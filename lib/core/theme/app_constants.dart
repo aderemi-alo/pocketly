@@ -37,4 +37,18 @@ class AppConstants {
   static Color get cardShadow => Colors.black.withValues(alpha: 0.08);
   static Color get fabShadow => const Color(0xFF6C63FF).withValues(alpha: 0.3);
   static Color get bottomSheetShadow => Colors.black.withValues(alpha: 0.12);
+
+  // Responsive Breakpoints
+  static const double mobileBreakpoint = 640.0;
+  static const double tabletBreakpoint = 1024.0;
+  static const double desktopBreakpoint = 1200.0;
+
+  // Base Dimensions for Responsive Scaling
+  static const double baseWidth = 390.0;
+  static const double baseHeight = 844.0;
+
+  // Responsive Spacing Multipliers
+  static const double mobileSpacingMultiplier = 1.0;
+  static const double tabletSpacingMultiplier = 1.2;
+  static const double desktopSpacingMultiplier = 1.5;
 }
