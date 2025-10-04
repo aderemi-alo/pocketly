@@ -10,7 +10,7 @@ class PocketlyApp extends ConsumerWidget {
     return ProviderScope(
       child: MaterialApp.router(
         title: 'Pocketly',
-        themeMode: ThemeMode.light,
+        theme: AppTheme.lightTheme,
         routerConfig: router,
       ),
     );

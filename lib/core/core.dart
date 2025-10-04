@@ -1,6 +1,7 @@
 // File exports
 export 'utils/utils.dart';
 export 'navigation/app_router.dart';
+export 'theme/theme.dart';
 // Package exports
 export 'package:flutter/material.dart';
 export 'package:flutter_riverpod/flutter_riverpod.dart';
