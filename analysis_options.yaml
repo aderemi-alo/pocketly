@@ -1,1 +1,35 @@
 include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # --- Debugging ---
+    avoid_print: true               # Disallow print(), use logger instead
+    avoid_redundant_argument_values: true # Cleaner widget constructors
+
+    # --- Code Quality / Safety ---
+    prefer_final_locals: true       # Use final for locals when possible
+    prefer_final_in_for_each: true  # Same for for-each loops
+    always_declare_return_types: true # Make return types explicit
+    avoid_returning_null_for_future: true
+
+    # --- Flutter best practices ---
+    use_key_in_widget_constructors: true
+    sort_child_properties_last: true
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
+
+    # --- Style / Consistency ---
+    prefer_single_quotes: true      # Enforce single quotes
+    unnecessary_this: true          # Avoid redundant "this."
+    unnecessary_new: true           # No "new" keyword
+    unnecessary_const: true         # No redundant "const"
+    lines_longer_than_80_chars: false # Don’t force 80-char limit (relaxed)
+    always_use_package_imports: true # Enforce package imports (clearer in big apps)
+
+    # --- Cleanliness ---
+    avoid_unnecessary_containers: true
+    unnecessary_null_checks: true
+    unnecessary_string_interpolations: true
+    avoid_types_as_parameter_names: true

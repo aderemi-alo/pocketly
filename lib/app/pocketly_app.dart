@@ -1,5 +1,4 @@
 import 'package:pocketly/core/core.dart';
-import 'package:flutter/foundation.dart';
 
 class PocketlyApp extends ConsumerWidget {
   const PocketlyApp({super.key});
@@ -11,7 +10,6 @@ class PocketlyApp extends ConsumerWidget {
     return ProviderScope(
       child: MaterialApp.router(
         title: 'Pocketly',
-        debugShowCheckedModeBanner: kDebugMode,
         themeMode: ThemeMode.light,
         routerConfig: router,
       ),
