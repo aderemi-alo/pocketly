@@ -1,6 +1,6 @@
 import 'package:pocketly/core/core.dart';
 
-class LightTheme {
+class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
