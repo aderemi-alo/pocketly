@@ -10,9 +10,10 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
   /// Add expense with validation
   void addExpense({
     required String name,
+    String? description,
     required double amount,
     required Category category,
-    DateTime? date,
+    required DateTime date,
   }) {
     // Simple validation
     if (name.trim().isEmpty) {
@@ -30,7 +31,8 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       name: name.trim(),
       amount: amount,
       category: category,
-      date: date ?? DateTime.now(),
+      date: date,
+      description: description,
     );
 
     state = state.copyWith(expenses: [...state.expenses, expense]);
@@ -40,9 +42,10 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
   void updateExpense({
     required String expenseId,
     required String name,
+    String? description,
     required double amount,
     required Category category,
-    DateTime? date,
+    required DateTime date,
   }) {
     // Simple validation
     if (name.trim().isEmpty) {
@@ -60,7 +63,8 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       name: name.trim(),
       amount: amount,
       category: category,
-      date: date ?? DateTime.now(),
+      date: date,
+      description: description,
     );
 
     final updatedExpenses = state.expenses.map((expense) {

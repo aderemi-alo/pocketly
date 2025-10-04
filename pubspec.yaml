@@ -11,6 +11,7 @@ dependencies:
     sdk: flutter
   flutter_riverpod: ^3.0.1
   go_router: ^16.2.4
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -30,3 +31,50 @@ flutter:
         - asset: fonts/Manrope/Manrope-ExtraBold.ttf
         - asset: fonts/Manrope/Manrope-ExtraLight.ttf
         - asset: fonts/Manrope/Manrope-Light.ttf
+    
+    - family: Outfit
+      fonts:
+        - asset: fonts/Outfit/Outfit-Thin.ttf
+        - asset: fonts/Outfit/Outfit-ExtraLight.ttf
+        - asset: fonts/Outfit/Outfit-Light.ttf
+        - asset: fonts/Outfit/Outfit-Regular.ttf
+        - asset: fonts/Outfit/Outfit-Medium.ttf
+        - asset: fonts/Outfit/Outfit-SemiBold.ttf
+        - asset: fonts/Outfit/Outfit-Bold.ttf
+        - asset: fonts/Outfit/Outfit-ExtraBold.ttf
+        - asset: fonts/Outfit/Outfit-Black.ttf
+    
+    - family: PlusJakartaSans
+      fonts:
+        - asset: fonts/PlusJarkataSans/PlusJakartaSans-ExtraLight.ttf
+        - asset: fonts/PlusJarkataSans/PlusJakartaSans-ExtraLightItalic.ttf
+        - asset: fonts/PlusJarkataSans/PlusJakartaSans-Light.ttf
+        - asset: fonts/PlusJarkataSans/PlusJakartaSans-LightItalic.ttf
+        - asset: fonts/PlusJarkataSans/PlusJakartaSans-Regular.ttf
+        - asset: fonts/PlusJarkataSans/PlusJakartaSans-Italic.ttf
+        - asset: fonts/PlusJarkataSans/PlusJakartaSans-Medium.ttf
+        - asset: fonts/PlusJarkataSans/PlusJakartaSans-MediumItalic.ttf
+        - asset: fonts/PlusJarkataSans/PlusJakartaSans-SemiBold.ttf
+        - asset: fonts/PlusJarkataSans/PlusJakartaSans-SemiBoldItalic.ttf
+        - asset: fonts/PlusJarkataSans/PlusJakartaSans-Bold.ttf
+        - asset: fonts/PlusJarkataSans/PlusJakartaSans-BoldItalic.ttf
+        - asset: fonts/PlusJarkataSans/PlusJakartaSans-ExtraBold.ttf
+        - asset: fonts/PlusJarkataSans/PlusJakartaSans-ExtraBoldItalic.ttf
+    
+    - family: Raleway
+      fonts:
+        - asset: fonts/Raleway/Raleway-Thin.ttf
+        - asset: fonts/Raleway/Raleway-ThinItalic.ttf
+        - asset: fonts/Raleway/Raleway-ExtraLight.ttf
+        - asset: fonts/Raleway/Raleway-ExtraLightItalic.ttf
+        - asset: fonts/Raleway/Raleway-Light.ttf
+        - asset: fonts/Raleway/Raleway-LightItalic.ttf
+        - asset: fonts/Raleway/Raleway-Regular.ttf
+        - asset: fonts/Raleway/Raleway-Medium.ttf
+        - asset: fonts/Raleway/Raleway-SemiBold.ttf
+        - asset: fonts/Raleway/Raleway-Bold.ttf
+        - asset: fonts/Raleway/Raleway-BoldItalic.ttf
+        - asset: fonts/Raleway/Raleway-ExtraBold.ttf
+        - asset: fonts/Raleway/Raleway-ExtraBoldItalic.ttf
+        - asset: fonts/Raleway/Raleway-Black.ttf
+        - asset: fonts/Raleway/Raleway-BlackItalic.ttf

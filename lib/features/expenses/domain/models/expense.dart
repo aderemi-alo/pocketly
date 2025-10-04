@@ -6,6 +6,7 @@ class Expense {
   final double amount;
   final Category category;
   final DateTime date;
+  final String? description;
 
   const Expense({
     required this.id,
@@ -13,6 +14,7 @@ class Expense {
     required this.amount,
     required this.category,
     required this.date,
+    this.description,
   });
 
   Expense copyWith({
@@ -21,6 +23,7 @@ class Expense {
     double? amount,
     Category? category,
     DateTime? date,
+    String? description,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -28,6 +31,7 @@ class Expense {
       amount: amount ?? this.amount,
       category: category ?? this.category,
       date: date ?? this.date,
+      description: description ?? this.description,
     );
   }
 

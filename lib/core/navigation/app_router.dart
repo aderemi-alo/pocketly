@@ -4,6 +4,7 @@ import 'package:pocketly/features/features.dart';
 class AppRoutes {
   static const dashboard = '/';
   static const expenses = '/expenses';
+  static const addExpense = '/expenses/add';
   static const settings = '/settings';
 }
 
@@ -22,6 +23,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.expenses,
         name: 'expenses',
         builder: (context, state) => const ExpensesView(),
+      ),
+      GoRoute(
+        path: AppRoutes.addExpense,
+        name: 'addExpense',
+        builder: (context, state) => const AddExpenseView(),
       ),
       GoRoute(
         path: AppRoutes.settings,
