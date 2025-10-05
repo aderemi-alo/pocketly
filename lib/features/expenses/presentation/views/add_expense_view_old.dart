@@ -14,15 +14,15 @@ class CurrencyInputFormatter extends TextInputFormatter {
     }
 
     // Remove all non-digit characters
-    String digitsOnly = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
+    final String digitsOnly = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
 
     if (digitsOnly.isEmpty) {
-      return const TextEditingValue(text: '');
+      return const TextEditingValue();
     }
 
     // Parse the number and format with commas
-    int value = int.parse(digitsOnly);
-    String formatted = NumberFormat('#,###').format(value);
+    final int value = int.parse(digitsOnly);
+    final String formatted = NumberFormat('#,###').format(value);
 
     return TextEditingValue(
       text: formatted,
@@ -99,11 +99,12 @@ class _AddExpenseViewState extends ConsumerState<AddExpenseView> {
     final theme = Theme.of(context);
     final categories = ref.watch(categoriesProvider);
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Add Expense'),
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
-        elevation: 0,
+        elevation: 10,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -119,34 +120,22 @@ class _AddExpenseViewState extends ConsumerState<AddExpenseView> {
                 children: [
                   context.verticalSpace(40),
                   // Name input
+                  Text(
+                    'Name *',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      // fontWeight: FontWeight.w600,
+                      // color: AppColors.textPrimary,
+                    ),
+                  ),
+                  context.verticalSpace(4),
                   TextFormField(
                     controller: nameController,
                     style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16),
                     decoration: InputDecoration(
-                      hintText: 'Name',
+                      hintText: 'e.g., Lunch, Coffee, Uber',
                       hintStyle: theme.textTheme.bodyMedium?.copyWith(
                         color: AppColors.textTertiary,
                         fontSize: 16,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: AppColors.primary),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
                       ),
                     ),
                   ),

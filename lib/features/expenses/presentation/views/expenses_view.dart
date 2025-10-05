@@ -1,6 +1,5 @@
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
-import 'package:go_router/go_router.dart';
 
 class ExpensesView extends ConsumerStatefulWidget {
   const ExpensesView({super.key});
@@ -12,13 +11,71 @@ class ExpensesView extends ConsumerStatefulWidget {
 class _ExpensesViewState extends ConsumerState<ExpensesView> {
   @override
   Widget build(BuildContext context) {
+    final expensesState = ref.watch(expensesProvider);
     return Scaffold(
-      body: Center(child: Text('Expenses')),
+      backgroundColor: AppColors.textPrimary,
+      appBar: AppBar(
+        title: const Text('Expenses'),
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.textPrimary,
+        elevation: 0,
+      ),
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          //Expenses List
+          expensesState.expenses.isEmpty
+              ? const Center(child: Text('No expenses yet'))
+              : Expanded(
+                  child: ListView.builder(
+                    itemCount: expensesState.expenses.length,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        padding: context.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: expensesState
+                                    .expenses[index]
+                                    .category
+                                    .color
+                                    .withValues(alpha: 0.5),
+                                shape: BoxShape.circle,
+                              ),
+                              child:
+                                  expensesState.expenses[index].category.icon,
+                            ),
+                            Text(expensesState.expenses[index].name),
+                            Text(
+                              expensesState.expenses[index].amount.toString(),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(
+          //     builder: (context) => AddEditExpenseScreen(onSave: (expense) {}),
+          //   ),
+          // );
           context.push(AppRoutes.addExpense);
         },
-        child: const Icon(Icons.add),
+        child: const Icon(LucideIcons.plus),
       ),
     );
   }

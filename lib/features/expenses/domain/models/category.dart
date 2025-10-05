@@ -4,7 +4,7 @@ import 'package:pocketly/core/core.dart';
 class Category {
   final String id;
   final String name;
-  final String icon;
+  final Icon icon;
   final Color color;
 
   const Category({

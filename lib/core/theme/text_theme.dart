@@ -58,7 +58,7 @@ class AppTextTheme {
     fontFamily: _fontFamily,
     fontSize: 16,
     fontWeight: FontWeight.w400,
-    color: AppColors.textSecondary,
+    color: AppColors.textPrimary,
     height: 1.5,
   );
 
@@ -66,7 +66,7 @@ class AppTextTheme {
     fontFamily: _fontFamily,
     fontSize: 14,
     fontWeight: FontWeight.w400,
-    color: AppColors.textSecondary,
+    color: AppColors.textPrimary,
     height: 1.5,
   );
 
@@ -74,7 +74,7 @@ class AppTextTheme {
     fontFamily: _fontFamily,
     fontSize: 12,
     fontWeight: FontWeight.w400,
-    color: AppColors.textSecondary,
+    color: AppColors.textPrimary,
     height: 1.4,
   );
 
