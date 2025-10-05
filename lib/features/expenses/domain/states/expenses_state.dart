@@ -45,6 +45,25 @@ class ExpensesState {
     return grouped;
   }
 
+  Map<String, List<Expense>> get expensesByMonth {
+    final Map<String, List<Expense>> grouped = {};
+    for (final expense in expenses) {
+      final monthKey =
+          '${expense.date.year}-${expense.date.month.toString().padLeft(2, '0')}';
+      if (grouped[monthKey] == null) {
+        grouped[monthKey] = [];
+      }
+      grouped[monthKey]!.add(expense);
+    }
+
+    // Sort each month's expenses by date (newest first)
+    for (final monthExpenses in grouped.values) {
+      monthExpenses.sort((a, b) => b.date.compareTo(a.date));
+    }
+
+    return grouped;
+  }
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

@@ -9,6 +9,40 @@ class ExpensesView extends ConsumerStatefulWidget {
 }
 
 class _ExpensesViewState extends ConsumerState<ExpensesView> {
+  Widget _buildGroupedExpensesList(ExpensesState expensesState) {
+    final groupedExpenses = expensesState.expensesByMonth;
+
+    if (groupedExpenses.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Sort months by date (newest first)
+    final sortedMonths = groupedExpenses.keys.toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    return Expanded(
+      child: ListView.builder(
+        itemCount: sortedMonths.length,
+        itemBuilder: (context, index) {
+          final monthKey = sortedMonths[index];
+          final monthExpenses = groupedExpenses[monthKey]!;
+          final totalAmount = monthExpenses.fold(
+            0.0,
+            (sum, expense) => sum + expense.amount,
+          );
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              MonthHeader(monthKey: monthKey, totalAmount: totalAmount),
+              ...monthExpenses.map((expense) => ExpenseCard(expense: expense)),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final expensesState = ref.watch(expensesProvider);
@@ -53,14 +87,7 @@ class _ExpensesViewState extends ConsumerState<ExpensesView> {
                   ],
                 ),
               )
-            : Expanded(
-                child: ListView.builder(
-                  itemCount: expensesState.expenses.length,
-                  itemBuilder: (context, index) {
-                    return ExpenseCard(expense: expensesState.expenses[index]);
-                  },
-                ),
-              ),
+            : Column(children: [_buildGroupedExpensesList(expensesState)]),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push(AppRoutes.addExpense),
