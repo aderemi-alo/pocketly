@@ -120,6 +120,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     final categories = ref.watch(categoriesProvider);
     final theme = Theme.of(context);
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
@@ -202,7 +203,10 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                                 if (value == null || value.isEmpty) {
                                   return 'Required';
                                 }
-                                if (double.tryParse(value) == null) {
+                                if (double.tryParse(
+                                      value.replaceAll(',', ''),
+                                    ) ==
+                                    null) {
                                   return 'Invalid';
                                 }
                                 return null;
@@ -281,14 +285,14 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                         _selectedCategory = entry;
                       });
                     },
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(24),
                     child: Container(
                       padding: context.all(16),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? _selectedCategory.color
                             : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(24),
                         border: Border.all(
                           color: isSelected
                               ? _selectedCategory.color
@@ -359,7 +363,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                   padding: context.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: AppColors.outline),
                   ),
                   child: Row(
@@ -416,7 +420,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                   style: ElevatedButton.styleFrom(
                     padding: context.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(24),
                     ),
                     elevation: 4,
                     shadowColor: AppColors.primary.withValues(alpha: 0.3),
