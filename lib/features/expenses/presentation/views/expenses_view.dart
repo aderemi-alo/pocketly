@@ -58,50 +58,12 @@ class _ExpensesViewState extends ConsumerState<ExpensesView> {
                   itemCount: expensesState.expenses.length,
                   itemBuilder: (context, index) {
                     return ExpenseCard(expense: expensesState.expenses[index]);
-                    // return Container(
-                    //   padding: context.symmetric(
-                    //     horizontal: 16,
-                    //     vertical: 12,
-                    //   ),
-                    //   decoration: BoxDecoration(
-                    //     color: AppColors.surface,
-                    //     borderRadius: BorderRadius.circular(16),
-                    //   ),
-                    //   child: Row(
-                    //     children: [
-                    //       Container(
-                    //         decoration: BoxDecoration(
-                    //           color: expensesState
-                    //               .expenses[index]
-                    //               .category
-                    //               .color
-                    //               .withValues(alpha: 0.5),
-                    //           shape: BoxShape.circle,
-                    //         ),
-                    //         child:
-                    //             expensesState.expenses[index].category.icon,
-                    //       ),
-                    //       Text(expensesState.expenses[index].name),
-                    //       Text(
-                    //         expensesState.expenses[index].amount.toString(),
-                    //       ),
-                    //     ],
-                    //   ),
-                    // );
                   },
                 ),
               ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(
-          //     builder: (context) => AddEditExpenseScreen(onSave: (expense) {}),
-          //   ),
-          // );
-          context.push(AppRoutes.addExpense);
-        },
+        onPressed: () => context.push(AppRoutes.addExpense),
         child: const Icon(LucideIcons.plus),
       ),
     );
