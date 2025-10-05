@@ -24,54 +24,73 @@ class _ExpensesViewState extends ConsumerState<ExpensesView> {
       ),
       body: Padding(
         padding: context.symmetric(horizontal: 16, vertical: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            //Expenses List
-            expensesState.expenses.isEmpty
-                ? const Center(child: Text('No expenses yet'))
-                : Expanded(
-                    child: ListView.builder(
-                      itemCount: expensesState.expenses.length,
-                      itemBuilder: (context, index) {
-                        return ExpenseCard(
-                          expense: expensesState.expenses[index],
-                        );
-                        // return Container(
-                        //   padding: context.symmetric(
-                        //     horizontal: 16,
-                        //     vertical: 12,
-                        //   ),
-                        //   decoration: BoxDecoration(
-                        //     color: AppColors.surface,
-                        //     borderRadius: BorderRadius.circular(16),
-                        //   ),
-                        //   child: Row(
-                        //     children: [
-                        //       Container(
-                        //         decoration: BoxDecoration(
-                        //           color: expensesState
-                        //               .expenses[index]
-                        //               .category
-                        //               .color
-                        //               .withValues(alpha: 0.5),
-                        //           shape: BoxShape.circle,
-                        //         ),
-                        //         child:
-                        //             expensesState.expenses[index].category.icon,
-                        //       ),
-                        //       Text(expensesState.expenses[index].name),
-                        //       Text(
-                        //         expensesState.expenses[index].amount.toString(),
-                        //       ),
-                        //     ],
-                        //   ),
-                        // );
-                      },
+        child: expensesState.expenses.isEmpty
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: context.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.4),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        LucideIcons.receipt,
+                        size: 60,
+                        color: AppColors.primary,
+                      ),
                     ),
-                  ),
-          ],
-        ),
+                    context.verticalSpace(16),
+                    Text('No expenses yet', style: theme.textTheme.titleLarge),
+                    context.verticalSpace(8),
+                    Text(
+                      'Start tracking by adding your first expense',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : Expanded(
+                child: ListView.builder(
+                  itemCount: expensesState.expenses.length,
+                  itemBuilder: (context, index) {
+                    return ExpenseCard(expense: expensesState.expenses[index]);
+                    // return Container(
+                    //   padding: context.symmetric(
+                    //     horizontal: 16,
+                    //     vertical: 12,
+                    //   ),
+                    //   decoration: BoxDecoration(
+                    //     color: AppColors.surface,
+                    //     borderRadius: BorderRadius.circular(16),
+                    //   ),
+                    //   child: Row(
+                    //     children: [
+                    //       Container(
+                    //         decoration: BoxDecoration(
+                    //           color: expensesState
+                    //               .expenses[index]
+                    //               .category
+                    //               .color
+                    //               .withValues(alpha: 0.5),
+                    //           shape: BoxShape.circle,
+                    //         ),
+                    //         child:
+                    //             expensesState.expenses[index].category.icon,
+                    //       ),
+                    //       Text(expensesState.expenses[index].name),
+                    //       Text(
+                    //         expensesState.expenses[index].amount.toString(),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // );
+                  },
+                ),
+              ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
