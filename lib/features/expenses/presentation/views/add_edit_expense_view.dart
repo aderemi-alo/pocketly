@@ -125,7 +125,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 1,
-        shadowColor: Colors.black12,
+        shadowColor: AppColors.textPrimary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textSecondary),
           onPressed: () => context.pop(),

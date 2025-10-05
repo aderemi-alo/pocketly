@@ -27,7 +27,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.addExpense,
         name: 'addExpense',
-        builder: (context, state) => const AddEditExpenseScreen(),
+        builder: (context, state) {
+          final expense = state.extra as Expense?;
+          return AddEditExpenseScreen(expense: expense);
+        },
       ),
       GoRoute(
         path: AppRoutes.settings,
