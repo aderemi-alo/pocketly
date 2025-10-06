@@ -322,7 +322,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              config.icon.icon,
+                              config.icon,
                               color: isSelected ? Colors.white : config.color,
                               size: 20,
                             ),

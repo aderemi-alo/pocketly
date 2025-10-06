@@ -5,9 +5,8 @@ import 'package:pocketly/features/features.dart';
 // Swipeable Expense Card Widget
 class ExpenseCard extends ConsumerStatefulWidget {
   final Expense expense;
-  final VoidCallback? onTap;
 
-  const ExpenseCard({super.key, required this.expense, this.onTap});
+  const ExpenseCard({super.key, required this.expense});
 
   @override
   ConsumerState<ExpenseCard> createState() => _ExpenseCardState();
@@ -84,8 +83,14 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
   void _handleCardTap() {
     if (_isOpen) {
       _closeActions();
-    } else if (widget.onTap != null) {
-      widget.onTap!();
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (context) =>
+            ExpenseDetailsBottomSheet(expense: widget.expense),
+      );
     }
   }
 
@@ -108,6 +113,7 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
       onHorizontalDragStart: _handleDragStart,
       onHorizontalDragUpdate: _handleDragUpdate,
       onHorizontalDragEnd: _handleDragEnd,
+      onTap: _handleCardTap,
       child: Stack(
         children: [
           // Action Buttons (Behind)
@@ -207,13 +213,9 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
                         height: 48,
                         decoration: BoxDecoration(
                           color: config.color.withValues(alpha: 0.12),
-                          borderRadius: context.radius(20),
+                          borderRadius: context.radius(18),
                         ),
-                        child: Icon(
-                          config.icon.icon,
-                          color: config.color,
-                          size: 24,
-                        ),
+                        child: Icon(config.icon, color: config.color, size: 24),
                       ),
 
                       context.horizontalSpace(12),
