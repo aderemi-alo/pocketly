@@ -165,6 +165,7 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
                       child: InkWell(
                         borderRadius: BorderRadius.circular(20),
                         onTap: () async {
+                          _closeActions();
                           showDialog<bool>(
                             context: context,
                             builder: (context) => DeleteExpenseDialog(
