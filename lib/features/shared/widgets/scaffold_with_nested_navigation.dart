@@ -1,24 +1,200 @@
 import 'package:pocketly/core/core.dart';
+import 'package:pocketly/features/features.dart';
 
-class ScaffoldWithNestedNavigation extends StatelessWidget {
+class ScaffoldWithNestedNavigation extends StatefulWidget {
   const ScaffoldWithNestedNavigation({Key? key, required this.navigationShell})
     : super(key: key ?? const ValueKey<String>('ScaffoldWithNestedNavigation'));
 
   final StatefulNavigationShell navigationShell;
 
-  void _goBranch(int index) {
-    navigationShell.goBranch(
-      index,
-      initialLocation: index == navigationShell.currentIndex,
+  @override
+  State<ScaffoldWithNestedNavigation> createState() =>
+      _ScaffoldWithNestedNavigationState();
+}
+
+class _ScaffoldWithNestedNavigationState
+    extends State<ScaffoldWithNestedNavigation>
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<Offset> _currentPageAnimation;
+  late Animation<Offset> _nextPageAnimation;
+  int _currentIndex = 0;
+  int _nextIndex = 0;
+  bool _isAnimating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.navigationShell.currentIndex;
+    _nextIndex = widget.navigationShell.currentIndex;
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
     );
+
+    _setupAnimations();
+  }
+
+  void _setupAnimations() {
+    final isMovingRight = _nextIndex > _currentIndex;
+
+    // Current page slides out completely
+    _currentPageAnimation =
+        Tween<Offset>(
+          begin: Offset.zero,
+          end: isMovingRight ? const Offset(-1.5, 0.0) : const Offset(1.5, 0.0),
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeInOut,
+          ),
+        );
+
+    // Next page slides in from completely off-screen
+    _nextPageAnimation =
+        Tween<Offset>(
+          begin: isMovingRight
+              ? const Offset(1.5, 0.0)
+              : const Offset(-1.5, 0.0),
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeInOut,
+          ),
+        );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _goBranch(int index) {
+    if (_isAnimating || index == widget.navigationShell.currentIndex) return;
+
+    setState(() {
+      _isAnimating = true;
+      _currentIndex = widget.navigationShell.currentIndex;
+      _nextIndex = index;
+    });
+
+    _setupAnimations();
+
+    // Start the carousel animation
+    _animationController.forward(from: 0).then((_) {
+      if (mounted) {
+        setState(() {
+          _isAnimating = false;
+          _currentIndex = index;
+        });
+        _animationController.reset();
+      }
+    });
+
+    widget.navigationShell.goBranch(
+      index,
+      initialLocation: index == widget.navigationShell.currentIndex,
+    );
+  }
+
+  Widget _buildCarouselBody() {
+    if (_isAnimating) {
+      return Stack(
+        children: [
+          // Current page sliding out
+          SlideTransition(
+            position: _currentPageAnimation,
+            child: _buildPageContent(_currentIndex),
+          ),
+          // Next page sliding in
+          SlideTransition(
+            position: _nextPageAnimation,
+            child: _buildPageContent(_nextIndex),
+          ),
+        ],
+      );
+    }
+
+    return widget.navigationShell;
+  }
+
+  PreferredSizeWidget _buildAnimatedAppBar() {
+    final theme = Theme.of(context);
+
+    return AppBar(
+      backgroundColor: AppColors.surface,
+      foregroundColor: AppColors.textPrimary,
+      elevation: 1,
+      shadowColor: AppColors.textPrimary,
+      title: _buildAnimatedTitle(theme.textTheme),
+    );
+  }
+
+  Widget _buildAnimatedTitle(TextTheme textTheme) {
+    if (_isAnimating) {
+      return ClipRect(
+        child: Stack(
+          children: [
+            // Current title sliding out
+            SlideTransition(
+              position: _currentPageAnimation,
+              child: _buildTitleText(_currentIndex, textTheme),
+            ),
+            // Next title sliding in
+            SlideTransition(
+              position: _nextPageAnimation,
+              child: _buildTitleText(_nextIndex, textTheme),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return _buildTitleText(widget.navigationShell.currentIndex, textTheme);
+  }
+
+  Widget _buildTitleText(int index, TextTheme textTheme) {
+    final title = _getPageTitle(index);
+    return Text(title, style: textTheme.titleLarge);
+  }
+
+  String _getPageTitle(int index) {
+    switch (index) {
+      case 0:
+        return 'Dashboard';
+      case 1:
+        return 'Expenses';
+      case 2:
+        return 'Settings';
+      default:
+        return 'Pocketly';
+    }
+  }
+
+  Widget _buildPageContent(int index) {
+    // Create individual page content for each tab without app bars
+    switch (index) {
+      case 0:
+        return const _DashboardContent();
+      case 1:
+        return const _ExpensesContent();
+      case 2:
+        return const _SettingsContent();
+      default:
+        return const SizedBox.shrink();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: navigationShell,
+      appBar: _buildAnimatedAppBar(),
+      body: _buildCarouselBody(),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: navigationShell.currentIndex,
+        currentIndex: widget.navigationShell.currentIndex,
         onTap: _goBranch,
         items: const [
           BottomNavigationBarItem(
@@ -36,5 +212,107 @@ class ScaffoldWithNestedNavigation extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// Content wrappers without app bars for carousel animation
+class _DashboardContent extends StatelessWidget {
+  const _DashboardContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Center(child: Text('Dashboard')));
+  }
+}
+
+class _ExpensesContent extends ConsumerWidget {
+  const _ExpensesContent();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final expensesState = ref.watch(expensesProvider);
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Padding(
+        padding: context.symmetric(horizontal: 16, vertical: 24),
+        child: expensesState.expenses.isEmpty
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: context.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.4),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        LucideIcons.receipt,
+                        size: 60,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    context.verticalSpace(16),
+                    Text('No expenses yet', style: theme.textTheme.titleLarge),
+                    context.verticalSpace(8),
+                    Text(
+                      'Start tracking by adding your first expense',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : _buildExpensesList(expensesState),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push(AppRoutes.addExpense),
+        child: const Icon(LucideIcons.plus),
+      ),
+    );
+  }
+
+  Widget _buildExpensesList(ExpensesState expensesState) {
+    final groupedExpenses = expensesState.expensesByMonth;
+
+    if (groupedExpenses.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Sort months by date (newest first)
+    final sortedMonths = groupedExpenses.keys.toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    return ListView.builder(
+      itemCount: sortedMonths.length,
+      itemBuilder: (context, index) {
+        final monthKey = sortedMonths[index];
+        final monthExpenses = groupedExpenses[monthKey]!;
+        final totalAmount = monthExpenses.fold(
+          0.0,
+          (sum, expense) => sum + expense.amount,
+        );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            MonthHeader(monthKey: monthKey, totalAmount: totalAmount),
+            ...monthExpenses.map((expense) => ExpenseCard(expense: expense)),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _SettingsContent extends StatelessWidget {
+  const _SettingsContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Center(child: Text('Settings')));
   }
 }
