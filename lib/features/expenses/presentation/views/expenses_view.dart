@@ -49,13 +49,7 @@ class _ExpensesViewState extends ConsumerState<ExpensesView> {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text('Expenses', style: theme.textTheme.titleLarge),
-        backgroundColor: AppColors.surface,
-        foregroundColor: AppColors.textPrimary,
-        elevation: 1,
-        shadowColor: AppColors.textPrimary,
-      ),
+
       body: Padding(
         padding: context.symmetric(horizontal: 16, vertical: 24),
         child: expensesState.expenses.isEmpty
