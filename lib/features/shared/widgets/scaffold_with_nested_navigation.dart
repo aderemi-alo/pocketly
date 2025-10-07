@@ -1,12 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:pocketly/core/core.dart';
 
 class ScaffoldWithNestedNavigation extends StatelessWidget {
-  const ScaffoldWithNestedNavigation({
-    Key? key,
-    required this.navigationShell,
-  }) : super(
-            key: key ?? const ValueKey<String>('ScaffoldWithNestedNavigation'));
+  const ScaffoldWithNestedNavigation({Key? key, required this.navigationShell})
+    : super(key: key ?? const ValueKey<String>('ScaffoldWithNestedNavigation'));
 
   final StatefulNavigationShell navigationShell;
 
@@ -26,15 +22,15 @@ class ScaffoldWithNestedNavigation extends StatelessWidget {
         onTap: _goBranch,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
+            icon: Icon(LucideIcons.layoutDashboard),
             label: 'Dashboard',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.receipt),
+            icon: Icon(LucideIcons.receipt),
             label: 'Expenses',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
+            icon: Icon(LucideIcons.settings),
             label: 'Settings',
           ),
         ],
