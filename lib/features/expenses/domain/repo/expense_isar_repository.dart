@@ -125,15 +125,11 @@ class ExpenseIsarRepository {
     DateTime endDate,
   ) async {
     final isar = await _isar;
-    final allExpenses = await isar.expenseIsars.where().findAll();
 
-    // Filter by date range manually since query methods aren't working
-    final filteredExpenses = allExpenses.where((expense) {
-      return expense.date.isAfter(
-            startDate.subtract(const Duration(days: 1)),
-          ) &&
-          expense.date.isBefore(endDate.add(const Duration(days: 1)));
-    }).toList();
+    final filteredExpenses = await isar.expenseIsars
+        .filter()
+        .dateBetween(startDate, endDate)
+        .findAll();
 
     return filteredExpenses.map(_toDomainModel).toList();
   }
@@ -141,12 +137,25 @@ class ExpenseIsarRepository {
   /// Get expenses by category
   Future<List<Expense>> getExpensesByCategory(String categoryId) async {
     final isar = await _isar;
-    final allExpenses = await isar.expenseIsars.where().findAll();
 
     // Filter by category manually since query methods aren't working
-    final filteredExpenses = allExpenses.where((expense) {
-      return expense.categoryId == categoryId;
-    }).toList();
+    final filteredExpenses = await isar.expenseIsars
+        .filter()
+        .categoryIdEqualTo(categoryId)
+        .findAll();
+
+    return filteredExpenses.map(_toDomainModel).toList();
+  }
+
+  Future<List<Expense>> getExpenseByAmount(
+    double lowerAmount,
+    double upperAmount,
+  ) async {
+    final isar = await _isar;
+    final filteredExpenses = await isar.expenseIsars
+        .filter()
+        .amountBetween(lowerAmount, upperAmount)
+        .findAll();
 
     return filteredExpenses.map(_toDomainModel).toList();
   }

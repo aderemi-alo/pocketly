@@ -11,11 +11,16 @@ class ExpenseIsar {
   late String expenseId;
 
   late String name;
+
+  @Index()
   late double amount;
+
+  @Index()
   late DateTime date;
   String? description;
 
   // Category fields
+  @Index()
   late String categoryId;
   late String categoryName;
   late int categoryIconCodePoint;

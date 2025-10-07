@@ -81,6 +81,45 @@ const ExpenseIsarSchema = CollectionSchema(
           caseSensitive: true,
         )
       ],
+    ),
+    r'amount': IndexSchema(
+      id: 3252599345080253594,
+      name: r'amount',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'amount',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'date': IndexSchema(
+      id: -7552997827385218417,
+      name: r'date',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'date',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'categoryId': IndexSchema(
+      id: -8798048739239305339,
+      name: r'categoryId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'categoryId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
     )
   },
   links: {},
@@ -252,6 +291,22 @@ extension ExpenseIsarQueryWhereSort
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
+
+  QueryBuilder<ExpenseIsar, ExpenseIsar, QAfterWhere> anyAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'amount'),
+      );
+    });
+  }
+
+  QueryBuilder<ExpenseIsar, ExpenseIsar, QAfterWhere> anyDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'date'),
+      );
+    });
+  }
 }
 
 extension ExpenseIsarQueryWhere
@@ -361,6 +416,231 @@ extension ExpenseIsarQueryWhere
               indexName: r'expenseId',
               lower: [],
               upper: [expenseId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<ExpenseIsar, ExpenseIsar, QAfterWhereClause> amountEqualTo(
+      double amount) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'amount',
+        value: [amount],
+      ));
+    });
+  }
+
+  QueryBuilder<ExpenseIsar, ExpenseIsar, QAfterWhereClause> amountNotEqualTo(
+      double amount) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'amount',
+              lower: [],
+              upper: [amount],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'amount',
+              lower: [amount],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'amount',
+              lower: [amount],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'amount',
+              lower: [],
+              upper: [amount],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<ExpenseIsar, ExpenseIsar, QAfterWhereClause> amountGreaterThan(
+    double amount, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'amount',
+        lower: [amount],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<ExpenseIsar, ExpenseIsar, QAfterWhereClause> amountLessThan(
+    double amount, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'amount',
+        lower: [],
+        upper: [amount],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<ExpenseIsar, ExpenseIsar, QAfterWhereClause> amountBetween(
+    double lowerAmount,
+    double upperAmount, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'amount',
+        lower: [lowerAmount],
+        includeLower: includeLower,
+        upper: [upperAmount],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ExpenseIsar, ExpenseIsar, QAfterWhereClause> dateEqualTo(
+      DateTime date) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'date',
+        value: [date],
+      ));
+    });
+  }
+
+  QueryBuilder<ExpenseIsar, ExpenseIsar, QAfterWhereClause> dateNotEqualTo(
+      DateTime date) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'date',
+              lower: [],
+              upper: [date],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'date',
+              lower: [date],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'date',
+              lower: [date],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'date',
+              lower: [],
+              upper: [date],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<ExpenseIsar, ExpenseIsar, QAfterWhereClause> dateGreaterThan(
+    DateTime date, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'date',
+        lower: [date],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<ExpenseIsar, ExpenseIsar, QAfterWhereClause> dateLessThan(
+    DateTime date, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'date',
+        lower: [],
+        upper: [date],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<ExpenseIsar, ExpenseIsar, QAfterWhereClause> dateBetween(
+    DateTime lowerDate,
+    DateTime upperDate, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'date',
+        lower: [lowerDate],
+        includeLower: includeLower,
+        upper: [upperDate],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ExpenseIsar, ExpenseIsar, QAfterWhereClause> categoryIdEqualTo(
+      String categoryId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'categoryId',
+        value: [categoryId],
+      ));
+    });
+  }
+
+  QueryBuilder<ExpenseIsar, ExpenseIsar, QAfterWhereClause>
+      categoryIdNotEqualTo(String categoryId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'categoryId',
+              lower: [],
+              upper: [categoryId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'categoryId',
+              lower: [categoryId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'categoryId',
+              lower: [categoryId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'categoryId',
+              lower: [],
+              upper: [categoryId],
               includeUpper: false,
             ));
       }

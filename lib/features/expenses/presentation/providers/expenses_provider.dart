@@ -146,6 +146,17 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     );
   }
 
+  // Get expenses by amount
+  Future<List<Expense>> getExpensesByAmount(
+    double lowerAmount,
+    double upperAmount,
+  ) async {
+    return await expenseIsarRepository.getExpenseByAmount(
+      lowerAmount,
+      upperAmount,
+    );
+  }
+
   // Get total amount by category
   Future<double> getTotalAmountByCategory(String categoryId) async {
     final expenses = await getExpensesByCategory(categoryId);
