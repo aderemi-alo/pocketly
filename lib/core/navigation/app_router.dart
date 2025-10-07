@@ -3,14 +3,15 @@ import 'package:pocketly/features/features.dart';
 
 class AppRoutes {
   static const dashboard = '/';
-  static const expensesList = '/expenses';
+  static const expenses = '/expenses';
+  static const addExpense = '/expenses/add';
   static const settings = '/settings';
 }
 
 // Router provider
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: AppRoutes.dashboard,
+    initialLocation: AppRoutes.expenses,
     debugLogDiagnostics: true,
     routes: [
       GoRoute(
@@ -19,9 +20,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const DashboardView(),
       ),
       GoRoute(
-        path: AppRoutes.expensesList,
-        name: 'expenses-list',
+        path: AppRoutes.expenses,
+        name: 'expenses',
         builder: (context, state) => const ExpensesView(),
+      ),
+      GoRoute(
+        path: AppRoutes.addExpense,
+        name: 'addExpense',
+        builder: (context, state) {
+          final expense = state.extra as Expense?;
+          return AddEditExpenseScreen(expense: expense);
+        },
       ),
       GoRoute(
         path: AppRoutes.settings,

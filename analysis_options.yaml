@@ -25,8 +25,9 @@ linter:
     unnecessary_this: true          # Avoid redundant "this."
     unnecessary_new: true           # No "new" keyword
     unnecessary_const: true         # No redundant "const"
-    lines_longer_than_80_chars: false # Don’t force 80-char limit (relaxed)
+    lines_longer_than_80_chars: false # Don't force 80-char limit (relaxed)
     always_use_package_imports: true # Enforce package imports (clearer in big apps)
+    require_trailing_commas: true   # Enforce trailing commas for cleaner diffs
 
     # --- Cleanliness ---
     avoid_unnecessary_containers: true

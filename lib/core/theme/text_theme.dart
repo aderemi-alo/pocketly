@@ -1,7 +1,7 @@
 import 'package:pocketly/core/core.dart';
 
 class AppTextTheme {
-  static const String _fontFamily = 'Manrope';
+  static const String _fontFamily = 'PlusJakartaSans';
 
   // Headlines - Bold, 24-28px, #1A1A2E
   static const TextStyle headlineLarge = TextStyle(
@@ -58,7 +58,7 @@ class AppTextTheme {
     fontFamily: _fontFamily,
     fontSize: 16,
     fontWeight: FontWeight.w400,
-    color: AppColors.textSecondary,
+    color: AppColors.textPrimary,
     height: 1.5,
   );
 
@@ -66,7 +66,7 @@ class AppTextTheme {
     fontFamily: _fontFamily,
     fontSize: 14,
     fontWeight: FontWeight.w400,
-    color: AppColors.textSecondary,
+    color: AppColors.textPrimary,
     height: 1.5,
   );
 
@@ -74,7 +74,7 @@ class AppTextTheme {
     fontFamily: _fontFamily,
     fontSize: 12,
     fontWeight: FontWeight.w400,
-    color: AppColors.textSecondary,
+    color: AppColors.textPrimary,
     height: 1.4,
   );
 

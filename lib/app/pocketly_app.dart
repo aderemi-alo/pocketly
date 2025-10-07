@@ -7,12 +7,10 @@ class PocketlyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
 
-    return ProviderScope(
-      child: MaterialApp.router(
-        title: 'Pocketly',
-        theme: AppTheme.lightTheme,
-        routerConfig: router,
-      ),
+    return MaterialApp.router(
+      title: 'Pocketly',
+      theme: AppTheme.lightTheme,
+      routerConfig: router,
     );
   }
 }
