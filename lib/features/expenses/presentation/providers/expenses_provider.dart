@@ -158,15 +158,15 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
   }
 
   /// Persist current state to database without affecting UI
-  Future<void> _persistStateToDatabase() async {
-    try {
-      // This method can be used to sync state changes to database
-      // Currently not needed since we persist immediately after state changes
-    } catch (e) {
-      // Log persistence errors but don't affect UI state
-      debugPrint('Failed to persist state to database: $e');
-    }
-  }
+  // Future<void> _persistStateToDatabase() async {
+  //   try {
+  //     // This method can be used to sync state changes to database
+  //     // Currently not needed since we persist immediately after state changes
+  //   } catch (e) {
+  //     // Log persistence errors but don't affect UI state
+  //     debugPrint('Failed to persist state to database: $e');
+  //   }
+  // }
 }
 
 final expensesProvider = NotifierProvider<ExpensesNotifier, ExpensesState>(() {

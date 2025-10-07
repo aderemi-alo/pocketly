@@ -10,37 +10,47 @@ class ExpenseIsarRepository {
 
   /// Convert ExpenseIsar to Expense domain model
   Expense _toDomainModel(ExpenseIsar expenseIsar) {
-    return Expense(
-      id: expenseIsar.expenseId,
-      name: expenseIsar.name,
-      amount: expenseIsar.amount,
-      date: expenseIsar.date,
-      description: expenseIsar.description,
-      category: Category(
-        id: expenseIsar.categoryId,
-        name: expenseIsar.categoryName,
-        icon: IconData(
-          expenseIsar.categoryIconCodePoint,
-          fontFamily: 'MaterialIcons',
+    try {
+      return Expense(
+        id: expenseIsar.expenseId,
+        name: expenseIsar.name,
+        amount: expenseIsar.amount,
+        date: expenseIsar.date,
+        description: expenseIsar.description,
+        category: Category(
+          id: expenseIsar.categoryId,
+          name: expenseIsar.categoryName,
+          icon: IconData(
+            expenseIsar.categoryIconCodePoint,
+            fontFamily: 'MaterialIcons',
+          ),
+          color: Color(expenseIsar.categoryColorValue),
         ),
-        color: Color(expenseIsar.categoryColorValue),
-      ),
-    );
+      );
+    } catch (e) {
+      debugPrint('Failed to convert ExpenseIsar to Expense domain model: $e');
+      rethrow;
+    }
   }
 
   /// Convert Expense domain model to ExpenseIsar
   ExpenseIsar _toIsarModel(Expense expense) {
-    return ExpenseIsar.create(
-      expenseId: expense.id,
-      name: expense.name,
-      amount: expense.amount,
-      date: expense.date,
-      description: expense.description,
-      categoryId: expense.category.id,
-      categoryName: expense.category.name,
-      categoryIcon: expense.category.icon,
-      categoryColor: expense.category.color,
-    );
+    try {
+      return ExpenseIsar.create(
+        expenseId: expense.id,
+        name: expense.name,
+        amount: expense.amount,
+        date: expense.date,
+        description: expense.description,
+        categoryId: expense.category.id,
+        categoryName: expense.category.name,
+        categoryIcon: expense.category.icon,
+        categoryColor: expense.category.color,
+      );
+    } catch (e) {
+      debugPrint('Failed to convert Expense domain model to ExpenseIsar: $e');
+      rethrow;
+    }
   }
 
   /// Get all expenses
@@ -63,12 +73,17 @@ class ExpenseIsarRepository {
 
   /// Add new expense
   Future<void> addExpense(Expense expense) async {
-    final isar = await _isar;
-    final expenseIsar = _toIsarModel(expense);
+    try {
+      final isar = await _isar;
+      final expenseIsar = _toIsarModel(expense);
 
-    await isar.writeTxn(() async {
-      await isar.expenseIsars.put(expenseIsar);
-    });
+      await isar.writeTxn(() async {
+        await isar.expenseIsars.put(expenseIsar);
+      });
+    } catch (e) {
+      debugPrint('Failed to add expense: $e');
+      rethrow;
+    }
   }
 
   /// Update existing expense

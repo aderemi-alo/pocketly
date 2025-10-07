@@ -24,23 +24,16 @@ class ExpenseIsar {
   ExpenseIsar();
 
   ExpenseIsar.create({
-    required String expenseId,
-    required String name,
-    required double amount,
-    required DateTime date,
-    String? description,
-    required String categoryId,
-    required String categoryName,
+    required this.expenseId,
+    required this.name,
+    required this.amount,
+    required this.date,
+    this.description,
+    required this.categoryId,
+    required this.categoryName,
     required IconData categoryIcon,
     required Color categoryColor,
   }) {
-    this.expenseId;
-    this.name;
-    this.amount;
-    this.date;
-    this.description;
-    this.categoryId;
-    this.categoryName;
     categoryIconCodePoint = categoryIcon.codePoint;
     categoryColorValue = categoryColor.toARGB32();
   }
