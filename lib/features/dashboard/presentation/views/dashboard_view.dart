@@ -129,11 +129,21 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const TextWidget(
-                    text: 'Spending by Category',
-                    fontSize: 16,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextWidget(
+                        text: 'Spending by Category',
+                        fontSize: 16,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      TextWidget(
+                        text: 'This Month',
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
 
