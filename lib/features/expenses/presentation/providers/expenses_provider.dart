@@ -61,6 +61,11 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     }
   }
 
+  /// Update filter
+  void updateFilter(ExpenseFilter filter) {
+    state = state.copyWith(filter: filter);
+  }
+
   /// Update expense with validation
   Future<void> updateExpense({
     required String expenseId,

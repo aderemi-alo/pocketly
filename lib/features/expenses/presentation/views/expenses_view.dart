@@ -10,7 +10,7 @@ class ExpensesView extends ConsumerStatefulWidget {
 
 class _ExpensesViewState extends ConsumerState<ExpensesView> {
   Widget _buildGroupedExpensesList(ExpensesState expensesState) {
-    final groupedExpenses = expensesState.expensesByMonth;
+    final groupedExpenses = expensesState.filteredExpensesByMonth;
 
     if (groupedExpenses.isEmpty) {
       return const SizedBox.shrink();
@@ -49,7 +49,6 @@ class _ExpensesViewState extends ConsumerState<ExpensesView> {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: AppColors.background,
-
       body: Padding(
         padding: context.symmetric(horizontal: 16, vertical: 24),
         child: expensesState.expenses.isEmpty
@@ -81,7 +80,22 @@ class _ExpensesViewState extends ConsumerState<ExpensesView> {
                   ],
                 ),
               )
-            : Column(children: [_buildGroupedExpensesList(expensesState)]),
+            : Column(
+                children: [
+                  // Filter Bar
+                  ExpenseFilterBar(
+                    filter: expensesState.filter,
+                    availableMonths: const [], // No longer needed
+                    categories: Categories.predefined,
+                    onFilterChanged: (filter) {
+                      ref.read(expensesProvider.notifier).updateFilter(filter);
+                    },
+                  ),
+                  context.verticalSpace(4),
+                  // Expenses List
+                  _buildGroupedExpensesList(expensesState),
+                ],
+              ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/expenses/${AppRoutes.addExpense}'),

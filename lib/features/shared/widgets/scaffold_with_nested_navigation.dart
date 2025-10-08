@@ -206,10 +206,10 @@ class _ScaffoldWithNestedNavigationState
             icon: Icon(LucideIcons.receipt),
             label: 'Expenses',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(LucideIcons.settings),
-            label: 'Settings',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(LucideIcons.settings),
+          //   label: 'Settings',
+          // ),
         ],
       ),
     );
