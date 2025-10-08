@@ -8,6 +8,7 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final category = Categories.getById(expense.category.id);
     final theme = Theme.of(context);
     return Container(
       padding: context.only(bottom: 16),
@@ -43,12 +44,12 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
                     Container(
                       padding: context.all(16),
                       decoration: BoxDecoration(
-                        color: expense.category.color.withValues(alpha: 0.12),
+                        color: category.color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Icon(
-                        expense.category.icon,
-                        color: expense.category.color,
+                        category.icon,
+                        color: category.color,
                         size: 30,
                       ),
                     ),
@@ -58,7 +59,7 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          expense.category.name,
+                          category.name,
                           style: theme.textTheme.labelLarge?.copyWith(
                             fontWeight: FontWeight.w500,
                             color: AppColors.textSecondary,
@@ -154,7 +155,10 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
                         ),
                         onPressed: () {
                           context.pop();
-                          context.push(AppRoutes.addExpense, extra: expense);
+                          context.push(
+                            '/expenses/${AppRoutes.addExpense}',
+                            extra: expense,
+                          );
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,

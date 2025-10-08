@@ -100,7 +100,7 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
 
   @override
   Widget build(BuildContext context) {
-    final config = Categories.getById(widget.expense.category.id);
+    final category = Categories.getById(widget.expense.category.id);
     final theme = Theme.of(context);
     // Update the slide animation with the correct screen width
     final screenWidth = MediaQuery.of(context).size.width;
@@ -213,10 +213,14 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: config.color.withValues(alpha: 0.12),
+                          color: category.color.withValues(alpha: 0.12),
                           borderRadius: context.radius(18),
                         ),
-                        child: Icon(config.icon, color: config.color, size: 24),
+                        child: Icon(
+                          category.icon,
+                          color: category.color,
+                          size: 24,
+                        ),
                       ),
 
                       context.horizontalSpace(12),

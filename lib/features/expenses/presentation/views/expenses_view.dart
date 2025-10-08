@@ -84,7 +84,7 @@ class _ExpensesViewState extends ConsumerState<ExpensesView> {
             : Column(children: [_buildGroupedExpensesList(expensesState)]),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(AppRoutes.addExpense),
+        onPressed: () => context.push('/expenses/${AppRoutes.addExpense}'),
         child: const Icon(LucideIcons.plus),
       ),
     );
