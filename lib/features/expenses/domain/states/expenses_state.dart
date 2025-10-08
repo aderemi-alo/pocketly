@@ -134,6 +134,47 @@ class ExpensesState {
     return grouped;
   }
 
+  Map<String, double> get expensesByDayCurrentWeek {
+    final now = DateTime.now();
+
+    // Get the start of the current week (Monday)
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    final startOfWeekDate = DateTime(
+      startOfWeek.year,
+      startOfWeek.month,
+      startOfWeek.day,
+    );
+
+    // Initialize map with all 7 days of the week
+    final Map<String, double> grouped = {};
+    for (int i = 0; i < 7; i++) {
+      final date = startOfWeekDate.add(Duration(days: i));
+      final dayKey =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      grouped[dayKey] = 0.0;
+    }
+
+    // Sum expenses for each day
+    for (final expense in expenses) {
+      final expenseDate = DateTime(
+        expense.date.year,
+        expense.date.month,
+        expense.date.day,
+      );
+
+      if (expenseDate.isAfter(
+            startOfWeekDate.subtract(const Duration(days: 1)),
+          ) &&
+          expenseDate.isBefore(startOfWeekDate.add(const Duration(days: 7)))) {
+        final dayKey =
+            '${expenseDate.year}-${expenseDate.month.toString().padLeft(2, '0')}-${expenseDate.day.toString().padLeft(2, '0')}';
+        grouped[dayKey] = (grouped[dayKey] ?? 0.0) + expense.amount;
+      }
+    }
+
+    return grouped;
+  }
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

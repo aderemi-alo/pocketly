@@ -17,130 +17,163 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     final totalSpent = expensesState.totalAmountCurrentMonth;
     final totalTransactions = expensesState.transactionCountCurrentMonth;
 
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          // Summary Cards
-          Row(
-            children: [
-              // Total Spent
-              Expanded(
-                flex: 3,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const TextWidget(
-                        text: 'Total Spent',
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                      context.verticalSpace(4),
-                      TextWidget(
-                        text: '₦${FormatUtils.formatCurrency(totalSpent)}',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      context.verticalSpace(2),
-                      const TextWidget(
-                        text: 'This Month',
-                        fontSize: 10,
-                        color: AppColors.textSecondary,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // Transactions
-              Expanded(
-                flex: 2,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const TextWidget(
-                        text: 'Transactions',
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                      context.verticalSpace(4),
-                      TextWidget(
-                        text: '$totalTransactions',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      context.verticalSpace(2),
-                      const TextWidget(
-                        text: 'This Month',
-                        fontSize: 10,
-                        color: AppColors.textSecondary,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              context.horizontalSpace(12),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Spending by Category Card
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            // Summary Cards
+            Row(
               children: [
-                const TextWidget(
-                  text: 'Spending by Category',
-                  fontSize: 16,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
+                // Total Spent
+                Expanded(
+                  flex: 3,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const TextWidget(
+                          text: 'Total Spent',
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                        context.verticalSpace(4),
+                        TextWidget(
+                          text: '₦${FormatUtils.formatCurrency(totalSpent)}',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        context.verticalSpace(2),
+                        const TextWidget(
+                          text: 'This Month',
+                          fontSize: 10,
+                          color: AppColors.textSecondary,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(width: 12),
 
-                _buildCategoryChart(expensesState),
+                // Transactions
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const TextWidget(
+                          text: 'Transactions',
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                        context.verticalSpace(4),
+                        TextWidget(
+                          text: '$totalTransactions',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        context.verticalSpace(2),
+                        const TextWidget(
+                          text: 'This Month',
+                          fontSize: 10,
+                          color: AppColors.textSecondary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                context.horizontalSpace(12),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+
+            // Spending by Category Card
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const TextWidget(
+                    text: 'Spending by Category',
+                    fontSize: 16,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  const SizedBox(height: 16),
+
+                  _buildCategoryChart(expensesState),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Weekly Spending Bar Chart
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const TextWidget(
+                    text: 'This Week\'s Spending',
+                    fontSize: 16,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  const SizedBox(height: 16),
+
+                  _buildWeeklyChart(expensesState),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -212,6 +245,35 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
         }),
       ],
     );
+  }
+
+  Widget _buildWeeklyChart(ExpensesState expensesState) {
+    final weeklyData = _getWeeklyData(expensesState);
+
+    return AnimatedBarChart(
+      key: ValueKey('bar_chart_${weeklyData.length}'),
+      data: weeklyData,
+    );
+  }
+
+  List<WeeklySpendingData> _getWeeklyData(ExpensesState expensesState) {
+    final expensesByDay = expensesState.expensesByDayCurrentWeek;
+
+    // Convert map to list with formatted dates
+    final weeklyData = <WeeklySpendingData>[];
+
+    // Days of week labels
+    const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    int index = 0;
+    expensesByDay.forEach((dateKey, amount) {
+      weeklyData.add(
+        WeeklySpendingData(date: daysOfWeek[index % 7], amount: amount),
+      );
+      index++;
+    });
+
+    return weeklyData;
   }
 
   List<CategoryChartData> _getCategoryData(ExpensesState expensesState) {
