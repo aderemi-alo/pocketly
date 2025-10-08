@@ -35,8 +35,8 @@ class _AnimatedBarChartState extends State<AnimatedBarChart>
       curve: Curves.easeOutCubic,
     );
 
-    // Start animation with slight delay
-    Future.delayed(const Duration(milliseconds: 300), () {
+    // Start animation with 1 second delay
+    Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
         _controller.forward();
       }

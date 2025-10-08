@@ -9,11 +9,11 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     return const ExpensesState(isLoading: true);
   }
 
-  /// Load expenses from Isar database
+  /// Load expenses from Hive database
   Future<void> _loadExpenses() async {
     try {
       setLoading(true);
-      final expenses = await expenseIsarRepository.getAllExpenses();
+      final expenses = await expenseHiveRepository.getAllExpenses();
       state = state.copyWith(expenses: expenses, isLoading: false);
     } catch (e) {
       setError('Failed to load expenses: $e');
@@ -55,7 +55,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       state = state.copyWith(expenses: updatedExpenses, isLoading: false);
 
       // Persist to database in background
-      await expenseIsarRepository.addExpense(expense);
+      await expenseHiveRepository.addExpense(expense);
     } catch (e) {
       setError('Failed to add expense: $e');
     }
@@ -99,7 +99,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       state = state.copyWith(expenses: updatedExpenses, isLoading: false);
 
       // Persist to database in background
-      await expenseIsarRepository.updateExpense(updatedExpense);
+      await expenseHiveRepository.updateExpense(updatedExpense);
     } catch (e) {
       setError('Failed to update expense: $e');
     }
@@ -116,7 +116,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       state = state.copyWith(expenses: updatedExpenses, isLoading: false);
 
       // Persist to database in background
-      await expenseIsarRepository.deleteExpense(expenseId);
+      await expenseHiveRepository.deleteExpense(expenseId);
     } catch (e) {
       setError('Failed to delete expense: $e');
     }
@@ -132,7 +132,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
 
   // Get expenses by category
   Future<List<Expense>> getExpensesByCategory(String categoryId) async {
-    return await expenseIsarRepository.getExpensesByCategory(categoryId);
+    return await expenseHiveRepository.getExpensesByCategory(categoryId);
   }
 
   // Get expenses by date range
@@ -140,7 +140,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     DateTime startDate,
     DateTime endDate,
   ) async {
-    return await expenseIsarRepository.getExpensesByDateRange(
+    return await expenseHiveRepository.getExpensesByDateRange(
       startDate,
       endDate,
     );
@@ -151,7 +151,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     double lowerAmount,
     double upperAmount,
   ) async {
-    return await expenseIsarRepository.getExpenseByAmount(
+    return await expenseHiveRepository.getExpenseByAmount(
       lowerAmount,
       upperAmount,
     );

@@ -1,1 +1,1 @@
-export 'expense_isar_repository.dart';
+export 'expense_hive_repository.dart';

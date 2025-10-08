@@ -4,10 +4,10 @@ import 'package:pocketly/features/features.dart';
 final locator = GetIt.instance;
 
 Future<void> setupLocator() async {
-  locator.registerLazySingleton<ExpenseIsarRepository>(
-    () => ExpenseIsarRepository(),
+  locator.registerLazySingleton<ExpenseHiveRepository>(
+    () => ExpenseHiveRepository(),
   );
 }
 
-ExpenseIsarRepository get expenseIsarRepository =>
-    locator<ExpenseIsarRepository>();
+ExpenseHiveRepository get expenseHiveRepository =>
+    locator<ExpenseHiveRepository>();

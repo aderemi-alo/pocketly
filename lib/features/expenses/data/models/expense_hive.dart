@@ -1,34 +1,41 @@
-import 'package:isar/isar.dart';
+import 'package:hive/hive.dart';
 import 'package:flutter/material.dart';
 
-part 'expense_isar.g.dart';
+part 'expense_hive.g.dart';
 
-@collection
-class ExpenseIsar {
-  Id id = Isar.autoIncrement;
-
-  @Index(unique: true)
+@HiveType(typeId: 0)
+class ExpenseHive extends HiveObject {
+  @HiveField(0)
   late String expenseId;
 
+  @HiveField(1)
   late String name;
 
-  @Index()
+  @HiveField(2)
   late double amount;
 
-  @Index()
+  @HiveField(3)
   late DateTime date;
+
+  @HiveField(4)
   String? description;
 
   // Category fields
-  @Index()
+  @HiveField(5)
   late String categoryId;
+
+  @HiveField(6)
   late String categoryName;
+
+  @HiveField(7)
   late int categoryIconCodePoint;
+
+  @HiveField(8)
   late int categoryColorValue;
 
-  ExpenseIsar();
+  ExpenseHive();
 
-  ExpenseIsar.create({
+  ExpenseHive.create({
     required this.expenseId,
     required this.name,
     required this.amount,
