@@ -36,6 +36,8 @@ class AppColors {
     0xFFFFFFFF,
   ); // White - Cards, sheets, containers
 
+  static const Color black = Color(0xFF000000); // Black
+
   static const Color surfaceVariant = Color(
     0xFFF5F5F7,
   ); // Light Gray - Subtle dividers
