@@ -130,9 +130,12 @@ class _AnimatedDonutChartState extends State<AnimatedDonutChart>
     // Calculate angle of tap (-π to π, 0 is right)
     var angle = atan2(dy, dx);
 
-    // Convert to start from top (-π/2) and go clockwise
+    // Convert to start from top (-π/2) and go counter-clockwise
     angle = angle + pi / 2;
     if (angle < 0) angle += 2 * pi;
+
+    // Convert to counter-clockwise by subtracting from 2π
+    angle = 2 * pi - angle;
 
     // Calculate total value
     final total = widget.data.fold<double>(0, (sum, item) => sum + item.value);
