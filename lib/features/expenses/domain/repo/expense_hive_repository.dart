@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:pocketly/core/utils/icon_mapper.dart';
 import 'package:pocketly/features/expenses/data/database/hive_database.dart';
 import 'package:pocketly/features/expenses/data/models/expense_hive.dart';
 import 'package:pocketly/features/expenses/domain/models/expense.dart';
@@ -20,10 +21,7 @@ class ExpenseHiveRepository {
         category: Category(
           id: expenseHive.categoryId,
           name: expenseHive.categoryName,
-          icon: IconData(
-            expenseHive.categoryIconCodePoint,
-            fontFamily: 'MaterialIcons',
-          ),
+          icon: IconMapper.getIcon(expenseHive.categoryIconCodePoint),
           color: Color(expenseHive.categoryColorValue),
         ),
       );
