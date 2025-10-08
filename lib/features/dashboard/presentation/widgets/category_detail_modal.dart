@@ -70,7 +70,7 @@ class CategoryDetailModal extends StatelessWidget {
         child: GestureDetector(
           onTap: () {}, // Prevent tap from propagating to parent
           child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+            margin: context.symmetric(horizontal: 20, vertical: 40),
             constraints: BoxConstraints(
               maxWidth: 500,
               maxHeight: context.screenHeight * 0.8,
@@ -272,7 +272,7 @@ class CategoryDetailModal extends StatelessWidget {
     List<Expense> topExpenses,
   ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: context.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -282,11 +282,11 @@ class CategoryDetailModal extends StatelessWidget {
             color: AppColors.textSecondary,
             fontWeight: FontWeight.w500,
           ),
-          const SizedBox(height: 12),
+          context.verticalSpace(12),
 
           if (topExpenses.isEmpty)
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 32),
+              padding: context.symmetric(vertical: 32),
               alignment: Alignment.center,
               child: const TextWidget(
                 text: 'No transactions yet',
@@ -380,7 +380,7 @@ class CategoryDetailModal extends StatelessWidget {
               );
             }),
 
-          const SizedBox(height: 20),
+          context.verticalSpace(20),
         ],
       ),
     );

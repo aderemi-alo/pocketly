@@ -19,7 +19,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
 
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: context.all(20),
         child: Column(
           children: [
             // Summary Cards
@@ -29,7 +29,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                 Expanded(
                   flex: 3,
                   child: Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: context.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -65,13 +65,13 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                context.horizontalSpace(12),
 
                 // Transactions
                 Expanded(
                   flex: 2,
                   child: Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: context.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -110,11 +110,11 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                 context.horizontalSpace(12),
               ],
             ),
-            const SizedBox(height: 24),
+            context.verticalSpace(24),
 
             // Spending by Category Card
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: context.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
@@ -145,17 +145,17 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  context.verticalSpace(16),
 
                   _buildCategoryChart(expensesState),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            context.verticalSpace(24),
 
             // Weekly Spending Bar Chart
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: context.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
@@ -176,7 +176,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(height: 16),
+                  context.verticalSpace(16),
 
                   _buildWeeklyChart(expensesState),
                 ],
@@ -193,7 +193,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
 
     if (categoryData.isEmpty) {
       return Container(
-        padding: const EdgeInsets.symmetric(vertical: 32),
+        padding: context.symmetric(vertical: 32),
         alignment: Alignment.center,
         child: const TextWidget(
           text: 'No data yet',
@@ -218,7 +218,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        context.verticalSpace(16),
 
         // Legend
         ...categoryData.map((categoryData) {
@@ -226,7 +226,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
             onTap: () =>
                 _showCategoryDetail(categoryData.categoryId, expensesState),
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: context.only(bottom: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -245,7 +245,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                           color: categoryData.color,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      context.horizontalSpace(8),
                       TextWidget(text: categoryData.name, fontSize: 14),
                     ],
                   ),

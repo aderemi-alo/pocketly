@@ -202,9 +202,9 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
 
         // Filter Options
         if (_isOpen) ...[
-          const SizedBox(height: 12),
+          context.verticalSpace(12),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: context.all(16),
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
@@ -214,7 +214,7 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
               children: [
                 // Date Filter
                 _buildDateFilter(),
-                const SizedBox(height: 16),
+                context.verticalSpace(16),
                 // Category Filter
                 _buildCategoryFilter(),
               ],
@@ -227,7 +227,7 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
 
   Widget _buildFilterBadge(String text, VoidCallback onRemove) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: context.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),

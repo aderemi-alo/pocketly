@@ -102,7 +102,7 @@ class _AnimatedBarChartState extends State<AnimatedBarChart>
                   }).toList(),
                 ),
               ),
-              const SizedBox(height: 8),
+              context.verticalSpace(8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: widget.data.map((dayData) {
@@ -129,7 +129,7 @@ class _AnimatedBarChartState extends State<AnimatedBarChart>
     final animatedHeight = normalizedHeight * progress;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: context.symmetric(horizontal: 12),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
