@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
@@ -97,8 +96,6 @@ class CategoryDetailModal extends StatelessWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const SizedBox(height: 20),
-
                           // Header Section
                           _buildHeader(
                             context,
@@ -107,12 +104,12 @@ class CategoryDetailModal extends StatelessWidget {
                             total,
                           ),
 
-                          const SizedBox(height: 24),
+                          context.verticalSpace(12),
 
                           // Top Transactions Section
                           _buildTopTransactions(context, category, topExpenses),
 
-                          const SizedBox(height: 20),
+                          context.verticalSpace(10),
                         ],
                       ),
                     ),
@@ -146,12 +143,8 @@ class CategoryDetailModal extends StatelessWidget {
         );
       },
       child: Container(
-        padding: const EdgeInsets.all(20),
-        margin: const EdgeInsets.symmetric(horizontal: 20),
-        decoration: BoxDecoration(
-          color: category.color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(20),
-        ),
+        padding: context.all(20),
+        color: category.color.withValues(alpha: 0.08),
         child: Column(
           children: [
             // Category Icon and Name
@@ -178,10 +171,14 @@ class CategoryDetailModal extends StatelessWidget {
                       color: category.color.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Icon(category.icon, size: 28, color: category.color),
+                    child: Icon(
+                      category.icon,
+                      size: 28,
+                      color: category.color.withValues(alpha: 0.7),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                context.horizontalSpace(12),
 
                 // Category Name and Count
                 Expanded(
@@ -190,15 +187,13 @@ class CategoryDetailModal extends StatelessWidget {
                     children: [
                       TextWidget(
                         text: category.name,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
-                      const SizedBox(height: 2),
                       TextWidget(
                         text:
                             '$transactionCount transaction${transactionCount != 1 ? 's' : ''}',
-                        fontSize: 13,
+                        fontSize: 12,
                         color: AppColors.textSecondary,
                       ),
                     ],
@@ -206,25 +201,24 @@ class CategoryDetailModal extends StatelessWidget {
                 ),
 
                 // Close Button
-                GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      LucideIcons.x,
-                      size: 20,
-                      color: AppColors.textSecondary,
+                SizedBox(
+                  height: 56,
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: const Icon(
+                        LucideIcons.x,
+                        size: 20,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 16),
+            context.verticalSpace(16),
 
             // Total Spent Card
             TweenAnimationBuilder<double>(
@@ -241,7 +235,8 @@ class CategoryDetailModal extends StatelessWidget {
                 );
               },
               child: Container(
-                padding: const EdgeInsets.all(16),
+                width: double.infinity,
+                padding: context.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -251,15 +246,15 @@ class CategoryDetailModal extends StatelessWidget {
                   children: [
                     const TextWidget(
                       text: 'Total Spent',
-                      fontSize: 11,
+                      fontSize: 12,
                       color: AppColors.textSecondary,
                     ),
-                    const SizedBox(height: 4),
+                    context.verticalSpace(2),
                     TextWidget(
                       text: '₦${FormatUtils.formatCurrency(total)}',
                       fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: -0.5,
                     ),
                   ],
                 ),
@@ -285,7 +280,7 @@ class CategoryDetailModal extends StatelessWidget {
             text: 'Top Transactions',
             fontSize: 15,
             color: AppColors.textSecondary,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
           ),
           const SizedBox(height: 12),
 
@@ -318,62 +313,66 @@ class CategoryDetailModal extends StatelessWidget {
                   );
                 },
                 child: Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
+                  padding: context.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8F9FE),
+                    color: AppColors.background,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
                       // Rank Badge
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: category.color.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Center(
-                          child: TextWidget(
-                            text: '#${index + 1}',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: category.color,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: context.only(
+                              left: 5,
+                              right: 5,
+                              top: 3,
+                              bottom: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: category.color.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: TextWidget(
+                              text: '#${index + 1}',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: category.color,
+                            ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
+                          context.horizontalSpace(8),
 
-                      // Expense Details
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            TextWidget(
-                              text: expense.name,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
-                            const SizedBox(height: 2),
-                            TextWidget(
-                              text: DateFormat(
-                                'MMM d, yyyy',
-                              ).format(expense.date),
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
-                          ],
-                        ),
+                          // Expense Details
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextWidget(
+                                text: expense.name,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              context.verticalSpace(4),
+                              TextWidget(
+                                text: DateFormat(
+                                  'MMM d, yyyy',
+                                ).format(expense.date),
+                                fontSize: 11,
+                                color: AppColors.textSecondary,
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
+                      const Spacer(),
 
                       // Amount
                       TextWidget(
                         text: '₦${FormatUtils.formatCurrency(expense.amount)}',
                         fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: -0.3,
                       ),
                     ],
                   ),
