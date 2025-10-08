@@ -157,7 +157,6 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                       context.verticalSpace(8),
                       Row(
                         mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             '₦',
