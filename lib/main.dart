@@ -1,20 +1,14 @@
-import 'package:flutter/material.dart';
+import 'package:pocketly/app/app.dart';
+import 'package:pocketly/core/core.dart';
+import 'package:pocketly/features/expenses/data/database/hive_database.dart';
 
-void main() {
-  runApp(const MainApp());
-}
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  // Initialize Hive
+  await HiveDatabase.init();
 
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
-    );
-  }
+  // Initialize locator
+  await setupLocator();
+  runApp(const ProviderScope(child: PocketlyApp()));
 }
