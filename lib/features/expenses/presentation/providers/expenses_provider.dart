@@ -4,17 +4,30 @@ import 'package:pocketly/features/features.dart';
 class ExpensesNotifier extends Notifier<ExpensesState> {
   @override
   ExpensesState build() {
-    return const ExpensesState();
+    // Initialize with loading state and load data after build completes
+    Future.microtask(() => _loadExpenses());
+    return const ExpensesState(isLoading: true);
+  }
+
+  /// Load expenses from Isar database
+  Future<void> _loadExpenses() async {
+    try {
+      setLoading(true);
+      final expenses = await expenseIsarRepository.getAllExpenses();
+      state = state.copyWith(expenses: expenses, isLoading: false);
+    } catch (e) {
+      setError('Failed to load expenses: $e');
+    }
   }
 
   /// Add expense with validation
-  void addExpense({
+  Future<void> addExpense({
     required String name,
     String? description,
     required double amount,
     required Category category,
     required DateTime date,
-  }) {
+  }) async {
     // Simple validation
     if (name.trim().isEmpty) {
       setError('Expense name is required');
@@ -26,27 +39,37 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       return;
     }
 
-    final expense = Expense(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: name.trim(),
-      amount: amount,
-      category: category,
-      date: date,
-      description: description,
-    );
+    try {
+      setLoading(true);
+      final expense = Expense(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: name.trim(),
+        amount: amount,
+        category: category,
+        date: date,
+        description: description,
+      );
 
-    state = state.copyWith(expenses: [...state.expenses, expense]);
+      // Update state immediately for UI responsiveness
+      final updatedExpenses = [...state.expenses, expense];
+      state = state.copyWith(expenses: updatedExpenses, isLoading: false);
+
+      // Persist to database in background
+      await expenseIsarRepository.addExpense(expense);
+    } catch (e) {
+      setError('Failed to add expense: $e');
+    }
   }
 
   /// Update expense with validation
-  void updateExpense({
+  Future<void> updateExpense({
     required String expenseId,
     required String name,
     String? description,
     required double amount,
     required Category category,
     required DateTime date,
-  }) {
+  }) async {
     // Simple validation
     if (name.trim().isEmpty) {
       setError('Expense name is required');
@@ -58,28 +81,45 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       return;
     }
 
-    final updatedExpense = Expense(
-      id: expenseId,
-      name: name.trim(),
-      amount: amount,
-      category: category,
-      date: date,
-      description: description,
-    );
+    try {
+      setLoading(true);
+      final updatedExpense = Expense(
+        id: expenseId,
+        name: name.trim(),
+        amount: amount,
+        category: category,
+        date: date,
+        description: description,
+      );
 
-    final updatedExpenses = state.expenses.map((expense) {
-      return expense.id == expenseId ? updatedExpense : expense;
-    }).toList();
+      // Update state immediately for UI responsiveness
+      final updatedExpenses = state.expenses.map((expense) {
+        return expense.id == expenseId ? updatedExpense : expense;
+      }).toList();
+      state = state.copyWith(expenses: updatedExpenses, isLoading: false);
 
-    state = state.copyWith(expenses: updatedExpenses);
+      // Persist to database in background
+      await expenseIsarRepository.updateExpense(updatedExpense);
+    } catch (e) {
+      setError('Failed to update expense: $e');
+    }
   }
 
-  void deleteExpense(String expenseId) {
-    final updatedExpenses = state.expenses
-        .where((expense) => expense.id != expenseId)
-        .toList();
+  Future<void> deleteExpense(String expenseId) async {
+    try {
+      setLoading(true);
 
-    state = state.copyWith(expenses: updatedExpenses);
+      // Update state immediately for UI responsiveness
+      final updatedExpenses = state.expenses
+          .where((expense) => expense.id != expenseId)
+          .toList();
+      state = state.copyWith(expenses: updatedExpenses, isLoading: false);
+
+      // Persist to database in background
+      await expenseIsarRepository.deleteExpense(expenseId);
+    } catch (e) {
+      setError('Failed to delete expense: $e');
+    }
   }
 
   void setLoading(bool isLoading) {
@@ -91,28 +131,53 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
   }
 
   // Get expenses by category
-  List<Expense> getExpensesByCategory(String categoryId) {
-    return state.expenses
-        .where((expense) => expense.category.id == categoryId)
-        .toList();
+  Future<List<Expense>> getExpensesByCategory(String categoryId) async {
+    return await expenseIsarRepository.getExpensesByCategory(categoryId);
   }
 
   // Get expenses by date range
-  List<Expense> getExpensesByDateRange(DateTime startDate, DateTime endDate) {
-    return state.expenses.where((expense) {
-      return expense.date.isAfter(
-            startDate.subtract(const Duration(days: 1)),
-          ) &&
-          expense.date.isBefore(endDate.add(const Duration(days: 1)));
-    }).toList();
+  Future<List<Expense>> getExpensesByDateRange(
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    return await expenseIsarRepository.getExpensesByDateRange(
+      startDate,
+      endDate,
+    );
+  }
+
+  // Get expenses by amount
+  Future<List<Expense>> getExpensesByAmount(
+    double lowerAmount,
+    double upperAmount,
+  ) async {
+    return await expenseIsarRepository.getExpenseByAmount(
+      lowerAmount,
+      upperAmount,
+    );
   }
 
   // Get total amount by category
-  double getTotalAmountByCategory(String categoryId) {
-    return getExpensesByCategory(
-      categoryId,
-    ).fold(0.0, (sum, expense) => sum + expense.amount);
+  Future<double> getTotalAmountByCategory(String categoryId) async {
+    final expenses = await getExpensesByCategory(categoryId);
+    return expenses.fold<double>(0.0, (sum, expense) => sum + expense.amount);
   }
+
+  // Refresh expenses from database
+  Future<void> refreshExpenses() async {
+    await _loadExpenses();
+  }
+
+  /// Persist current state to database without affecting UI
+  // Future<void> _persistStateToDatabase() async {
+  //   try {
+  //     // This method can be used to sync state changes to database
+  //     // Currently not needed since we persist immediately after state changes
+  //   } catch (e) {
+  //     // Log persistence errors but don't affect UI state
+  //     debugPrint('Failed to persist state to database: $e');
+  //   }
+  // }
 }
 
 final expensesProvider = NotifierProvider<ExpensesNotifier, ExpensesState>(() {
