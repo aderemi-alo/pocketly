@@ -191,6 +191,7 @@ class _ScaffoldWithNestedNavigationState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: _buildAnimatedAppBar(),
       body: _buildCarouselBody(),
       bottomNavigationBar: BottomNavigationBar(

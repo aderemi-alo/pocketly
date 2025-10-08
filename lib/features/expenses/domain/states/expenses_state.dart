@@ -27,6 +27,15 @@ class ExpensesState {
     return expenses.fold(0.0, (sum, expense) => sum + expense.amount);
   }
 
+  double get totalAmountLast30Days {
+    final now = DateTime.now();
+    final thirtyDaysAgo = now.subtract(const Duration(days: 30));
+
+    return expenses
+        .where((expense) => expense.date.isAfter(thirtyDaysAgo))
+        .fold(0.0, (sum, expense) => sum + expense.amount);
+  }
+
   List<Expense> get expensesByDate {
     final sortedExpenses = List<Expense>.from(expenses);
     sortedExpenses.sort((a, b) => b.date.compareTo(a.date));

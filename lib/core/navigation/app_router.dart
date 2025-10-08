@@ -1,6 +1,5 @@
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
-import 'package:pocketly/features/shared/widgets/scaffold_with_nested_navigation.dart';
 
 class AppRoutes {
   static const dashboard = '/';
