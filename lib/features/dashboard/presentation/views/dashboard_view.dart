@@ -212,6 +212,9 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
             child: AnimatedDonutChart(
               key: ValueKey('donut_chart_${categoryData.length}'),
               data: categoryData,
+              onCategoryTap: (categoryId) {
+                _showCategoryDetail(categoryId, expensesState);
+              },
             ),
           ),
         ),
@@ -219,37 +222,41 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
 
         // Legend
         ...categoryData.map((categoryData) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: categoryData.color.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
+          return GestureDetector(
+            onTap: () =>
+                _showCategoryDetail(categoryData.categoryId, expensesState),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: categoryData.color.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          categoryData.icon,
+                          size: 16,
+                          color: categoryData.color,
+                        ),
                       ),
-                      child: Icon(
-                        categoryData.icon,
-                        size: 16,
-                        color: categoryData.color,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    TextWidget(text: categoryData.name, fontSize: 14),
-                  ],
-                ),
-                TextWidget(
-                  text: '${categoryData.percentage.toStringAsFixed(1)} %',
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                  letterSpacing: -0.5,
-                ),
-              ],
+                      const SizedBox(width: 8),
+                      TextWidget(text: categoryData.name, fontSize: 14),
+                    ],
+                  ),
+                  TextWidget(
+                    text: '${categoryData.percentage.toStringAsFixed(1)} %',
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    letterSpacing: -0.5,
+                  ),
+                ],
+              ),
             ),
           );
         }),
@@ -306,6 +313,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
 
       categoryData.add(
         CategoryChartData(
+          categoryId: categoryId,
           name: category.name,
           value: totalForCategory,
           percentage: (totalForCategory / totalAmount) * 100,
@@ -319,5 +327,13 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     categoryData.sort((a, b) => b.value.compareTo(a.value));
 
     return categoryData;
+  }
+
+  void _showCategoryDetail(String categoryId, ExpensesState expensesState) {
+    CategoryDetailModal.show(
+      context: context,
+      categoryId: categoryId,
+      expenses: expensesState.expenses,
+    );
   }
 }

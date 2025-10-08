@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class CategoryChartData {
+  final String categoryId;
   final String name;
   final double value;
   final double percentage;
@@ -9,6 +10,7 @@ class CategoryChartData {
   final IconData icon;
 
   CategoryChartData({
+    required this.categoryId,
     required this.name,
     required this.value,
     required this.percentage,
@@ -21,12 +23,14 @@ class AnimatedDonutChart extends StatefulWidget {
   final List<CategoryChartData> data;
   final double size;
   final double strokeWidth;
+  final Function(String categoryId)? onCategoryTap;
 
   const AnimatedDonutChart({
     super.key,
     required this.data,
     this.size = 160,
     this.strokeWidth = 20,
+    this.onCategoryTap,
   });
 
   @override
@@ -78,16 +82,82 @@ class _AnimatedDonutChartState extends State<AnimatedDonutChart>
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
-        return CustomPaint(
-          size: Size(widget.size, widget.size),
-          painter: DonutChartPainter(
-            data: widget.data,
-            strokeWidth: widget.strokeWidth,
-            progress: _animation.value,
+        return GestureDetector(
+          onTapUp: (details) {
+            if (widget.onCategoryTap == null) return;
+
+            final categoryId = _getCategoryAtPosition(
+              details.localPosition,
+              Size(widget.size, widget.size),
+            );
+
+            if (categoryId != null) {
+              widget.onCategoryTap!(categoryId);
+            }
+          },
+          child: CustomPaint(
+            size: Size(widget.size, widget.size),
+            painter: DonutChartPainter(
+              data: widget.data,
+              strokeWidth: widget.strokeWidth,
+              progress: _animation.value,
+            ),
           ),
         );
       },
     );
+  }
+
+  String? _getCategoryAtPosition(Offset position, Size size) {
+    if (widget.data.isEmpty) return null;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - widget.strokeWidth) / 2;
+
+    // Calculate distance from center
+    final dx = position.dx - center.dx;
+    final dy = position.dy - center.dy;
+    final distance = sqrt(dx * dx + dy * dy);
+
+    // Check if tap is within the donut ring
+    final outerRadius = radius + widget.strokeWidth / 2;
+    final innerRadius = radius - widget.strokeWidth / 2;
+
+    if (distance < innerRadius || distance > outerRadius) {
+      return null; // Tap is outside the donut ring
+    }
+
+    // Calculate angle of tap (-π to π, 0 is right)
+    var angle = atan2(dy, dx);
+
+    // Convert to start from top (-π/2) and go clockwise
+    angle = angle + pi / 2;
+    if (angle < 0) angle += 2 * pi;
+
+    // Calculate total value
+    final total = widget.data.fold<double>(0, (sum, item) => sum + item.value);
+
+    // Calculate gap angle
+    final gapAngle = 5.0 / radius;
+    final totalGapSpace = widget.data.length * gapAngle;
+    final availableAngle = 2 * pi - totalGapSpace;
+
+    // Find which segment was tapped (going counter-clockwise from top)
+    double startAngle = 0;
+
+    for (int i = 0; i < widget.data.length; i++) {
+      final category = widget.data[i];
+      final sweepAngle = (category.value / total) * availableAngle;
+      final endAngle = startAngle + sweepAngle;
+
+      if (angle >= startAngle && angle < endAngle) {
+        return category.categoryId;
+      }
+
+      startAngle = endAngle + gapAngle;
+    }
+
+    return null;
   }
 }
 
