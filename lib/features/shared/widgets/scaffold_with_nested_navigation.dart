@@ -178,11 +178,11 @@ class _ScaffoldWithNestedNavigationState
     // Create individual page content for each tab without app bars
     switch (index) {
       case 0:
-        return const _DashboardContent();
+        return const DashboardView();
       case 1:
-        return const _ExpensesContent();
+        return const ExpensesView();
       case 2:
-        return const _SettingsContent();
+        return const SettingsView();
       default:
         return const SizedBox.shrink();
     }
@@ -212,107 +212,5 @@ class _ScaffoldWithNestedNavigationState
         ],
       ),
     );
-  }
-}
-
-// Content wrappers without app bars for carousel animation
-class _DashboardContent extends StatelessWidget {
-  const _DashboardContent();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text('Dashboard')));
-  }
-}
-
-class _ExpensesContent extends ConsumerWidget {
-  const _ExpensesContent();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final expensesState = ref.watch(expensesProvider);
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Padding(
-        padding: context.symmetric(horizontal: 16, vertical: 24),
-        child: expensesState.expenses.isEmpty
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: context.all(20),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.4),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        LucideIcons.receipt,
-                        size: 60,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    context.verticalSpace(16),
-                    Text('No expenses yet', style: theme.textTheme.titleLarge),
-                    context.verticalSpace(8),
-                    Text(
-                      'Start tracking by adding your first expense',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            : _buildExpensesList(expensesState),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(AppRoutes.addExpense),
-        child: const Icon(LucideIcons.plus),
-      ),
-    );
-  }
-
-  Widget _buildExpensesList(ExpensesState expensesState) {
-    final groupedExpenses = expensesState.expensesByMonth;
-
-    if (groupedExpenses.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    // Sort months by date (newest first)
-    final sortedMonths = groupedExpenses.keys.toList()
-      ..sort((a, b) => b.compareTo(a));
-
-    return ListView.builder(
-      itemCount: sortedMonths.length,
-      itemBuilder: (context, index) {
-        final monthKey = sortedMonths[index];
-        final monthExpenses = groupedExpenses[monthKey]!;
-        final totalAmount = monthExpenses.fold(
-          0.0,
-          (sum, expense) => sum + expense.amount,
-        );
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            MonthHeader(monthKey: monthKey, totalAmount: totalAmount),
-            ...monthExpenses.map((expense) => ExpenseCard(expense: expense)),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _SettingsContent extends StatelessWidget {
-  const _SettingsContent();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text('Settings')));
   }
 }
