@@ -46,7 +46,25 @@ class _AnimatedDonutChartState extends State<AnimatedDonutChart>
       vsync: this,
     );
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
-    _controller.forward();
+
+    // Start animation with 1 second delay
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        _controller.forward();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(AnimatedDonutChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reset animation when data changes
+    if (oldWidget.data != widget.data) {
+      _controller.reset();
+      if (mounted) {
+        _controller.forward();
+      }
+    }
   }
 
   @override

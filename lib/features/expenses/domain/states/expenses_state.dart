@@ -38,7 +38,7 @@ class ExpensesState {
 
   double get totalAmountCurrentMonth {
     final now = DateTime.now();
-    final startOfMonth = DateTime(now.year, now.month, 1);
+    final startOfMonth = DateTime(now.year, now.month);
 
     return expenses
         .where(
@@ -51,7 +51,7 @@ class ExpensesState {
 
   int get transactionCountCurrentMonth {
     final now = DateTime.now();
-    final startOfMonth = DateTime(now.year, now.month, 1);
+    final startOfMonth = DateTime(now.year, now.month);
 
     return expenses
         .where(
@@ -99,7 +99,7 @@ class ExpensesState {
 
   Map<String, List<Expense>> get expensesByCategoryCurrentMonth {
     final now = DateTime.now();
-    final startOfMonth = DateTime(now.year, now.month, 1);
+    final startOfMonth = DateTime(now.year, now.month);
 
     final Map<String, List<Expense>> grouped = {};
     for (final expense in expenses) {

@@ -165,7 +165,12 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
         // Animated Donut Chart
         SizedBox(
           height: 200,
-          child: Center(child: AnimatedDonutChart(data: categoryData)),
+          child: Center(
+            child: AnimatedDonutChart(
+              key: ValueKey('donut_chart_${categoryData.length}'),
+              data: categoryData,
+            ),
+          ),
         ),
         const SizedBox(height: 16),
 
@@ -192,11 +197,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    TextWidget(
-                      text: categoryData.name,
-                      fontSize: 14,
-                      color: AppColors.textPrimary,
-                    ),
+                    TextWidget(text: categoryData.name, fontSize: 14),
                   ],
                 ),
                 TextWidget(
