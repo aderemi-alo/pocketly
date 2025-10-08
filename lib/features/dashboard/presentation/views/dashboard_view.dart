@@ -188,7 +188,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                       height: 32,
                       decoration: BoxDecoration(
                         color: categoryData.color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
+                        shape: BoxShape.circle,
                       ),
                       child: Icon(
                         categoryData.icon,
@@ -201,9 +201,10 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                   ],
                 ),
                 TextWidget(
-                  text: '${categoryData.percentage.toStringAsFixed(1)}%',
+                  text: '${categoryData.percentage.toStringAsFixed(1)} %',
                   fontSize: 14,
                   color: AppColors.textSecondary,
+                  letterSpacing: -0.5,
                 ),
               ],
             ),

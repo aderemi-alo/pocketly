@@ -10,6 +10,7 @@ class TextWidget extends StatelessWidget {
     this.maxLines,
     this.overflow,
     this.softWrap,
+    this.letterSpacing,
   });
 
   final String text;
@@ -19,7 +20,7 @@ class TextWidget extends StatelessWidget {
   final int? maxLines;
   final TextOverflow? overflow;
   final bool? softWrap;
-
+  final double? letterSpacing;
   @override
   Widget build(BuildContext context) {
     return Text(
@@ -28,6 +29,7 @@ class TextWidget extends StatelessWidget {
         fontSize: fontSize,
         fontWeight: fontWeight,
         color: color,
+        letterSpacing: letterSpacing,
       ),
       maxLines: maxLines,
       overflow: overflow,

@@ -104,6 +104,11 @@ class DonutChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Don't render anything if progress is 0 or data is empty
+    if (progress <= 0 || data.isEmpty) {
+      return;
+    }
+
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - strokeWidth) / 2;
     final rect = Rect.fromCircle(center: center, radius: radius);
@@ -111,15 +116,37 @@ class DonutChartPainter extends CustomPainter {
     // Calculate total value
     final total = data.fold<double>(0, (sum, item) => sum + item.value);
 
+    // Calculate gap angle in radians (5 pixels converted to radians)
+    final gapAngle = 5.0 / radius; // 5 pixel gap converted to radians
+
+    // Calculate total gap space needed (number of gaps = number of sections)
+    final totalGapSpace = data.length * gapAngle;
+
+    // Calculate the total available angle minus gaps
+    final availableAngle = (2 * pi * progress) - totalGapSpace;
+
+    // Don't render if available angle is too small
+    if (availableAngle <= 0) {
+      return;
+    }
+
     // Start angle at top (270 degrees = -90 degrees = top of circle)
     // For anti-clockwise, we'll draw in reverse order
     double startAngle = -pi / 2; // Start at top
 
-    for (final category in data) {
-      final sweepAngle = (category.value / total) * 2 * pi * progress;
+    for (int i = 0; i < data.length; i++) {
+      final category = data[i];
+
+      // Calculate proportional sweep angle based on available space
+      final proportionalSweepAngle = (category.value / total) * availableAngle;
+
+      // Skip sections that are too small to render
+      if (proportionalSweepAngle <= 0) {
+        continue;
+      }
 
       final paint = Paint()
-        ..color = category.color
+        ..color = category.color.withValues(alpha: 0.7)
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.butt;
@@ -128,12 +155,15 @@ class DonutChartPainter extends CustomPainter {
       canvas.drawArc(
         rect,
         startAngle,
-        -sweepAngle, // Negative for anti-clockwise
+        -proportionalSweepAngle, // Negative for anti-clockwise
         false,
         paint,
       );
 
-      startAngle -= sweepAngle; // Subtract for anti-clockwise direction
+      // Move to next section position (subtract sweep angle and gap)
+      startAngle -=
+          (proportionalSweepAngle +
+          gapAngle); // Subtract for anti-clockwise direction
     }
   }
 
