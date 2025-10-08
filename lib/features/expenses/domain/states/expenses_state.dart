@@ -36,6 +36,32 @@ class ExpensesState {
         .fold(0.0, (sum, expense) => sum + expense.amount);
   }
 
+  double get totalAmountCurrentMonth {
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+
+    return expenses
+        .where(
+          (expense) =>
+              expense.date.isAfter(startOfMonth) ||
+              expense.date.isAtSameMomentAs(startOfMonth),
+        )
+        .fold(0.0, (sum, expense) => sum + expense.amount);
+  }
+
+  int get transactionCountCurrentMonth {
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+
+    return expenses
+        .where(
+          (expense) =>
+              expense.date.isAfter(startOfMonth) ||
+              expense.date.isAtSameMomentAs(startOfMonth),
+        )
+        .length;
+  }
+
   List<Expense> get expensesByDate {
     final sortedExpenses = List<Expense>.from(expenses);
     sortedExpenses.sort((a, b) => b.date.compareTo(a.date));
@@ -50,6 +76,41 @@ class ExpensesState {
         grouped[categoryId] = [];
       }
       grouped[categoryId]!.add(expense);
+    }
+    return grouped;
+  }
+
+  Map<String, List<Expense>> get expensesByCategoryLast30Days {
+    final now = DateTime.now();
+    final thirtyDaysAgo = now.subtract(const Duration(days: 30));
+
+    final Map<String, List<Expense>> grouped = {};
+    for (final expense in expenses) {
+      if (expense.date.isAfter(thirtyDaysAgo)) {
+        final categoryId = expense.category.id;
+        if (grouped[categoryId] == null) {
+          grouped[categoryId] = [];
+        }
+        grouped[categoryId]!.add(expense);
+      }
+    }
+    return grouped;
+  }
+
+  Map<String, List<Expense>> get expensesByCategoryCurrentMonth {
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+
+    final Map<String, List<Expense>> grouped = {};
+    for (final expense in expenses) {
+      if (expense.date.isAfter(startOfMonth) ||
+          expense.date.isAtSameMomentAs(startOfMonth)) {
+        final categoryId = expense.category.id;
+        if (grouped[categoryId] == null) {
+          grouped[categoryId] = [];
+        }
+        grouped[categoryId]!.add(expense);
+      }
     }
     return grouped;
   }
