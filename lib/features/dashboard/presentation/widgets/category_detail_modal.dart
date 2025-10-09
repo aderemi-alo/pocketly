@@ -313,6 +313,9 @@ class CategoryDetailModal extends StatelessWidget {
                   );
                 },
                 child: Container(
+                  margin: context.only(
+                    bottom: index == topExpenses.length - 1 ? 0 : 10,
+                  ),
                   padding: context.all(16),
                   decoration: BoxDecoration(
                     color: AppColors.background,
@@ -321,51 +324,49 @@ class CategoryDetailModal extends StatelessWidget {
                   child: Row(
                     children: [
                       // Rank Badge
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: context.only(
-                              left: 5,
-                              right: 5,
-                              top: 3,
-                              bottom: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: category.color.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(100),
-                            ),
-                            child: TextWidget(
-                              text: '#${index + 1}',
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: category.color,
-                            ),
-                          ),
-                          context.horizontalSpace(8),
-
-                          // Expense Details
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TextWidget(
-                                text: expense.name,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              context.verticalSpace(4),
-                              TextWidget(
-                                text: DateFormat(
-                                  'MMM d, yyyy',
-                                ).format(expense.date),
-                                fontSize: 11,
-                                color: AppColors.textSecondary,
-                              ),
-                            ],
-                          ),
-                        ],
+                      Container(
+                        padding: context.only(
+                          left: 5,
+                          right: 5,
+                          top: 3,
+                          bottom: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: category.color.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: TextWidget(
+                          text: '#${index + 1}',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: category.color,
+                        ),
                       ),
-                      const Spacer(),
+                      context.horizontalSpace(8),
+
+                      // Expense Details - Wrap in Expanded to handle overflow
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextWidget(
+                              text: expense.name,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                            context.verticalSpace(4),
+                            TextWidget(
+                              text: DateFormat(
+                                'MMM d, yyyy',
+                              ).format(expense.date),
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                            ),
+                          ],
+                        ),
+                      ),
 
                       // Amount
                       TextWidget(
