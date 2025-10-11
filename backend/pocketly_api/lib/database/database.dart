@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:uuid/uuid.dart';
+
 part 'database.g.dart';
 
 const _uuid = Uuid();
@@ -25,6 +26,32 @@ class Users extends Table {
 
   /// The date and time the user was updated.
   DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Defines the 'refresh_tokens' table.
+
+class RefreshTokens extends Table {
+  /// The ID of the refresh token.
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
+
+  /// The user the refresh token belongs to..
+  TextColumn get userId =>
+      text().references(Users, #id, onDelete: KeyAction.cascade)();
+
+  /// The hash of the refresh token.
+  TextColumn get tokenHash => text().unique()();
+
+  /// The device ID of the refresh token.
+  TextColumn get deviceId => text()();
+
+  /// The date and time the refresh token was created.
+  DateTimeColumn get expiresAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// The date and time the refresh token was created.
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
   Set<Column> get primaryKey => {id};
