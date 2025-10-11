@@ -1,18 +1,21 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:sqlite3/sqlite3.dart';
+import 'package:uuid/uuid.dart';
 part 'database.g.dart';
+
+const _uuid = Uuid();
 
 /// Defines the 'users' table.
 class Users extends Table {
   /// The ID of the user.
-  IntColumn get id => integer().autoIncrement()();
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
 
   /// The name of the user.
-  TextColumn get name => text().unique()();
+  TextColumn get name => text()();
 
   /// The email of the user.
-  TextColumn get email => text()();
+  TextColumn get email => text().unique()();
 
   /// The password hash of the user.
   TextColumn get passwordHash => text()();
@@ -22,12 +25,15 @@ class Users extends Table {
 
   /// The date and time the user was updated.
   DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 /// Defines the 'categories' table.
 class Categories extends Table {
   /// The ID of the category.
-  IntColumn get id => integer().autoIncrement()();
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
 
   /// The name of the category.
   TextColumn get name => text()();
@@ -48,6 +54,9 @@ class Categories extends Table {
 
   /// The date and time the category was updated.
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 /// Defines the 'expenses' table.
@@ -82,6 +91,9 @@ class Expenses extends Table {
 
   /// The date and time the expense was updated.
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 @DriftDatabase(tables: [Expenses, Users, Categories])
