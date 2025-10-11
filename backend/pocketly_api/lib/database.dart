@@ -45,9 +45,8 @@ class Categories extends Table {
   TextColumn get color => text()();
 
   /// NULL = predefined category, NOT NULL = user's custom category
-  IntColumn get userId => integer()
-      .nullable()
-      .references(Users, #id, onDelete: KeyAction.cascade)();
+  TextColumn get userId =>
+      text().nullable().references(Users, #id, onDelete: KeyAction.cascade)();
 
   /// The date and time the category was created.
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -62,12 +61,11 @@ class Categories extends Table {
 /// Defines the 'expenses' table.
 class Expenses extends Table {
   /// The ID of the expense.
-  IntColumn get id => integer().autoIncrement()();
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
 
   /// The user the expense belongs to.
-  IntColumn get userId => integer()
-      .nullable()
-      .references(Users, #id, onDelete: KeyAction.cascade)();
+  TextColumn get userId =>
+      text().nullable().references(Users, #id, onDelete: KeyAction.cascade)();
 
   /// The name of the expense.
   TextColumn get name => text()();
@@ -82,7 +80,7 @@ class Expenses extends Table {
   DateTimeColumn get date => dateTime()();
 
   /// The category of the expense.
-  IntColumn get categoryId => integer()
+  TextColumn get categoryId => text()
       .nullable()
       .references(Categories, #id, onDelete: KeyAction.restrict)();
 
