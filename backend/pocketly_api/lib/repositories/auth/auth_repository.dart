@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:pocketly_api/database/database.dart';
 import 'package:pocketly_api/utils/encryption.dart';
-import 'package:pocketly_api/utils/utils.dart';
 
 /// Repository for authentication-related operations
 class AuthRepository {
@@ -12,7 +11,6 @@ class AuthRepository {
 
   /// Finds a user by email
   Future<User?> findUserByEmail(String email) async {
-    AppLogger.info('Finding user by email: $email');
     return (_db.select(_db.users)..where((user) => user.email.equals(email)))
         .getSingleOrNull();
   }

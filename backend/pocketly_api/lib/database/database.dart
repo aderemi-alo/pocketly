@@ -121,7 +121,7 @@ class Expenses extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [Expenses, Users, Categories])
+@DriftDatabase(tables: [Expenses, Users, Categories, RefreshTokens])
 
 /// The database for the Pocketly app.
 class PocketlyDatabase extends _$PocketlyDatabase {

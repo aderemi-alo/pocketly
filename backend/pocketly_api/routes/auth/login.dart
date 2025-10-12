@@ -28,7 +28,6 @@ Future<Response> _login(RequestContext context) async {
 
     // Find user
     final user = await authRepo.findUserByEmail(email);
-    AppLogger.info('Found user: $user');
 
     // Check if user exists and password matches
     if (user == null || !authRepo.verifyPassword(password, user.passwordHash)) {
