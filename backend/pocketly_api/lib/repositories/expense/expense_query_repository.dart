@@ -15,7 +15,9 @@ class ExpenseQueryRepository {
     DateTime? startDate,
     DateTime? endDate,
     int? limit,
-    int? offset,
+    int? page,
+    String? sortBy = 'date',
+    String? sortOrder = 'desc',
   }) async {
     final query = _db.select(_db.expenses)
       ..where((e) => e.userId.equals(userId));
@@ -33,14 +35,17 @@ class ExpenseQueryRepository {
       query.where((e) => e.date.isSmallerOrEqualValue(endDate));
     }
 
-    // Order by date descending
+    // Order by sortBy and sortOrder
     query.orderBy([
-      (e) => OrderingTerm(expression: e.date, mode: OrderingMode.desc),
+      (e) => OrderingTerm(
+            expression: sortBy == 'date' ? e.date : e.amount,
+            mode: sortOrder == 'desc' ? OrderingMode.desc : OrderingMode.asc,
+          ),
     ]);
 
     // Apply pagination
     if (limit != null) {
-      query.limit(limit, offset: offset ?? 0);
+      query.limit(limit, offset: page != null ? (page - 1) * limit : 0);
     }
 
     return query.get();
@@ -103,7 +108,9 @@ class ExpenseQueryRepository {
     DateTime? startDate,
     DateTime? endDate,
     int? limit,
-    int? offset,
+    int? page,
+    String? sortBy = 'date',
+    String? sortOrder = 'desc',
   }) async {
     final query = _db.select(_db.expenses).join([
       leftOuterJoin(
@@ -113,7 +120,11 @@ class ExpenseQueryRepository {
     ])
       ..where(_db.expenses.userId.equals(userId))
       ..orderBy([
-        OrderingTerm(expression: _db.expenses.date, mode: OrderingMode.desc),
+        OrderingTerm(
+          expression:
+              sortBy == 'date' ? _db.expenses.date : _db.expenses.amount,
+          mode: sortOrder == 'desc' ? OrderingMode.desc : OrderingMode.asc,
+        ),
       ]);
 
     // Apply optional filters
@@ -131,7 +142,7 @@ class ExpenseQueryRepository {
 
     // Apply pagination
     if (limit != null) {
-      query.limit(limit, offset: offset);
+      query.limit(limit, offset: page != null ? (page - 1) * limit : 0);
     }
 
     final results = await query.get();

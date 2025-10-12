@@ -27,14 +27,16 @@ Future<Response> _getExpenses(RequestContext context) async {
     // Parse query parameters
     final queryParams = context.request.uri.queryParameters;
     final limitStr = queryParams['limit'];
-    final offsetStr = queryParams['offset'];
+    final pageStr = queryParams['page'];
     final categoryId = queryParams['categoryId'];
     final startDateStr = queryParams['startDate'];
     final endDateStr = queryParams['endDate'];
     final includeCategory = queryParams['includeCategory'] == 'true';
+    final sortBy = queryParams['sortBy'];
+    final sortOrder = queryParams['sortOrder'];
 
     final limit = limitStr != null ? int.tryParse(limitStr) ?? 50 : 50;
-    final offset = offsetStr != null ? int.tryParse(offsetStr) ?? 0 : 0;
+    final page = pageStr != null ? int.tryParse(pageStr) ?? 1 : 1;
 
     // Parse date range if provided
     DateTime? startDate;
@@ -62,7 +64,9 @@ Future<Response> _getExpenses(RequestContext context) async {
         startDate: startDate,
         endDate: endDate,
         limit: limit,
-        offset: offset,
+        page: page,
+        sortBy: sortBy,
+        sortOrder: sortOrder,
       );
 
       expenseResponses = expensesWithCategories
@@ -87,7 +91,9 @@ Future<Response> _getExpenses(RequestContext context) async {
         startDate: startDate,
         endDate: endDate,
         limit: limit,
-        offset: offset,
+        page: page,
+        sortBy: sortBy,
+        sortOrder: sortOrder,
       );
 
       expenseResponses =
@@ -101,8 +107,7 @@ Future<Response> _getExpenses(RequestContext context) async {
       );
     }
 
-    final hasMore = offset + limit < totalCount;
-    final page = (offset / limit).floor() + 1;
+    final hasMore = page * limit < totalCount;
 
     return ApiResponse.success(
       data: {
@@ -110,7 +115,6 @@ Future<Response> _getExpenses(RequestContext context) async {
         'total': totalCount,
         'page': page,
         'limit': limit,
-        'offset': offset,
         'hasMore': hasMore,
       },
     );
