@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:pocketly_api/utils/utils.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:uuid/uuid.dart';
 
@@ -134,7 +135,7 @@ class PocketlyDatabase extends _$PocketlyDatabase {
   int get schemaVersion => 1;
 
   static QueryExecutor _openConnection() {
-    return NativeDatabase.opened(sqlite3.open('gray-horst.db'));
+    return NativeDatabase.opened(sqlite3.open(Settings.dbName));
   }
 
   /// Initializes the database with predefined categories if they don't exist
