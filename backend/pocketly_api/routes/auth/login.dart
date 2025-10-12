@@ -1,4 +1,6 @@
 import 'package:dart_frog/dart_frog.dart';
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
 import 'package:pocketly_api/models/models.dart';
 import 'package:pocketly_api/repositories/repositories.dart';
 import 'package:pocketly_api/utils/utils.dart';
@@ -54,6 +56,11 @@ Future<Response> _login(RequestContext context) async {
     );
 
     return ApiResponse.success(data: response.toJson());
+  } on SqliteException catch (e) {
+    AppLogger.error('Login error: $e');
+    return ApiResponse.internalError(
+      message: 'Database error',
+    );
   } catch (e) {
     AppLogger.error('Login error: $e');
     return ApiResponse.internalError(
