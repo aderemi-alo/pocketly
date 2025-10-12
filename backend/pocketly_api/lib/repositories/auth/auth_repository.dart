@@ -31,7 +31,7 @@ class AuthRepository {
 
     // Delete existing tokens for this user/device combination first
     await (_db.delete(_db.refreshTokens)
-          ..where((t) => t.userId.equals(userId))
+          // ..where((t) => t.userId.equals(userId))
           ..where((t) => t.deviceId.equals(deviceId)))
         .go();
 
