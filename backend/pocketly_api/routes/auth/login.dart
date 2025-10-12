@@ -37,16 +37,20 @@ Future<Response> _login(RequestContext context) async {
     }
 
     // Generate tokens
+    AppLogger.info('Generating tokens for user: $user');
     final accessToken = authRepo.generateAccessToken(user);
+    AppLogger.info('Access token: $accessToken');
     final refreshToken = authRepo.generateRefreshToken();
+    AppLogger.info('Refresh token: $refreshToken');
 
     // Store refresh token
+    AppLogger.info('Storing refresh token for user: $user');
     await authRepo.storeRefreshToken(
       userId: user.id,
       refreshToken: refreshToken,
       deviceId: deviceId,
     );
-
+    AppLogger.info('Stored refresh token for user: $user');
     final response = AuthResponse(
       user: UserResponse.fromEntity(user),
       accessToken: accessToken,
