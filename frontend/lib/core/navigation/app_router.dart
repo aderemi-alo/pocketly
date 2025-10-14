@@ -1,7 +1,29 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
 
+// Helper class to refresh router when auth state changes
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+      (dynamic _) => notifyListeners(),
+    );
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
 class AppRoutes {
+  static const login = '/login';
+  static const signup = '/signup';
   static const dashboard = '/';
   static const expenses = '/expenses';
   static const addExpense = 'add';
@@ -12,11 +34,44 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 // Router provider
 final routerProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authProvider);
+
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: AppRoutes.dashboard,
+    initialLocation: AppRoutes.login,
     debugLogDiagnostics: true,
+    refreshListenable: GoRouterRefreshStream(
+      ref.watch(authProvider.notifier).stream,
+    ),
+    redirect: (context, state) {
+      final isAuthenticated = authState.isAuthenticated;
+      final isOnAuthPage =
+          state.matchedLocation == AppRoutes.login ||
+          state.matchedLocation == AppRoutes.signup;
+
+      // Redirect to login if not authenticated and not on auth page
+      if (!isAuthenticated && !isOnAuthPage) {
+        return AppRoutes.login;
+      }
+
+      // Redirect to dashboard if authenticated and on auth page
+      if (isAuthenticated && isOnAuthPage) {
+        return AppRoutes.dashboard;
+      }
+
+      return null; // No redirect needed
+    },
     routes: [
+      GoRoute(
+        path: AppRoutes.login,
+        name: 'login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.signup,
+        name: 'signup',
+        builder: (context, state) => const SignUpScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ScaffoldWithNestedNavigation(navigationShell: navigationShell);

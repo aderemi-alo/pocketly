@@ -9,9 +9,10 @@ class Settings {
   // Database Connection Settings
   // Using Platform.environment for runtime access to environment variables
 
-  static String dbName = Platform.environment['DB_NAME'] ?? '';
+  static String dbName = Platform.environment['DB_NAME'] ?? 'gray-horst.db';
 
-  static String jwtSecretKey = Platform.environment['JWT_SECRET_KEY'] ?? '';
+  static String jwtSecretKey =
+      Platform.environment['JWT_SECRET_KEY'] ?? 'secret-key';
 
   static const int tokenExpirationInHours = 168; // 7 days
   static const int refreshTokenExpirationInDays = 30; // 30 days

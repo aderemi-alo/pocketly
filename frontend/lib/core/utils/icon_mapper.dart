@@ -1,8 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Utility class to map icon code points to constant IconData instances
 /// This prevents tree-shaking issues when building for web
 class IconMapper {
+  // Map icon string names to Lucide icons (matching backend icon names)
+  static final Map<String, IconData> _nameToIconMap = {
+    'utensils': LucideIcons.utensils,
+    'car': LucideIcons.car,
+    'tv': LucideIcons.tv,
+    'shoppingCart': LucideIcons.shoppingCart,
+    'fileText': LucideIcons.fileText,
+    'heart': LucideIcons.heart,
+    'menu': LucideIcons.menu,
+    'dumbbell': LucideIcons.dumbbell,
+    'activity': LucideIcons.activity,
+    'coffee': LucideIcons.coffee,
+    'home': LucideIcons.house,
+    'briefcase': LucideIcons.briefcase,
+    'book': LucideIcons.book,
+    'gift': LucideIcons.gift,
+    'plane': LucideIcons.plane,
+    'wallet': LucideIcons.wallet,
+    'creditCard': LucideIcons.creditCard,
+    'smartphone': LucideIcons.smartphone,
+    'music': LucideIcons.music,
+    'gamepad': LucideIcons.gamepad,
+  };
+
+  // Reverse map for icon to name conversion
+  static final Map<IconData, String> _iconToNameMap = {
+    for (var entry in _nameToIconMap.entries) entry.value: entry.key,
+  };
+
   // Common Material Icons used in the app
   static final Map<int, IconData> _iconMap = {
     // Food & Dining
@@ -106,5 +136,25 @@ class IconMapper {
   /// Get all available icon code points
   static List<int> getAvailableCodePoints() {
     return _iconMap.keys.toList();
+  }
+
+  /// Get IconData from string name (for API integration)
+  static IconData getIconFromString(String iconName) {
+    return _nameToIconMap[iconName] ?? LucideIcons.menu;
+  }
+
+  /// Get string name from IconData (for API integration)
+  static String getIconName(IconData icon) {
+    return _iconToNameMap[icon] ?? 'menu';
+  }
+
+  /// Check if icon name exists
+  static bool hasIconName(String iconName) {
+    return _nameToIconMap.containsKey(iconName);
+  }
+
+  /// Get all available icon names
+  static List<String> getAvailableIconNames() {
+    return _nameToIconMap.keys.toList();
   }
 }
