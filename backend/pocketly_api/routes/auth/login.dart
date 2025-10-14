@@ -57,7 +57,7 @@ Future<Response> _login(RequestContext context) async {
       refreshToken: refreshToken,
     );
 
-    return ApiResponse.success(data: response.toJson());
+    return ApiResponse.success(data: response.toJson(includeTimestamps: true));
   } catch (e) {
     AppLogger.error('Login error: $e');
     return ApiResponse.internalError(

@@ -17,6 +17,13 @@ dependencies:
   hive_flutter: ^1.1.0
   lucide_icons_flutter: ^3.1.1
   path_provider: ^2.1.4
+  dio: ^5.4.0
+  flutter_secure_storage: ^9.0.0
+  device_info_plus: ^10.0.0
+  connectivity_plus: ^5.0.2
+  uuid: ^4.3.3
+  flutter_svg: ^2.2.1
+  extended_image: ^10.0.1
 
 dev_dependencies:
   flutter_test:
@@ -27,6 +34,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/png/
 
   fonts:
     - family: Manrope

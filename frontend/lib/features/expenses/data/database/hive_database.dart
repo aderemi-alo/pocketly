@@ -1,4 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:pocketly/core/services/sync/sync_models.dart';
 import 'package:pocketly/features/expenses/data/models/expense_hive.dart';
 
 class HiveDatabase {
@@ -10,6 +11,7 @@ class HiveDatabase {
 
     // Register adapters
     Hive.registerAdapter(ExpenseHiveAdapter());
+    Hive.registerAdapter(SyncQueueItemAdapter());
 
     // Open boxes
     _expenseBox = await Hive.openBox<ExpenseHive>(_expenseBoxName);
