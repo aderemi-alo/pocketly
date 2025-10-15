@@ -14,6 +14,6 @@ class Settings {
   static String jwtSecretKey =
       Platform.environment['JWT_SECRET_KEY'] ?? 'secret-key';
 
-  static const int tokenExpirationInHours = 168; // 7 days
-  static const int refreshTokenExpirationInDays = 30; // 30 days
+  static const int tokenExpirationInMinutes = 30; // 30 minutes
+  static const int refreshTokenExpirationInDays = 14; // 14 days
 }

@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class TokenStorageService {
   final FlutterSecureStorage _storage;
@@ -54,5 +55,17 @@ class TokenStorageService {
     final accessToken = await getAccessToken();
     final refreshToken = await getRefreshToken();
     return accessToken != null && refreshToken != null;
+  }
+
+  Future<bool> isAccessTokenExpired() async {
+    final accessToken = await getAccessToken();
+    if (accessToken == null) return true;
+
+    try {
+      return JwtDecoder.isExpired(accessToken);
+    } catch (e) {
+      // If token is invalid/malformed, consider it expired
+      return true;
+    }
   }
 }

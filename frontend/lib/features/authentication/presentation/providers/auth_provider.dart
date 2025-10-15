@@ -51,8 +51,34 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> _checkAuthStatus() async {
     final hasTokens = await _tokenStorage.hasValidTokens();
-    if (hasTokens) {
-      // TODO: Validate token with server
+    if (!hasTokens) {
+      return;
+    }
+
+    // Check if access token is expired
+    final isExpired = await _tokenStorage.isAccessTokenExpired();
+
+    if (isExpired) {
+      // Try to refresh the token
+      final refreshToken = await _tokenStorage.getRefreshToken();
+      if (refreshToken != null) {
+        try {
+          await _authRepository.refreshToken(refreshToken);
+          // If refresh succeeds, user is authenticated
+          state = state.copyWith(isAuthenticated: true);
+        } catch (e) {
+          // Refresh failed, clear tokens and remain unauthenticated
+          debugPrint('Token refresh failed on startup: $e');
+          await _tokenStorage.clearTokens();
+          state = state.copyWith(isAuthenticated: false);
+        }
+      } else {
+        // No refresh token, clear everything
+        await _tokenStorage.clearTokens();
+        state = state.copyWith(isAuthenticated: false);
+      }
+    } else {
+      // Token is still valid
       state = state.copyWith(isAuthenticated: true);
     }
   }
