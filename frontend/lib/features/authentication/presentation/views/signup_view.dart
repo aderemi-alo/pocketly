@@ -1,56 +1,94 @@
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class SignupView extends ConsumerStatefulWidget {
+  const SignupView({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<SignupView> createState() => _SignupViewState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _SignupViewState extends ConsumerState<SignupView> {
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _handleLogin() {
+  void _handleSignUp() {
     if (_formKey.currentState?.validate() ?? false) {
+      // Validate passwords match
+      if (_passwordController.text != _confirmPasswordController.text) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Passwords do not match'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
       ref
           .read(authProvider.notifier)
-          .login(_emailController.text.trim(), _passwordController.text);
+          .register(
+            _nameController.text.trim(),
+            _emailController.text.trim(),
+            _passwordController.text,
+          );
     }
   }
 
-  // void _handleGoogleLogin() {
-  //   // TODO: Implement Google OAuth
-  //   ScaffoldMessenger.of(
-  //     context,
-  //   ).showSnackBar(const SnackBar(content: Text('Google login coming soon!')));
-  // }
-
-  // void _handleAppleLogin() {
-  //   // TODO: Implement Apple OAuth
-  //   ScaffoldMessenger.of(
-  //     context,
-  //   ).showSnackBar(const SnackBar(content: Text('Apple login coming soon!')));
-  // }
-
-  void _navigateToSignUp() {
-    context.go('/signup');
+  void _navigateToLogin() {
+    context.go('/login');
   }
 
-  void _navigateToForgotPassword() {
-    // TODO: Navigate to forgot password screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Forgot password screen coming soon!')),
-    );
+  String? _validateName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Name is required';
+    }
+    if (value.trim().length < 2) {
+      return 'Name must be at least 2 characters';
+    }
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Email is required';
+    }
+    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+      return 'Please enter a valid email';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Password is required';
+    }
+    if (value.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+    return null;
+  }
+
+  String? _validateConfirmPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please confirm your password';
+    }
+    if (value != _passwordController.text) {
+      return 'Passwords do not match';
+    }
+    return null;
   }
 
   @override
@@ -59,7 +97,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     // Listen for auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) {
-      // Navigate to dashboard on successful authentication
+      // Navigate to dashboard on successful registration
       if (next.isAuthenticated && !next.isLoading) {
         context.go(AppRoutes.dashboard);
       }
@@ -91,14 +129,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       children: [
                         // Logo and Title
                         Text(
-                          'Welcome Back',
+                          'Create Account',
                           style: AppTextTheme.headlineMedium.copyWith(
                             color: AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Sign in to continue managing your expenses',
+                          'Start tracking your expenses today',
                           style: AppTextTheme.bodyLarge.copyWith(
                             color: AppColors.textSecondary,
                           ),
@@ -106,6 +144,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
 
                         const SizedBox(height: 32),
+
+                        // Name Field
+                        Column(
+                          children: [
+                            CustomTextField(
+                              label: 'Full Name',
+                              hint: 'Enter your full name',
+                              icon: LucideIcons.user,
+                              controller: _nameController,
+                              enabled: !authState.isLoading,
+                              validator: _validateName,
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
 
                         // Email Field
                         Column(
@@ -116,6 +170,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               icon: LucideIcons.mail,
                               controller: _emailController,
                               enabled: !authState.isLoading,
+                              validator: _validateEmail,
                             ),
                           ],
                         ),
@@ -123,41 +178,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(height: 16),
 
                         // Password Field
-                        CustomTextField(
-                          label: 'Password',
-                          hint: 'Enter your password',
-                          icon: LucideIcons.lock,
-                          controller: _passwordController,
-                          isPassword: true,
-                          enabled: !authState.isLoading,
+                        Column(
+                          children: [
+                            CustomTextField(
+                              label: 'Password',
+                              hint: 'Create a password',
+                              icon: LucideIcons.lock,
+                              controller: _passwordController,
+                              isPassword: true,
+                              enabled: !authState.isLoading,
+                              validator: _validatePassword,
+                            ),
+                          ],
                         ),
 
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 16),
 
-                        // Forgot Password
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: _navigateToForgotPassword,
-                            child: Text(
-                              'Forgot Password?',
-                              style: AppTextTheme.bodyMedium.copyWith(
-                                color: AppColors.primary,
-                              ),
+                        // Confirm Password Field
+                        Column(
+                          children: [
+                            CustomTextField(
+                              label: 'Confirm Password',
+                              hint: 'Confirm your password',
+                              icon: LucideIcons.lock,
+                              controller: _confirmPasswordController,
+                              isPassword: true,
+                              enabled: !authState.isLoading,
+                              validator: _validateConfirmPassword,
                             ),
-                          ),
+                          ],
                         ),
 
                         const SizedBox(height: 24),
 
-                        // Login Button
+                        // Sign Up Button
                         SizedBox(
                           width: double.infinity,
                           height: 56,
                           child: ElevatedButton(
                             onPressed: authState.isLoading
                                 ? null
-                                : _handleLogin,
+                                : _handleSignUp,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
@@ -181,7 +242,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     ),
                                   )
                                 : Text(
-                                    'Sign In',
+                                    'Create Account',
                                     style: AppTextTheme.titleMedium.copyWith(
                                       color: Colors.white,
                                     ),
@@ -191,67 +252,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                         const SizedBox(height: 24),
 
-                        // // Divider
-                        // Row(
-                        //   children: [
-                        //     Expanded(
-                        //       child: Container(
-                        //         height: 1,
-                        //         color: AppColors.outline,
-                        //       ),
-                        //     ),
-                        //     Padding(
-                        //       padding: const EdgeInsets.symmetric(
-                        //         horizontal: 16,
-                        //       ),
-                        //       child: Text(
-                        //         'Or continue with',
-                        //         style: AppTextTheme.bodyMedium.copyWith(
-                        //           color: AppColors.textSecondary,
-                        //         ),
-                        //       ),
-                        //     ),
-                        //     Expanded(
-                        //       child: Container(
-                        //         height: 1,
-                        //         color: AppColors.outline,
-                        //       ),
-                        //     ),
-                        //   ],
-                        // ),
-
-                        // const SizedBox(height: 24),
-
-                        // // OAuth Buttons
-                        // OAuthButton(
-                        //   text: 'Sign in with Google',
-                        //   icon: LucideIcons.globe,
-                        //   onPressed: _handleGoogleLogin,
-                        //   isLoading: authState.isLoading,
-                        // ),
-
-                        // const SizedBox(height: 12),
-
-                        // OAuthButton(
-                        //   text: 'Sign in with Apple',
-                        //   icon: LucideIcons.apple,
-                        //   onPressed: _handleAppleLogin,
-                        //   isLoading: authState.isLoading,
-                        // ),
-                        // const SizedBox(height: 12),
-
-                        // Sign Up Link
+                        // Login Link
                         Center(
                           child: Text.rich(
                             TextSpan(
-                              text: "Don't have an account? ",
+                              text: 'Already have an account? ',
                               style: AppTextTheme.bodyMedium.copyWith(
                                 color: AppColors.textSecondary,
                               ),
                               children: [
                                 WidgetSpan(
                                   child: TextButton(
-                                    onPressed: _navigateToSignUp,
+                                    onPressed: _navigateToLogin,
                                     style: TextButton.styleFrom(
                                       padding: EdgeInsets.zero,
                                       minimumSize: Size.zero,
@@ -259,7 +271,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                           MaterialTapTargetSize.shrinkWrap,
                                     ),
                                     child: Text(
-                                      'Sign Up',
+                                      'Sign In',
                                       style: AppTextTheme.bodyMedium.copyWith(
                                         color: AppColors.primary,
                                         fontWeight: FontWeight.w600,

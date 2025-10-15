@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
 
@@ -65,12 +64,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.login,
         name: 'login',
-        builder: (context, state) => const LoginScreen(),
+        builder: (context, state) => const LoginView(),
       ),
       GoRoute(
         path: AppRoutes.signup,
         name: 'signup',
-        builder: (context, state) => const SignUpScreen(),
+        builder: (context, state) => const SignupView(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

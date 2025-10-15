@@ -23,7 +23,7 @@ class Encryption {
 
     return jwt.sign(
       SecretKey(Settings.jwtSecretKey),
-      expiresIn: const Duration(hours: Settings.tokenExpirationInHours),
+      expiresIn: const Duration(minutes: Settings.tokenExpirationInMinutes),
     );
   }
 
