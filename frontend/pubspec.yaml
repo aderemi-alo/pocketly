@@ -25,6 +25,7 @@ dependencies:
   flutter_svg: ^2.2.1
   extended_image: ^10.0.1
   jwt_decoder: ^2.0.1
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:

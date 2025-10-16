@@ -76,13 +76,15 @@ class CategoryDetailModal extends StatelessWidget {
               maxHeight: context.screenHeight * 0.8,
             ),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.black.withValues(alpha: 0.2),
-                  blurRadius: 40,
-                  offset: const Offset(0, 10),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.shadow.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
@@ -189,12 +191,13 @@ class CategoryDetailModal extends StatelessWidget {
                         text: category.name,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                       TextWidget(
                         text:
                             '$transactionCount transaction${transactionCount != 1 ? 's' : ''}',
                         fontSize: 12,
-                        color: AppColors.textSecondary,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ],
                   ),
@@ -207,10 +210,10 @@ class CategoryDetailModal extends StatelessWidget {
                     alignment: Alignment.topCenter,
                     child: GestureDetector(
                       onTap: () => Navigator.of(context).pop(),
-                      child: const Icon(
+                      child: Icon(
                         LucideIcons.x,
                         size: 20,
-                        color: AppColors.textSecondary,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -238,16 +241,16 @@ class CategoryDetailModal extends StatelessWidget {
                 width: double.infinity,
                 padding: context.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const TextWidget(
+                    TextWidget(
                       text: 'Total Spent',
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     context.verticalSpace(2),
                     TextWidget(
@@ -255,6 +258,7 @@ class CategoryDetailModal extends StatelessWidget {
                       fontSize: 24,
                       fontWeight: FontWeight.w500,
                       letterSpacing: -0.5,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ],
                 ),
@@ -276,10 +280,10 @@ class CategoryDetailModal extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const TextWidget(
+          TextWidget(
             text: 'Top Transactions',
             fontSize: 15,
-            color: AppColors.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w500,
           ),
           context.verticalSpace(12),
@@ -288,9 +292,9 @@ class CategoryDetailModal extends StatelessWidget {
             Container(
               padding: context.symmetric(vertical: 32),
               alignment: Alignment.center,
-              child: const TextWidget(
+              child: TextWidget(
                 text: 'No transactions yet',
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 14,
               ),
             )
@@ -318,7 +322,7 @@ class CategoryDetailModal extends StatelessWidget {
                   ),
                   padding: context.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.background,
+                    color: Theme.of(context).colorScheme.background,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -355,6 +359,7 @@ class CategoryDetailModal extends StatelessWidget {
                               fontWeight: FontWeight.w500,
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                             context.verticalSpace(4),
                             TextWidget(
@@ -362,7 +367,9 @@ class CategoryDetailModal extends StatelessWidget {
                                 'MMM d, yyyy',
                               ).format(expense.date),
                               fontSize: 11,
-                              color: AppColors.textSecondary,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ],
                         ),
@@ -374,6 +381,7 @@ class CategoryDetailModal extends StatelessWidget {
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                         letterSpacing: -0.3,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ],
                   ),

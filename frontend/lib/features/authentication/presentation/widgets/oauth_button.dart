@@ -49,7 +49,7 @@ class OAuthButton extends StatelessWidget {
                 const SizedBox(width: 12),
                 Text(
                   text,
-                  style: AppTextTheme.titleMedium.copyWith(
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.textPrimary,
                   ),
                 ),

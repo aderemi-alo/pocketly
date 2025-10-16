@@ -130,83 +130,65 @@ class _SignupViewState extends ConsumerState<SignupView> {
                         // Logo and Title
                         Text(
                           'Create Account',
-                          style: AppTextTheme.headlineMedium.copyWith(
-                            color: AppColors.textPrimary,
-                          ),
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(color: AppColors.textPrimary),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Start tracking your expenses today',
-                          style: AppTextTheme.bodyLarge.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(color: AppColors.textSecondary),
                           textAlign: TextAlign.center,
                         ),
 
                         const SizedBox(height: 32),
 
                         // Name Field
-                        Column(
-                          children: [
-                            CustomTextField(
-                              label: 'Full Name',
-                              hint: 'Enter your full name',
-                              icon: LucideIcons.user,
-                              controller: _nameController,
-                              enabled: !authState.isLoading,
-                              validator: _validateName,
-                            ),
-                          ],
+                        CustomTextField(
+                          label: 'Full Name',
+                          hint: 'Enter your full name',
+                          icon: LucideIcons.user,
+                          controller: _nameController,
+                          enabled: !authState.isLoading,
+                          validator: _validateName,
                         ),
 
                         const SizedBox(height: 16),
 
                         // Email Field
-                        Column(
-                          children: [
-                            CustomTextField(
-                              label: 'Email',
-                              hint: 'Enter your email',
-                              icon: LucideIcons.mail,
-                              controller: _emailController,
-                              enabled: !authState.isLoading,
-                              validator: _validateEmail,
-                            ),
-                          ],
+                        CustomTextField(
+                          label: 'Email',
+                          hint: 'Enter your email',
+                          icon: LucideIcons.mail,
+                          controller: _emailController,
+                          enabled: !authState.isLoading,
+                          validator: _validateEmail,
                         ),
 
                         const SizedBox(height: 16),
 
                         // Password Field
-                        Column(
-                          children: [
-                            CustomTextField(
-                              label: 'Password',
-                              hint: 'Create a password',
-                              icon: LucideIcons.lock,
-                              controller: _passwordController,
-                              isPassword: true,
-                              enabled: !authState.isLoading,
-                              validator: _validatePassword,
-                            ),
-                          ],
+                        CustomTextField(
+                          label: 'Password',
+                          hint: 'Create a password',
+                          icon: LucideIcons.lock,
+                          controller: _passwordController,
+                          isPassword: true,
+                          enabled: !authState.isLoading,
+                          validator: _validatePassword,
                         ),
 
                         const SizedBox(height: 16),
 
                         // Confirm Password Field
-                        Column(
-                          children: [
-                            CustomTextField(
-                              label: 'Confirm Password',
-                              hint: 'Confirm your password',
-                              icon: LucideIcons.lock,
-                              controller: _confirmPasswordController,
-                              isPassword: true,
-                              enabled: !authState.isLoading,
-                              validator: _validateConfirmPassword,
-                            ),
-                          ],
+                        CustomTextField(
+                          label: 'Confirm Password',
+                          hint: 'Confirm your password',
+                          icon: LucideIcons.lock,
+                          controller: _confirmPasswordController,
+                          isPassword: true,
+                          enabled: !authState.isLoading,
+                          validator: _validateConfirmPassword,
                         ),
 
                         const SizedBox(height: 24),
@@ -243,9 +225,10 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                   )
                                 : Text(
                                     'Create Account',
-                                    style: AppTextTheme.titleMedium.copyWith(
-                                      color: Colors.white,
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(color: Colors.white),
                                   ),
                           ),
                         ),
@@ -257,9 +240,8 @@ class _SignupViewState extends ConsumerState<SignupView> {
                           child: Text.rich(
                             TextSpan(
                               text: 'Already have an account? ',
-                              style: AppTextTheme.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: AppColors.textSecondary),
                               children: [
                                 WidgetSpan(
                                   child: TextButton(
@@ -272,10 +254,13 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                     ),
                                     child: Text(
                                       'Sign In',
-                                      style: AppTextTheme.bodyMedium.copyWith(
-                                        color: AppColors.primary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                     ),
                                   ),
                                 ),

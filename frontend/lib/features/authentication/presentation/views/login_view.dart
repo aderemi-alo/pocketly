@@ -92,16 +92,14 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         // Logo and Title
                         Text(
                           'Welcome Back',
-                          style: AppTextTheme.headlineMedium.copyWith(
-                            color: AppColors.textPrimary,
-                          ),
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(color: AppColors.textPrimary),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Sign in to continue managing your expenses',
-                          style: AppTextTheme.bodyLarge.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(color: AppColors.textSecondary),
                           textAlign: TextAlign.center,
                         ),
 
@@ -141,9 +139,8 @@ class _LoginViewState extends ConsumerState<LoginView> {
                             onPressed: _navigateToForgotPassword,
                             child: Text(
                               'Forgot Password?',
-                              style: AppTextTheme.bodyMedium.copyWith(
-                                color: AppColors.primary,
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: AppColors.primary),
                             ),
                           ),
                         ),
@@ -182,9 +179,10 @@ class _LoginViewState extends ConsumerState<LoginView> {
                                   )
                                 : Text(
                                     'Sign In',
-                                    style: AppTextTheme.titleMedium.copyWith(
-                                      color: Colors.white,
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(color: Colors.white),
                                   ),
                           ),
                         ),
@@ -245,9 +243,8 @@ class _LoginViewState extends ConsumerState<LoginView> {
                           child: Text.rich(
                             TextSpan(
                               text: "Don't have an account? ",
-                              style: AppTextTheme.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: AppColors.textSecondary),
                               children: [
                                 WidgetSpan(
                                   child: TextButton(
@@ -260,10 +257,13 @@ class _LoginViewState extends ConsumerState<LoginView> {
                                     ),
                                     child: Text(
                                       'Sign Up',
-                                      style: AppTextTheme.bodyMedium.copyWith(
-                                        color: AppColors.primary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                     ),
                                   ),
                                 ),

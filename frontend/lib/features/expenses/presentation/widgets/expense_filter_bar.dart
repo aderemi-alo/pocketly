@@ -111,9 +111,12 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
                 padding: context.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: hasActiveFilters
-                      ? AppColors.primary
-                      : AppColors.surface,
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -122,16 +125,16 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
                       LucideIcons.funnel,
                       size: 16,
                       color: hasActiveFilters
-                          ? Colors.white
-                          : AppColors.textSecondary,
+                          ? AppColors.surface
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     context.horizontalSpace(8),
                     Text(
                       'Filter',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: hasActiveFilters
-                            ? Colors.white
-                            : AppColors.textSecondary,
+                            ? AppColors.surface
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     if (hasActiveFilters) ...[
@@ -156,8 +159,8 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
                       LucideIcons.chevronDown,
                       size: 16,
                       color: hasActiveFilters
-                          ? Colors.white
-                          : AppColors.textSecondary,
+                          ? AppColors.surface
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ],
                 ),
@@ -170,7 +173,7 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
                 child: Text(
                   'Clear',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -206,7 +209,7 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
           Container(
             padding: context.all(16),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -229,7 +232,7 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
     return Container(
       padding: context.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -238,17 +241,17 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
           Text(
             text,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w500,
             ),
           ),
           context.horizontalSpace(4),
           GestureDetector(
             onTap: onRemove,
-            child: const Icon(
+            child: Icon(
               LucideIcons.x,
               size: 12,
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         ],
@@ -257,7 +260,6 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
   }
 
   Widget _buildDateFilter() {
-    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -266,8 +268,8 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
           children: [
             Text(
               'Date',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             GestureDetector(
@@ -275,16 +277,16 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     LucideIcons.calendar,
                     size: 12,
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   context.horizontalSpace(4),
                   Text(
                     _showCustomRange ? 'Quick select' : 'Custom range',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.primary,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -327,9 +329,12 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
                       children: [
                         Text(
                           'From',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                         context.verticalSpace(4),
                         GestureDetector(
@@ -353,9 +358,11 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.background,
+                              color: Theme.of(context).colorScheme.background,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.outline),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
                             ),
                             child: Row(
                               children: [
@@ -366,13 +373,17 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
                                             'MMM d, yyyy',
                                           ).format(widget.filter.startDate!)
                                         : 'Select date',
-                                    style: theme.textTheme.bodyMedium,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
                                   ),
                                 ),
-                                const Icon(
+                                Icon(
                                   LucideIcons.calendar,
                                   size: 16,
-                                  color: AppColors.textSecondary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ],
                             ),
@@ -388,9 +399,12 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
                       children: [
                         Text(
                           'To',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                         context.verticalSpace(4),
                         GestureDetector(
@@ -415,9 +429,11 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.background,
+                              color: Theme.of(context).colorScheme.background,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.outline),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
                             ),
                             child: Row(
                               children: [
@@ -428,13 +444,17 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
                                             'MMM d, yyyy',
                                           ).format(widget.filter.endDate!)
                                         : 'Select date',
-                                    style: theme.textTheme.bodyMedium,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
                                   ),
                                 ),
-                                const Icon(
+                                Icon(
                                   LucideIcons.calendar,
                                   size: 16,
-                                  color: AppColors.textSecondary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ],
                             ),
@@ -451,8 +471,8 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
                   onTap: () => widget.onFilterChanged(widget.filter.copyWith()),
                   child: Text(
                     'Clear date range',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.primary,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -473,7 +493,7 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
         Text(
           'Category',
           style: theme.textTheme.bodySmall?.copyWith(
-            color: AppColors.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         context.verticalSpace(8),
@@ -508,13 +528,17 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
       child: Container(
         padding: context.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.background,
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.background,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           text,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            color: isSelected
+                ? Colors.white
+                : Theme.of(context).colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -533,13 +557,17 @@ class _ExpenseFilterBarState extends State<ExpenseFilterBar> {
       child: Container(
         padding: context.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.background,
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.background,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           text,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            color: isSelected
+                ? Colors.white
+                : Theme.of(context).colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w500,
           ),
         ),

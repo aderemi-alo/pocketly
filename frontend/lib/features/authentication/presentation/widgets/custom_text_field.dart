@@ -31,12 +31,16 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
+    // Cache theme to avoid multiple Theme.of(context) calls
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           widget.label,
-          style: AppTextTheme.titleSmall.copyWith(color: AppColors.textPrimary),
+          style: textTheme.titleSmall?.copyWith(color: AppColors.textPrimary),
         ),
         const SizedBox(height: 8),
         Container(
@@ -54,12 +58,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
             controller: widget.controller,
             obscureText: widget.isPassword ? _obscureText : false,
             enabled: widget.enabled,
-            style: AppTextTheme.bodyLarge.copyWith(
-              color: AppColors.textPrimary,
-            ),
+            style: textTheme.bodyLarge?.copyWith(color: AppColors.textPrimary),
             decoration: InputDecoration(
               hintText: widget.hint,
-              hintStyle: AppTextTheme.bodyLarge.copyWith(
+              hintStyle: textTheme.bodyLarge?.copyWith(
                 color: AppColors.textTertiary,
               ),
               prefixIcon: Icon(
@@ -93,7 +95,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           const SizedBox(height: 8),
           Text(
             widget.errorText!,
-            style: AppTextTheme.bodySmall.copyWith(color: AppColors.error),
+            style: textTheme.bodySmall?.copyWith(color: AppColors.error),
           ),
         ],
       ],
