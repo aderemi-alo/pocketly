@@ -5,3 +5,4 @@ export 'format_utils.dart';
 export 'settings.dart';
 export 'avatar_color_generator.dart';
 export 'icon_mapper.dart';
+export 'validator.dart';

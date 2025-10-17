@@ -9,6 +9,7 @@ class CustomTextField extends StatefulWidget {
   final String? errorText;
   final bool enabled;
   final String? Function(String?)? validator;
+  final AutovalidateMode autovalidateMode;
 
   const CustomTextField({
     super.key,
@@ -20,6 +21,7 @@ class CustomTextField extends StatefulWidget {
     this.errorText,
     this.enabled = true,
     this.validator,
+    this.autovalidateMode = AutovalidateMode.onUnfocus,
   });
 
   @override
@@ -38,66 +40,66 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.label,
-          style: textTheme.titleSmall?.copyWith(color: AppColors.textPrimary),
-        ),
+        Text(widget.label, style: textTheme.titleSmall),
         const SizedBox(height: 8),
-        Container(
-          height: 56,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: widget.errorText != null
-                  ? AppColors.error
-                  : AppColors.outline,
+        TextFormField(
+          validator: widget.validator,
+          autovalidateMode: widget.autovalidateMode,
+          controller: widget.controller,
+          obscureText: widget.isPassword ? _obscureText : false,
+          enabled: widget.enabled,
+          style: textTheme.bodyLarge,
+          decoration: InputDecoration(
+            hintText: widget.hint,
+            hintStyle: textTheme.bodyLarge,
+            prefixIcon: Icon(
+              widget.icon,
+              color: theme.colorScheme.onSurfaceVariant,
+              size: 20,
             ),
-            color: AppColors.surface,
-          ),
-          child: TextField(
-            controller: widget.controller,
-            obscureText: widget.isPassword ? _obscureText : false,
-            enabled: widget.enabled,
-            style: textTheme.bodyLarge?.copyWith(color: AppColors.textPrimary),
-            decoration: InputDecoration(
-              hintText: widget.hint,
-              hintStyle: textTheme.bodyLarge?.copyWith(
-                color: AppColors.textTertiary,
-              ),
-              prefixIcon: Icon(
-                widget.icon,
-                color: AppColors.textTertiary,
-                size: 20,
-              ),
-              suffixIcon: widget.isPassword
-                  ? IconButton(
-                      icon: Icon(
-                        _obscureText ? LucideIcons.eyeOff : LucideIcons.eye,
-                        color: AppColors.textTertiary,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscureText = !_obscureText;
-                        });
-                      },
-                    )
-                  : null,
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
+            suffixIcon: widget.isPassword
+                ? IconButton(
+                    icon: Icon(
+                      _obscureText ? LucideIcons.eyeOff : LucideIcons.eye,
+                      color: theme.colorScheme.onSurfaceVariant,
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureText = !_obscureText;
+                      });
+                    },
+                  )
+                : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: theme.colorScheme.outline),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: theme.colorScheme.outline),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: theme.colorScheme.primary),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: theme.colorScheme.error),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: theme.colorScheme.error),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+            errorStyle: textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
             ),
           ),
         ),
-        if (widget.errorText != null) ...[
-          const SizedBox(height: 8),
-          Text(
-            widget.errorText!,
-            style: textTheme.bodySmall?.copyWith(color: AppColors.error),
-          ),
-        ],
       ],
     );
   }

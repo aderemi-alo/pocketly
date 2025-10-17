@@ -320,7 +320,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                             child: Icon(
                               config.icon,
                               color: isSelected
-                                  ? Theme.of(context).colorScheme.onSurface
+                                  ? AppColors.surface
                                   : config.color,
                               size: 20,
                             ),
@@ -331,7 +331,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                               categoryName,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: isSelected
-                                    ? Theme.of(context).colorScheme.onSurface
+                                    ? AppColors.surface
                                     : Theme.of(
                                         context,
                                       ).colorScheme.onSurfaceVariant,

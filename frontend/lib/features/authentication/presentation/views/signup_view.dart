@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
 
@@ -29,9 +30,9 @@ class _SignupViewState extends ConsumerState<SignupView> {
       // Validate passwords match
       if (_passwordController.text != _confirmPasswordController.text) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Passwords do not match'),
-            backgroundColor: AppColors.error,
+          SnackBar(
+            content: const Text('Passwords do not match'),
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
         return;
@@ -51,49 +52,10 @@ class _SignupViewState extends ConsumerState<SignupView> {
     context.go('/login');
   }
 
-  String? _validateName(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Name is required';
-    }
-    if (value.trim().length < 2) {
-      return 'Name must be at least 2 characters';
-    }
-    return null;
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Email is required';
-    }
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
-      return 'Please enter a valid email';
-    }
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Password is required';
-    }
-    if (value.length < 6) {
-      return 'Password must be at least 6 characters';
-    }
-    return null;
-  }
-
-  String? _validateConfirmPassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please confirm your password';
-    }
-    if (value != _passwordController.text) {
-      return 'Passwords do not match';
-    }
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final theme = Theme.of(context);
 
     // Listen for auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) {
@@ -107,7 +69,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.error!),
-            backgroundColor: AppColors.error,
+            backgroundColor: theme.colorScheme.error,
           ),
         );
         ref.read(authProvider.notifier).clearError();
@@ -130,14 +92,12 @@ class _SignupViewState extends ConsumerState<SignupView> {
                         // Logo and Title
                         Text(
                           'Create Account',
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(color: AppColors.textPrimary),
+                          style: theme.textTheme.headlineMedium,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Start tracking your expenses today',
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(color: AppColors.textSecondary),
+                          style: theme.textTheme.bodyLarge,
                           textAlign: TextAlign.center,
                         ),
 
@@ -150,7 +110,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                           icon: LucideIcons.user,
                           controller: _nameController,
                           enabled: !authState.isLoading,
-                          validator: _validateName,
+                          validator: Validator.validateName,
                         ),
 
                         const SizedBox(height: 16),
@@ -162,7 +122,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                           icon: LucideIcons.mail,
                           controller: _emailController,
                           enabled: !authState.isLoading,
-                          validator: _validateEmail,
+                          validator: Validator.validateEmail,
                         ),
 
                         const SizedBox(height: 16),
@@ -175,7 +135,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                           controller: _passwordController,
                           isPassword: true,
                           enabled: !authState.isLoading,
-                          validator: _validatePassword,
+                          validator: Validator.validatePassword,
                         ),
 
                         const SizedBox(height: 16),
@@ -188,7 +148,11 @@ class _SignupViewState extends ConsumerState<SignupView> {
                           controller: _confirmPasswordController,
                           isPassword: true,
                           enabled: !authState.isLoading,
-                          validator: _validateConfirmPassword,
+                          validator: (value) =>
+                              Validator.validateConfirmPassword(
+                                value,
+                                _passwordController.text,
+                              ),
                         ),
 
                         const SizedBox(height: 24),
@@ -202,13 +166,13 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                 ? null
                                 : _handleSignUp,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
+                              backgroundColor: theme.colorScheme.primary,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               elevation: 4,
-                              shadowColor: AppColors.primary.withValues(
+                              shadowColor: theme.colorScheme.primary.withValues(
                                 alpha: 0.3,
                               ),
                             ),
@@ -225,10 +189,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                                   )
                                 : Text(
                                     'Create Account',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium
-                                        ?.copyWith(color: Colors.white),
+                                    style: theme.textTheme.titleMedium,
                                   ),
                           ),
                         ),
@@ -239,29 +200,20 @@ class _SignupViewState extends ConsumerState<SignupView> {
                         Center(
                           child: Text.rich(
                             TextSpan(
-                              text: 'Already have an account? ',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: AppColors.textSecondary),
                               children: [
-                                WidgetSpan(
-                                  child: TextButton(
-                                    onPressed: _navigateToLogin,
-                                    style: TextButton.styleFrom(
-                                      padding: EdgeInsets.zero,
-                                      minimumSize: Size.zero,
-                                      tapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
-                                    ),
-                                    child: Text(
-                                      'Sign In',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            color: AppColors.primary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
+                                TextSpan(
+                                  text: 'Already have an account? ',
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                TextSpan(
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = _navigateToLogin,
+                                  text: 'Login',
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],

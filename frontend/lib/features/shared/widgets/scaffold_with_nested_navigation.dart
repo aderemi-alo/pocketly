@@ -162,7 +162,20 @@ class _ScaffoldWithNestedNavigationState
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // appBar: _buildAnimatedAppBar(),
-      appBar: AppBar(title: _buildAnimatedTitle(Theme.of(context).textTheme)),
+      appBar: AppBar(
+        title: _buildAnimatedTitle(Theme.of(context).textTheme),
+        actions: widget.navigationShell.currentIndex != 2
+            ? [
+                UserAvatarWidget(
+                  textSize: 12,
+                  iconSize: 14,
+                  textPadding: context.all(12),
+                  iconPadding: context.all(10),
+                ),
+                context.horizontalSpace(12),
+              ]
+            : [],
+      ),
       body: _buildCarouselBody(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: widget.navigationShell.currentIndex,

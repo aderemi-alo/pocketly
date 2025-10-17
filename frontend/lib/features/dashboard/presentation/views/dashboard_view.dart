@@ -251,7 +251,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                           width: 32,
                           height: 32,
                           decoration: BoxDecoration(
-                            color: category.color.withValues(alpha: 0.12),
+                            color: category.color.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(

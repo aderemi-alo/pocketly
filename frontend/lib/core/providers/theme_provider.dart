@@ -25,6 +25,10 @@ class ThemeState {
         ? Brightness.dark
         : Brightness.light;
   }
+
+  static bool isDarkMode(BuildContext context) {
+    return Theme.of(context).colorScheme.brightness == Brightness.dark;
+  }
 }
 
 class ThemeNotifier extends StateNotifier<ThemeState> {

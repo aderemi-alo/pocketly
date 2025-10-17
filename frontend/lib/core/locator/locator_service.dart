@@ -1,13 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:pocketly/core/services/api_client.dart';
-import 'package:pocketly/core/services/device_id_service.dart';
-import 'package:pocketly/core/services/network_service.dart';
-import 'package:pocketly/core/services/sync/conflict_resolution_service.dart';
-import 'package:pocketly/core/services/sync/sync_manager.dart';
-import 'package:pocketly/core/services/sync/sync_queue_service.dart';
-import 'package:pocketly/core/services/token_storage_service.dart';
+import 'package:pocketly/core/services/services.dart';
 import 'package:pocketly/core/services/theme_service.dart';
 import 'package:pocketly/features/features.dart';
 
@@ -26,6 +20,7 @@ Future<void> setupLocator() async {
   );
   locator.registerLazySingleton(() => DeviceIdService(locator()));
   locator.registerLazySingleton(() => NetworkService());
+  locator.registerLazySingleton(() => AppInfoService());
   locator.registerLazySingleton(() => ApiClient(locator(), locator()));
 
   // Sync services
@@ -76,3 +71,5 @@ TokenStorageService get tokenStorageService => locator<TokenStorageService>();
 ExpenseCacheManager get expenseCacheManager => locator<ExpenseCacheManager>();
 
 SyncQueueService get syncQueueService => locator<SyncQueueService>();
+
+AppInfoService get appInfoService => locator<AppInfoService>();

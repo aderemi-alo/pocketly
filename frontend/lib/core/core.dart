@@ -5,6 +5,7 @@ export 'theme/theme.dart';
 export 'locator/locator_service.dart';
 export 'models/models.dart';
 export 'services/services.dart';
+export 'providers/providers.dart';
 
 // Package exports
 export 'package:flutter/material.dart';
