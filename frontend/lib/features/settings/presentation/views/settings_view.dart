@@ -22,7 +22,7 @@ class SettingsView extends ConsumerWidget {
           children: [
             // Profile Section
             GestureDetector(
-              onTap: () => context.push('/settings/profile'),
+              onTap: () => context.go('/settings/profile'),
               child: Container(
                 padding: context.only(left: 16, top: 16, bottom: 16, right: 8),
                 width: double.infinity,

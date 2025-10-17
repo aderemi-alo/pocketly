@@ -236,9 +236,11 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
                 ],
               ),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Avatar Section
-                  _buildAvatarSection(user),
+                  // _buildAvatarSection(user),
+                  const UserAvatarWidget(),
                   const SizedBox(height: 24),
 
                   // // Email Verification Status
@@ -276,10 +278,15 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
     final name = user?.name ?? '';
     final email = user?.email ?? '';
 
+    debugPrint('Avatar name: $name'); // Debug to verify name is being passed
+
     return Column(
       children: [
+        const UserAvatarWidget(),
         // Avatar
         Container(
+          width: 100,
+          height: 100,
           padding: context.all(16),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -289,7 +296,7 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
               ? const Icon(LucideIcons.user, color: AppColors.surface, size: 40)
               : Center(
                   child: Text(
-                    'A'.toUpperCase(),
+                    name[0].toUpperCase(),
                     style: Theme.of(
                       context,
                     ).textTheme.titleLarge!.copyWith(color: AppColors.surface),

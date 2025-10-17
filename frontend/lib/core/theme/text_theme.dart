@@ -1,7 +1,7 @@
 import 'package:pocketly/core/core.dart';
 
 class AppTextTheme {
-  static const String _fontFamily = 'PlusJakartaSans';
+  static const String _fontFamily = 'Roboto';
 
   // LIGHT MODE TEXT THEME
   static TextTheme get lightTextTheme => TextTheme(

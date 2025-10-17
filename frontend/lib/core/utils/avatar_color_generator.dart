@@ -27,9 +27,12 @@ class AvatarColorGenerator {
     ];
 
     // Use the hash of the name to get consistent colors
-    final hash = name.codeUnits.fold(0, (prev, curr) => prev + curr);
+    final hash = name.hashCode.abs();
     final colorIndex1 = hash % brightColors.length;
     final colorIndex2 = (hash + 1) % brightColors.length;
+
+    debugPrint('colorIndex1: $colorIndex1');
+    debugPrint('colorIndex2: $colorIndex2');
 
     return LinearGradient(
       colors: [brightColors[colorIndex1], brightColors[colorIndex2]],

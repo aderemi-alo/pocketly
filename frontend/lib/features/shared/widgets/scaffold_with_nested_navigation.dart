@@ -166,11 +166,9 @@ class _ScaffoldWithNestedNavigationState
         title: _buildAnimatedTitle(Theme.of(context).textTheme),
         actions: widget.navigationShell.currentIndex != 2
             ? [
-                UserAvatarWidget(
-                  textSize: 12,
-                  iconSize: 14,
-                  textPadding: context.all(12),
-                  iconPadding: context.all(10),
+                GestureDetector(
+                  onTap: () => context.push('/settings/profile'),
+                  child: const UserAvatarWidget(isSmall: true),
                 ),
                 context.horizontalSpace(12),
               ]

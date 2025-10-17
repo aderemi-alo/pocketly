@@ -81,7 +81,7 @@ class AuthRepositoryImpl implements AuthRepository {
         data: {
           'refreshToken': refreshToken,
           'deviceId': deviceId,
-          'rotateToken': false,
+          'rotateToken': true,
         },
       );
 
