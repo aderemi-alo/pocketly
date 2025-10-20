@@ -12,6 +12,7 @@ dependencies:
   dart_frog: ^1.1.0
   dart_jsonwebtoken: ^3.3.0
   drift: ^2.28.2
+  http: ^1.2.0
   logger: ^2.6.2
   sqlite3: ^2.9.2
   uuid: ^4.5.1

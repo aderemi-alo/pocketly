@@ -33,6 +33,16 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
   late final GeneratedColumn<String> passwordHash = GeneratedColumn<String>(
       'password_hash', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _isEmailVerifiedMeta =
+      const VerificationMeta('isEmailVerified');
+  @override
+  late final GeneratedColumn<bool> isEmailVerified = GeneratedColumn<bool>(
+      'is_email_verified', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_email_verified" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -47,7 +57,7 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, name, email, passwordHash, createdAt, updatedAt];
+      [id, name, email, passwordHash, isEmailVerified, createdAt, updatedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -81,6 +91,12 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     } else if (isInserting) {
       context.missing(_passwordHashMeta);
     }
+    if (data.containsKey('is_email_verified')) {
+      context.handle(
+          _isEmailVerifiedMeta,
+          isEmailVerified.isAcceptableOrUnknown(
+              data['is_email_verified']!, _isEmailVerifiedMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -110,6 +126,8 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
           .read(DriftSqlType.string, data['${effectivePrefix}email'])!,
       passwordHash: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}password_hash'])!,
+      isEmailVerified: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}is_email_verified'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -136,6 +154,9 @@ class User extends DataClass implements Insertable<User> {
   /// The password hash of the user.
   final String passwordHash;
 
+  /// Whether the user's email is verified.
+  final bool isEmailVerified;
+
   /// The date and time the user was created.
   final DateTime createdAt;
 
@@ -146,6 +167,7 @@ class User extends DataClass implements Insertable<User> {
       required this.name,
       required this.email,
       required this.passwordHash,
+      required this.isEmailVerified,
       required this.createdAt,
       required this.updatedAt});
   @override
@@ -155,6 +177,7 @@ class User extends DataClass implements Insertable<User> {
     map['name'] = Variable<String>(name);
     map['email'] = Variable<String>(email);
     map['password_hash'] = Variable<String>(passwordHash);
+    map['is_email_verified'] = Variable<bool>(isEmailVerified);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -166,6 +189,7 @@ class User extends DataClass implements Insertable<User> {
       name: Value(name),
       email: Value(email),
       passwordHash: Value(passwordHash),
+      isEmailVerified: Value(isEmailVerified),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -179,6 +203,7 @@ class User extends DataClass implements Insertable<User> {
       name: serializer.fromJson<String>(json['name']),
       email: serializer.fromJson<String>(json['email']),
       passwordHash: serializer.fromJson<String>(json['passwordHash']),
+      isEmailVerified: serializer.fromJson<bool>(json['isEmailVerified']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -191,6 +216,7 @@ class User extends DataClass implements Insertable<User> {
       'name': serializer.toJson<String>(name),
       'email': serializer.toJson<String>(email),
       'passwordHash': serializer.toJson<String>(passwordHash),
+      'isEmailVerified': serializer.toJson<bool>(isEmailVerified),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -201,6 +227,7 @@ class User extends DataClass implements Insertable<User> {
           String? name,
           String? email,
           String? passwordHash,
+          bool? isEmailVerified,
           DateTime? createdAt,
           DateTime? updatedAt}) =>
       User(
@@ -208,6 +235,7 @@ class User extends DataClass implements Insertable<User> {
         name: name ?? this.name,
         email: email ?? this.email,
         passwordHash: passwordHash ?? this.passwordHash,
+        isEmailVerified: isEmailVerified ?? this.isEmailVerified,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
       );
@@ -219,6 +247,9 @@ class User extends DataClass implements Insertable<User> {
       passwordHash: data.passwordHash.present
           ? data.passwordHash.value
           : this.passwordHash,
+      isEmailVerified: data.isEmailVerified.present
+          ? data.isEmailVerified.value
+          : this.isEmailVerified,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -231,6 +262,7 @@ class User extends DataClass implements Insertable<User> {
           ..write('name: $name, ')
           ..write('email: $email, ')
           ..write('passwordHash: $passwordHash, ')
+          ..write('isEmailVerified: $isEmailVerified, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -238,8 +270,8 @@ class User extends DataClass implements Insertable<User> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, email, passwordHash, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+      id, name, email, passwordHash, isEmailVerified, createdAt, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -248,6 +280,7 @@ class User extends DataClass implements Insertable<User> {
           other.name == this.name &&
           other.email == this.email &&
           other.passwordHash == this.passwordHash &&
+          other.isEmailVerified == this.isEmailVerified &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -257,6 +290,7 @@ class UsersCompanion extends UpdateCompanion<User> {
   final Value<String> name;
   final Value<String> email;
   final Value<String> passwordHash;
+  final Value<bool> isEmailVerified;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -265,6 +299,7 @@ class UsersCompanion extends UpdateCompanion<User> {
     this.name = const Value.absent(),
     this.email = const Value.absent(),
     this.passwordHash = const Value.absent(),
+    this.isEmailVerified = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -274,6 +309,7 @@ class UsersCompanion extends UpdateCompanion<User> {
     required String name,
     required String email,
     required String passwordHash,
+    this.isEmailVerified = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -287,6 +323,7 @@ class UsersCompanion extends UpdateCompanion<User> {
     Expression<String>? name,
     Expression<String>? email,
     Expression<String>? passwordHash,
+    Expression<bool>? isEmailVerified,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -296,6 +333,7 @@ class UsersCompanion extends UpdateCompanion<User> {
       if (name != null) 'name': name,
       if (email != null) 'email': email,
       if (passwordHash != null) 'password_hash': passwordHash,
+      if (isEmailVerified != null) 'is_email_verified': isEmailVerified,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -307,6 +345,7 @@ class UsersCompanion extends UpdateCompanion<User> {
       Value<String>? name,
       Value<String>? email,
       Value<String>? passwordHash,
+      Value<bool>? isEmailVerified,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<int>? rowid}) {
@@ -315,6 +354,7 @@ class UsersCompanion extends UpdateCompanion<User> {
       name: name ?? this.name,
       email: email ?? this.email,
       passwordHash: passwordHash ?? this.passwordHash,
+      isEmailVerified: isEmailVerified ?? this.isEmailVerified,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -336,6 +376,9 @@ class UsersCompanion extends UpdateCompanion<User> {
     if (passwordHash.present) {
       map['password_hash'] = Variable<String>(passwordHash.value);
     }
+    if (isEmailVerified.present) {
+      map['is_email_verified'] = Variable<bool>(isEmailVerified.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -355,6 +398,7 @@ class UsersCompanion extends UpdateCompanion<User> {
           ..write('name: $name, ')
           ..write('email: $email, ')
           ..write('passwordHash: $passwordHash, ')
+          ..write('isEmailVerified: $isEmailVerified, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -1605,6 +1649,452 @@ class RefreshTokensCompanion extends UpdateCompanion<RefreshToken> {
   }
 }
 
+class $OtpsTable extends Otps with TableInfo<$OtpsTable, Otp> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OtpsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      clientDefault: () => _uuid.v4());
+  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  @override
+  late final GeneratedColumn<String> email = GeneratedColumn<String>(
+      'email', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _otpCodeHashMeta =
+      const VerificationMeta('otpCodeHash');
+  @override
+  late final GeneratedColumn<String> otpCodeHash = GeneratedColumn<String>(
+      'otp_code_hash', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _purposeMeta =
+      const VerificationMeta('purpose');
+  @override
+  late final GeneratedColumn<String> purpose = GeneratedColumn<String>(
+      'purpose', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _expiresAtMeta =
+      const VerificationMeta('expiresAt');
+  @override
+  late final GeneratedColumn<DateTime> expiresAt = GeneratedColumn<DateTime>(
+      'expires_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _isUsedMeta = const VerificationMeta('isUsed');
+  @override
+  late final GeneratedColumn<bool> isUsed = GeneratedColumn<bool>(
+      'is_used', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_used" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _attemptCountMeta =
+      const VerificationMeta('attemptCount');
+  @override
+  late final GeneratedColumn<int> attemptCount = GeneratedColumn<int>(
+      'attempt_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        email,
+        otpCodeHash,
+        purpose,
+        expiresAt,
+        isUsed,
+        attemptCount,
+        createdAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'otps';
+  @override
+  VerificationContext validateIntegrity(Insertable<Otp> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('email')) {
+      context.handle(
+          _emailMeta, email.isAcceptableOrUnknown(data['email']!, _emailMeta));
+    } else if (isInserting) {
+      context.missing(_emailMeta);
+    }
+    if (data.containsKey('otp_code_hash')) {
+      context.handle(
+          _otpCodeHashMeta,
+          otpCodeHash.isAcceptableOrUnknown(
+              data['otp_code_hash']!, _otpCodeHashMeta));
+    } else if (isInserting) {
+      context.missing(_otpCodeHashMeta);
+    }
+    if (data.containsKey('purpose')) {
+      context.handle(_purposeMeta,
+          purpose.isAcceptableOrUnknown(data['purpose']!, _purposeMeta));
+    } else if (isInserting) {
+      context.missing(_purposeMeta);
+    }
+    if (data.containsKey('expires_at')) {
+      context.handle(_expiresAtMeta,
+          expiresAt.isAcceptableOrUnknown(data['expires_at']!, _expiresAtMeta));
+    } else if (isInserting) {
+      context.missing(_expiresAtMeta);
+    }
+    if (data.containsKey('is_used')) {
+      context.handle(_isUsedMeta,
+          isUsed.isAcceptableOrUnknown(data['is_used']!, _isUsedMeta));
+    }
+    if (data.containsKey('attempt_count')) {
+      context.handle(
+          _attemptCountMeta,
+          attemptCount.isAcceptableOrUnknown(
+              data['attempt_count']!, _attemptCountMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Otp map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Otp(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      email: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}email'])!,
+      otpCodeHash: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}otp_code_hash'])!,
+      purpose: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}purpose'])!,
+      expiresAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}expires_at'])!,
+      isUsed: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_used'])!,
+      attemptCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}attempt_count'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $OtpsTable createAlias(String alias) {
+    return $OtpsTable(attachedDatabase, alias);
+  }
+}
+
+class Otp extends DataClass implements Insertable<Otp> {
+  /// The ID of the OTP.
+  final String id;
+
+  /// The email the OTP is sent to.
+  final String email;
+
+  /// The hashed OTP code.
+  final String otpCodeHash;
+
+  /// The purpose of the OTP (email_verification or password_reset).
+  final String purpose;
+
+  /// The date and time the OTP expires.
+  final DateTime expiresAt;
+
+  /// Whether the OTP has been used.
+  final bool isUsed;
+
+  /// The number of verification attempts.
+  final int attemptCount;
+
+  /// The date and time the OTP was created.
+  final DateTime createdAt;
+  const Otp(
+      {required this.id,
+      required this.email,
+      required this.otpCodeHash,
+      required this.purpose,
+      required this.expiresAt,
+      required this.isUsed,
+      required this.attemptCount,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['email'] = Variable<String>(email);
+    map['otp_code_hash'] = Variable<String>(otpCodeHash);
+    map['purpose'] = Variable<String>(purpose);
+    map['expires_at'] = Variable<DateTime>(expiresAt);
+    map['is_used'] = Variable<bool>(isUsed);
+    map['attempt_count'] = Variable<int>(attemptCount);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  OtpsCompanion toCompanion(bool nullToAbsent) {
+    return OtpsCompanion(
+      id: Value(id),
+      email: Value(email),
+      otpCodeHash: Value(otpCodeHash),
+      purpose: Value(purpose),
+      expiresAt: Value(expiresAt),
+      isUsed: Value(isUsed),
+      attemptCount: Value(attemptCount),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory Otp.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Otp(
+      id: serializer.fromJson<String>(json['id']),
+      email: serializer.fromJson<String>(json['email']),
+      otpCodeHash: serializer.fromJson<String>(json['otpCodeHash']),
+      purpose: serializer.fromJson<String>(json['purpose']),
+      expiresAt: serializer.fromJson<DateTime>(json['expiresAt']),
+      isUsed: serializer.fromJson<bool>(json['isUsed']),
+      attemptCount: serializer.fromJson<int>(json['attemptCount']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'email': serializer.toJson<String>(email),
+      'otpCodeHash': serializer.toJson<String>(otpCodeHash),
+      'purpose': serializer.toJson<String>(purpose),
+      'expiresAt': serializer.toJson<DateTime>(expiresAt),
+      'isUsed': serializer.toJson<bool>(isUsed),
+      'attemptCount': serializer.toJson<int>(attemptCount),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  Otp copyWith(
+          {String? id,
+          String? email,
+          String? otpCodeHash,
+          String? purpose,
+          DateTime? expiresAt,
+          bool? isUsed,
+          int? attemptCount,
+          DateTime? createdAt}) =>
+      Otp(
+        id: id ?? this.id,
+        email: email ?? this.email,
+        otpCodeHash: otpCodeHash ?? this.otpCodeHash,
+        purpose: purpose ?? this.purpose,
+        expiresAt: expiresAt ?? this.expiresAt,
+        isUsed: isUsed ?? this.isUsed,
+        attemptCount: attemptCount ?? this.attemptCount,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  Otp copyWithCompanion(OtpsCompanion data) {
+    return Otp(
+      id: data.id.present ? data.id.value : this.id,
+      email: data.email.present ? data.email.value : this.email,
+      otpCodeHash:
+          data.otpCodeHash.present ? data.otpCodeHash.value : this.otpCodeHash,
+      purpose: data.purpose.present ? data.purpose.value : this.purpose,
+      expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+      isUsed: data.isUsed.present ? data.isUsed.value : this.isUsed,
+      attemptCount: data.attemptCount.present
+          ? data.attemptCount.value
+          : this.attemptCount,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Otp(')
+          ..write('id: $id, ')
+          ..write('email: $email, ')
+          ..write('otpCodeHash: $otpCodeHash, ')
+          ..write('purpose: $purpose, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('isUsed: $isUsed, ')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, email, otpCodeHash, purpose, expiresAt,
+      isUsed, attemptCount, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Otp &&
+          other.id == this.id &&
+          other.email == this.email &&
+          other.otpCodeHash == this.otpCodeHash &&
+          other.purpose == this.purpose &&
+          other.expiresAt == this.expiresAt &&
+          other.isUsed == this.isUsed &&
+          other.attemptCount == this.attemptCount &&
+          other.createdAt == this.createdAt);
+}
+
+class OtpsCompanion extends UpdateCompanion<Otp> {
+  final Value<String> id;
+  final Value<String> email;
+  final Value<String> otpCodeHash;
+  final Value<String> purpose;
+  final Value<DateTime> expiresAt;
+  final Value<bool> isUsed;
+  final Value<int> attemptCount;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const OtpsCompanion({
+    this.id = const Value.absent(),
+    this.email = const Value.absent(),
+    this.otpCodeHash = const Value.absent(),
+    this.purpose = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+    this.isUsed = const Value.absent(),
+    this.attemptCount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OtpsCompanion.insert({
+    this.id = const Value.absent(),
+    required String email,
+    required String otpCodeHash,
+    required String purpose,
+    required DateTime expiresAt,
+    this.isUsed = const Value.absent(),
+    this.attemptCount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : email = Value(email),
+        otpCodeHash = Value(otpCodeHash),
+        purpose = Value(purpose),
+        expiresAt = Value(expiresAt);
+  static Insertable<Otp> custom({
+    Expression<String>? id,
+    Expression<String>? email,
+    Expression<String>? otpCodeHash,
+    Expression<String>? purpose,
+    Expression<DateTime>? expiresAt,
+    Expression<bool>? isUsed,
+    Expression<int>? attemptCount,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (email != null) 'email': email,
+      if (otpCodeHash != null) 'otp_code_hash': otpCodeHash,
+      if (purpose != null) 'purpose': purpose,
+      if (expiresAt != null) 'expires_at': expiresAt,
+      if (isUsed != null) 'is_used': isUsed,
+      if (attemptCount != null) 'attempt_count': attemptCount,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OtpsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? email,
+      Value<String>? otpCodeHash,
+      Value<String>? purpose,
+      Value<DateTime>? expiresAt,
+      Value<bool>? isUsed,
+      Value<int>? attemptCount,
+      Value<DateTime>? createdAt,
+      Value<int>? rowid}) {
+    return OtpsCompanion(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      otpCodeHash: otpCodeHash ?? this.otpCodeHash,
+      purpose: purpose ?? this.purpose,
+      expiresAt: expiresAt ?? this.expiresAt,
+      isUsed: isUsed ?? this.isUsed,
+      attemptCount: attemptCount ?? this.attemptCount,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (email.present) {
+      map['email'] = Variable<String>(email.value);
+    }
+    if (otpCodeHash.present) {
+      map['otp_code_hash'] = Variable<String>(otpCodeHash.value);
+    }
+    if (purpose.present) {
+      map['purpose'] = Variable<String>(purpose.value);
+    }
+    if (expiresAt.present) {
+      map['expires_at'] = Variable<DateTime>(expiresAt.value);
+    }
+    if (isUsed.present) {
+      map['is_used'] = Variable<bool>(isUsed.value);
+    }
+    if (attemptCount.present) {
+      map['attempt_count'] = Variable<int>(attemptCount.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OtpsCompanion(')
+          ..write('id: $id, ')
+          ..write('email: $email, ')
+          ..write('otpCodeHash: $otpCodeHash, ')
+          ..write('purpose: $purpose, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('isUsed: $isUsed, ')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$PocketlyDatabase extends GeneratedDatabase {
   _$PocketlyDatabase(QueryExecutor e) : super(e);
   $PocketlyDatabaseManager get managers => $PocketlyDatabaseManager(this);
@@ -1612,12 +2102,13 @@ abstract class _$PocketlyDatabase extends GeneratedDatabase {
   late final $CategoriesTable categories = $CategoriesTable(this);
   late final $ExpensesTable expenses = $ExpensesTable(this);
   late final $RefreshTokensTable refreshTokens = $RefreshTokensTable(this);
+  late final $OtpsTable otps = $OtpsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [users, categories, expenses, refreshTokens];
+      [users, categories, expenses, refreshTokens, otps];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
         [
@@ -1651,6 +2142,7 @@ typedef $$UsersTableCreateCompanionBuilder = UsersCompanion Function({
   required String name,
   required String email,
   required String passwordHash,
+  Value<bool> isEmailVerified,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -1660,6 +2152,7 @@ typedef $$UsersTableUpdateCompanionBuilder = UsersCompanion Function({
   Value<String> name,
   Value<String> email,
   Value<String> passwordHash,
+  Value<bool> isEmailVerified,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -1734,6 +2227,10 @@ class $$UsersTableFilterComposer
 
   ColumnFilters<String> get passwordHash => $composableBuilder(
       column: $table.passwordHash, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isEmailVerified => $composableBuilder(
+      column: $table.isEmailVerified,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -1827,6 +2324,10 @@ class $$UsersTableOrderingComposer
       column: $table.passwordHash,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get isEmailVerified => $composableBuilder(
+      column: $table.isEmailVerified,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -1854,6 +2355,9 @@ class $$UsersTableAnnotationComposer
 
   GeneratedColumn<String> get passwordHash => $composableBuilder(
       column: $table.passwordHash, builder: (column) => column);
+
+  GeneratedColumn<bool> get isEmailVerified => $composableBuilder(
+      column: $table.isEmailVerified, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -1953,6 +2457,7 @@ class $$UsersTableTableManager extends RootTableManager<
             Value<String> name = const Value.absent(),
             Value<String> email = const Value.absent(),
             Value<String> passwordHash = const Value.absent(),
+            Value<bool> isEmailVerified = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -1962,6 +2467,7 @@ class $$UsersTableTableManager extends RootTableManager<
             name: name,
             email: email,
             passwordHash: passwordHash,
+            isEmailVerified: isEmailVerified,
             createdAt: createdAt,
             updatedAt: updatedAt,
             rowid: rowid,
@@ -1971,6 +2477,7 @@ class $$UsersTableTableManager extends RootTableManager<
             required String name,
             required String email,
             required String passwordHash,
+            Value<bool> isEmailVerified = const Value.absent(),
             required DateTime createdAt,
             required DateTime updatedAt,
             Value<int> rowid = const Value.absent(),
@@ -1980,6 +2487,7 @@ class $$UsersTableTableManager extends RootTableManager<
             name: name,
             email: email,
             passwordHash: passwordHash,
+            isEmailVerified: isEmailVerified,
             createdAt: createdAt,
             updatedAt: updatedAt,
             rowid: rowid,
@@ -3126,6 +3634,217 @@ typedef $$RefreshTokensTableProcessedTableManager = ProcessedTableManager<
     (RefreshToken, $$RefreshTokensTableReferences),
     RefreshToken,
     PrefetchHooks Function({bool userId})>;
+typedef $$OtpsTableCreateCompanionBuilder = OtpsCompanion Function({
+  Value<String> id,
+  required String email,
+  required String otpCodeHash,
+  required String purpose,
+  required DateTime expiresAt,
+  Value<bool> isUsed,
+  Value<int> attemptCount,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+typedef $$OtpsTableUpdateCompanionBuilder = OtpsCompanion Function({
+  Value<String> id,
+  Value<String> email,
+  Value<String> otpCodeHash,
+  Value<String> purpose,
+  Value<DateTime> expiresAt,
+  Value<bool> isUsed,
+  Value<int> attemptCount,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+
+class $$OtpsTableFilterComposer
+    extends Composer<_$PocketlyDatabase, $OtpsTable> {
+  $$OtpsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get email => $composableBuilder(
+      column: $table.email, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get otpCodeHash => $composableBuilder(
+      column: $table.otpCodeHash, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get purpose => $composableBuilder(
+      column: $table.purpose, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get expiresAt => $composableBuilder(
+      column: $table.expiresAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isUsed => $composableBuilder(
+      column: $table.isUsed, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get attemptCount => $composableBuilder(
+      column: $table.attemptCount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$OtpsTableOrderingComposer
+    extends Composer<_$PocketlyDatabase, $OtpsTable> {
+  $$OtpsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get email => $composableBuilder(
+      column: $table.email, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get otpCodeHash => $composableBuilder(
+      column: $table.otpCodeHash, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get purpose => $composableBuilder(
+      column: $table.purpose, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get expiresAt => $composableBuilder(
+      column: $table.expiresAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isUsed => $composableBuilder(
+      column: $table.isUsed, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get attemptCount => $composableBuilder(
+      column: $table.attemptCount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$OtpsTableAnnotationComposer
+    extends Composer<_$PocketlyDatabase, $OtpsTable> {
+  $$OtpsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get email =>
+      $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<String> get otpCodeHash => $composableBuilder(
+      column: $table.otpCodeHash, builder: (column) => column);
+
+  GeneratedColumn<String> get purpose =>
+      $composableBuilder(column: $table.purpose, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get expiresAt =>
+      $composableBuilder(column: $table.expiresAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isUsed =>
+      $composableBuilder(column: $table.isUsed, builder: (column) => column);
+
+  GeneratedColumn<int> get attemptCount => $composableBuilder(
+      column: $table.attemptCount, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$OtpsTableTableManager extends RootTableManager<
+    _$PocketlyDatabase,
+    $OtpsTable,
+    Otp,
+    $$OtpsTableFilterComposer,
+    $$OtpsTableOrderingComposer,
+    $$OtpsTableAnnotationComposer,
+    $$OtpsTableCreateCompanionBuilder,
+    $$OtpsTableUpdateCompanionBuilder,
+    (Otp, BaseReferences<_$PocketlyDatabase, $OtpsTable, Otp>),
+    Otp,
+    PrefetchHooks Function()> {
+  $$OtpsTableTableManager(_$PocketlyDatabase db, $OtpsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OtpsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OtpsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OtpsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> email = const Value.absent(),
+            Value<String> otpCodeHash = const Value.absent(),
+            Value<String> purpose = const Value.absent(),
+            Value<DateTime> expiresAt = const Value.absent(),
+            Value<bool> isUsed = const Value.absent(),
+            Value<int> attemptCount = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              OtpsCompanion(
+            id: id,
+            email: email,
+            otpCodeHash: otpCodeHash,
+            purpose: purpose,
+            expiresAt: expiresAt,
+            isUsed: isUsed,
+            attemptCount: attemptCount,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            required String email,
+            required String otpCodeHash,
+            required String purpose,
+            required DateTime expiresAt,
+            Value<bool> isUsed = const Value.absent(),
+            Value<int> attemptCount = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              OtpsCompanion.insert(
+            id: id,
+            email: email,
+            otpCodeHash: otpCodeHash,
+            purpose: purpose,
+            expiresAt: expiresAt,
+            isUsed: isUsed,
+            attemptCount: attemptCount,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$OtpsTableProcessedTableManager = ProcessedTableManager<
+    _$PocketlyDatabase,
+    $OtpsTable,
+    Otp,
+    $$OtpsTableFilterComposer,
+    $$OtpsTableOrderingComposer,
+    $$OtpsTableAnnotationComposer,
+    $$OtpsTableCreateCompanionBuilder,
+    $$OtpsTableUpdateCompanionBuilder,
+    (Otp, BaseReferences<_$PocketlyDatabase, $OtpsTable, Otp>),
+    Otp,
+    PrefetchHooks Function()>;
 
 class $PocketlyDatabaseManager {
   final _$PocketlyDatabase _db;
@@ -3138,4 +3857,5 @@ class $PocketlyDatabaseManager {
       $$ExpensesTableTableManager(_db, _db.expenses);
   $$RefreshTokensTableTableManager get refreshTokens =>
       $$RefreshTokensTableTableManager(_db, _db.refreshTokens);
+  $$OtpsTableTableManager get otps => $$OtpsTableTableManager(_db, _db.otps);
 }

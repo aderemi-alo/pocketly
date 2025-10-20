@@ -164,4 +164,19 @@ class ApiResponse {
       },
     );
   }
+
+  /// Creates a too many requests (429) response
+  static Response tooManyRequests({
+    required String message,
+    dynamic errors,
+  }) {
+    return Response.json(
+      statusCode: HttpStatus.tooManyRequests,
+      body: {
+        'success': false,
+        'message': message,
+        'errors': errors,
+      },
+    );
+  }
 }
