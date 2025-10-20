@@ -20,24 +20,42 @@ class _ExpensesViewState extends ConsumerState<ExpensesView> {
     final sortedMonths = groupedExpenses.keys.toList()
       ..sort((a, b) => b.compareTo(a));
 
+    // Calculate total items for proper lazy loading
+    final totalItems = sortedMonths.fold<int>(
+      0,
+      (sum, month) => sum + groupedExpenses[month]!.length + 1, // +1 for header
+    );
+
     return Expanded(
       child: ListView.builder(
-        itemCount: sortedMonths.length,
+        itemCount: totalItems,
         itemBuilder: (context, index) {
-          final monthKey = sortedMonths[index];
-          final monthExpenses = groupedExpenses[monthKey]!;
-          final totalAmount = monthExpenses.fold(
-            0.0,
-            (sum, expense) => sum + expense.amount,
-          );
+          int currentIndex = index;
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              MonthHeader(monthKey: monthKey, totalAmount: totalAmount),
-              ...monthExpenses.map((expense) => ExpenseCard(expense: expense)),
-            ],
-          );
+          // Find which month and expense this index corresponds to
+          for (final monthKey in sortedMonths) {
+            final monthExpenses = groupedExpenses[monthKey]!;
+
+            if (currentIndex == 0) {
+              // Show month header
+              final totalAmount = monthExpenses.fold(
+                0.0,
+                (sum, expense) => sum + expense.amount,
+              );
+              return MonthHeader(monthKey: monthKey, totalAmount: totalAmount);
+            }
+
+            currentIndex--;
+
+            if (currentIndex < monthExpenses.length) {
+              // Show expense card
+              return ExpenseCard(expense: monthExpenses[currentIndex]);
+            }
+
+            currentIndex -= monthExpenses.length;
+          }
+
+          return const SizedBox.shrink();
         },
       ),
     );
@@ -48,7 +66,7 @@ class _ExpensesViewState extends ConsumerState<ExpensesView> {
     final expensesState = ref.watch(expensesProvider);
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Padding(
         padding: context.symmetric(horizontal: 16, vertical: 24),
         child: expensesState.expenses.isEmpty
@@ -59,13 +77,15 @@ class _ExpensesViewState extends ConsumerState<ExpensesView> {
                     Container(
                       padding: context.all(20),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.4),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.4),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         LucideIcons.receipt,
                         size: 60,
-                        color: AppColors.primary,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     context.verticalSpace(16),
@@ -73,9 +93,7 @@ class _ExpensesViewState extends ConsumerState<ExpensesView> {
                     context.verticalSpace(8),
                     Text(
                       'Start tracking by adding your first expense',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                      style: theme.textTheme.bodyLarge,
                     ),
                   ],
                 ),

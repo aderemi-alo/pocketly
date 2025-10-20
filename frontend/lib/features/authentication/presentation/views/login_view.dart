@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
 
@@ -92,16 +93,12 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         // Logo and Title
                         Text(
                           'Welcome Back',
-                          style: AppTextTheme.headlineMedium.copyWith(
-                            color: AppColors.textPrimary,
-                          ),
+                          style: Theme.of(context).textTheme.headlineMedium,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Sign in to continue managing your expenses',
-                          style: AppTextTheme.bodyLarge.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge,
                           textAlign: TextAlign.center,
                         ),
 
@@ -141,9 +138,8 @@ class _LoginViewState extends ConsumerState<LoginView> {
                             onPressed: _navigateToForgotPassword,
                             child: Text(
                               'Forgot Password?',
-                              style: AppTextTheme.bodyMedium.copyWith(
-                                color: AppColors.primary,
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: AppColors.primary),
                             ),
                           ),
                         ),
@@ -182,9 +178,10 @@ class _LoginViewState extends ConsumerState<LoginView> {
                                   )
                                 : Text(
                                     'Sign In',
-                                    style: AppTextTheme.titleMedium.copyWith(
-                                      color: Colors.white,
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(color: Colors.white),
                                   ),
                           ),
                         ),
@@ -244,28 +241,27 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         Center(
                           child: Text.rich(
                             TextSpan(
-                              text: "Don't have an account? ",
-                              style: AppTextTheme.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
                               children: [
-                                WidgetSpan(
-                                  child: TextButton(
-                                    onPressed: _navigateToSignUp,
-                                    style: TextButton.styleFrom(
-                                      padding: EdgeInsets.zero,
-                                      minimumSize: Size.zero,
-                                      tapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
-                                    ),
-                                    child: Text(
-                                      'Sign Up',
-                                      style: AppTextTheme.bodyMedium.copyWith(
-                                        color: AppColors.primary,
+                                TextSpan(
+                                  text: "Don't have an account? ",
+                                  style: Theme.of(context).textTheme.bodyLarge
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                                TextSpan(
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = _navigateToSignUp,
+                                  text: 'Sign Up',
+                                  style: Theme.of(context).textTheme.bodyLarge
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
                                         fontWeight: FontWeight.w600,
                                       ),
-                                    ),
-                                  ),
                                 ),
                               ],
                             ),

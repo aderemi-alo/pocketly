@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:pocketly/core/core.dart';
 
 class TokenStorageService {
   final FlutterSecureStorage _storage;
@@ -10,6 +13,23 @@ class TokenStorageService {
   static const _refreshTokenKey = 'refresh_token';
   static const _deviceIdKey = 'device_id';
   static const _userIdKey = 'user_id';
+  static const _userDataKey = 'user_data';
+
+  Future<void> saveUserData(UserModel user) async {
+    await _storage.write(key: _userDataKey, value: jsonEncode(user.toJson()));
+  }
+
+  Future<UserModel?> getUserData() async {
+    final userData = await _storage.read(key: _userDataKey);
+    if (userData != null) {
+      return UserModel.fromJson(jsonDecode(userData));
+    }
+    return null;
+  }
+
+  Future<void> clearUserData() async {
+    await _storage.delete(key: _userDataKey);
+  }
 
   Future<void> saveTokens({
     required String accessToken,

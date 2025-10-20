@@ -25,6 +25,9 @@ class AuthRepositoryImpl implements AuthRepository {
         userId: authResponse.user.id!,
       );
 
+      // Store user data
+      await _tokenStorage.saveUserData(authResponse.user);
+
       return authResponse;
     } catch (e) {
       throw Exception('Login failed: ${e.toString()}');
@@ -48,6 +51,8 @@ class AuthRepositoryImpl implements AuthRepository {
         refreshToken: authResponse.refreshToken,
         userId: authResponse.user.id!,
       );
+      // Store user data
+      await _tokenStorage.saveUserData(authResponse.user);
 
       return authResponse;
     } catch (e) {
@@ -76,7 +81,7 @@ class AuthRepositoryImpl implements AuthRepository {
         data: {
           'refreshToken': refreshToken,
           'deviceId': deviceId,
-          'rotateToken': false,
+          'rotateToken': true,
         },
       );
 

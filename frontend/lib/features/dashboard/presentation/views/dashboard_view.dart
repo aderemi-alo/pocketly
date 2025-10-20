@@ -31,12 +31,14 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                   child: Container(
                     padding: context.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.shadow.withValues(alpha: 0.05),
+                          blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
                       ],
@@ -44,22 +46,23 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const TextWidget(
+                        TextWidget(
                           text: 'Total Spent',
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         context.verticalSpace(4),
                         TextWidget(
                           text: '₦${FormatUtils.formatCurrency(totalSpent)}',
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                         context.verticalSpace(2),
-                        const TextWidget(
+                        TextWidget(
                           text: 'This Month',
                           fontSize: 10,
-                          color: AppColors.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ],
                     ),
@@ -73,12 +76,14 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                   child: Container(
                     padding: context.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.shadow.withValues(alpha: 0.05),
+                          blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
                       ],
@@ -86,22 +91,23 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const TextWidget(
+                        TextWidget(
                           text: 'Transactions',
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         context.verticalSpace(4),
                         TextWidget(
                           text: '$totalTransactions',
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                         context.verticalSpace(2),
-                        const TextWidget(
+                        TextWidget(
                           text: 'This Month',
                           fontSize: 10,
-                          color: AppColors.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ],
                     ),
@@ -116,12 +122,14 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
             Container(
               padding: context.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.shadow.withValues(alpha: 0.05),
+                    blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -129,19 +137,19 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       TextWidget(
                         text: 'Spending by Category',
                         fontSize: 16,
-                        color: AppColors.primary,
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.w600,
                       ),
                       TextWidget(
                         text: 'This Month',
                         fontSize: 12,
-                        color: AppColors.textSecondary,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ],
                   ),
@@ -157,12 +165,14 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
             Container(
               padding: context.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.shadow.withValues(alpha: 0.05),
+                    blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -170,10 +180,10 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const TextWidget(
+                  TextWidget(
                     text: 'This Week\'s Spending',
                     fontSize: 16,
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w600,
                   ),
                   context.verticalSpace(16),
@@ -195,9 +205,9 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
       return Container(
         padding: context.symmetric(vertical: 32),
         alignment: Alignment.center,
-        child: const TextWidget(
+        child: TextWidget(
           text: 'No data yet',
-          color: AppColors.textSecondary,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontSize: 14,
         ),
       );
@@ -221,45 +231,55 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
         context.verticalSpace(16),
 
         // Legend
-        ...categoryData.map((categoryData) {
-          return GestureDetector(
-            onTap: () =>
-                _showCategoryDetail(categoryData.categoryId, expensesState),
-            child: Padding(
-              padding: context.only(bottom: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: categoryData.color.withValues(alpha: 0.12),
-                          shape: BoxShape.circle,
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: categoryData.length,
+          itemBuilder: (context, index) {
+            final category = categoryData[index];
+            return GestureDetector(
+              onTap: () =>
+                  _showCategoryDetail(category.categoryId, expensesState),
+              child: Padding(
+                padding: context.only(bottom: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: category.color.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            category.icon,
+                            size: 16,
+                            color: category.color,
+                          ),
                         ),
-                        child: Icon(
-                          categoryData.icon,
-                          size: 16,
-                          color: categoryData.color,
+                        context.horizontalSpace(8),
+                        TextWidget(
+                          text: category.name,
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
-                      ),
-                      context.horizontalSpace(8),
-                      TextWidget(text: categoryData.name, fontSize: 14),
-                    ],
-                  ),
-                  TextWidget(
-                    text: '${categoryData.percentage.toStringAsFixed(1)} %',
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                    letterSpacing: -0.5,
-                  ),
-                ],
+                      ],
+                    ),
+                    TextWidget(
+                      text: '${category.percentage.toStringAsFixed(1)} %',
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      letterSpacing: -0.5,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        }),
+            );
+          },
+        ),
       ],
     );
   }

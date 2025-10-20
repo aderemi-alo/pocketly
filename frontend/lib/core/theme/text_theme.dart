@@ -1,149 +1,168 @@
 import 'package:pocketly/core/core.dart';
 
 class AppTextTheme {
-  static const String _fontFamily = 'PlusJakartaSans';
+  static const String _fontFamily = 'Roboto';
 
-  // Headlines - Bold, 24-28px, #1A1A2E
-  static const TextStyle headlineLarge = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 28,
-    fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
-    height: 1.2,
+  // LIGHT MODE TEXT THEME
+  static TextTheme get lightTextTheme => TextTheme(
+    displayLarge: _displayLarge(AppColors.textPrimary),
+    displayMedium: _displayMedium(AppColors.textPrimary),
+    displaySmall: _displaySmall(AppColors.textPrimary),
+    headlineLarge: _headlineLarge(AppColors.textPrimary),
+    headlineMedium: _headlineMedium(AppColors.textPrimary),
+    headlineSmall: _headlineSmall(AppColors.textPrimary),
+    titleLarge: _titleLarge(AppColors.textPrimary),
+    titleMedium: _titleMedium(AppColors.textPrimary),
+    titleSmall: _titleSmall(AppColors.textPrimary),
+    bodyLarge: _bodyLarge(AppColors.textPrimary),
+    bodyMedium: _bodyMedium(AppColors.textPrimary),
+    bodySmall: _bodySmall(AppColors.textPrimary),
+    labelLarge: _labelLarge(AppColors.textTertiary),
+    labelMedium: _labelMedium(AppColors.textTertiary),
+    labelSmall: _labelSmall(AppColors.textTertiary),
   );
 
-  static const TextStyle headlineMedium = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 26,
-    fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
-    height: 1.2,
+  // DARK MODE TEXT THEME
+  static TextTheme get darkTextTheme => TextTheme(
+    displayLarge: _displayLarge(AppColorsDark.textPrimary),
+    displayMedium: _displayMedium(AppColorsDark.textPrimary),
+    displaySmall: _displaySmall(AppColorsDark.textPrimary),
+    headlineLarge: _headlineLarge(AppColorsDark.textPrimary),
+    headlineMedium: _headlineMedium(AppColorsDark.textPrimary),
+    headlineSmall: _headlineSmall(AppColorsDark.textPrimary),
+    titleLarge: _titleLarge(AppColorsDark.textPrimary),
+    titleMedium: _titleMedium(AppColorsDark.textPrimary),
+    titleSmall: _titleSmall(AppColorsDark.textPrimary),
+    bodyLarge: _bodyLarge(AppColorsDark.textPrimary),
+    bodyMedium: _bodyMedium(AppColorsDark.textPrimary),
+    bodySmall: _bodySmall(AppColorsDark.textPrimary),
+    labelLarge: _labelLarge(AppColorsDark.textTertiary),
+    labelMedium: _labelMedium(AppColorsDark.textTertiary),
+    labelSmall: _labelSmall(AppColorsDark.textTertiary),
   );
 
-  static const TextStyle headlineSmall = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
-    height: 1.2,
-  );
+  // DEPRECATED: Use lightTextTheme instead
+  @Deprecated('Use lightTextTheme instead')
+  static TextTheme get textTheme => lightTextTheme;
 
-  // Titles - Semi-bold, 18-20px, #1A1A2E
-  static const TextStyle titleLarge = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 20,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
-    height: 1.3,
-  );
-
-  static const TextStyle titleMedium = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 18,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
-    height: 1.3,
-  );
-
-  static const TextStyle titleSmall = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
-    height: 1.3,
-  );
-
-  // Body - Regular, 14-16px, #6B6B80
-  static const TextStyle bodyLarge = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 16,
-    fontWeight: FontWeight.w400,
-    color: AppColors.textPrimary,
-    height: 1.5,
-  );
-
-  static const TextStyle bodyMedium = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
-    color: AppColors.textPrimary,
-    height: 1.5,
-  );
-
-  static const TextStyle bodySmall = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 12,
-    fontWeight: FontWeight.w400,
-    color: AppColors.textPrimary,
-    height: 1.4,
-  );
-
-  // Captions - Regular, 12-14px, #9999AB
-  static const TextStyle labelLarge = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
-    color: AppColors.textTertiary,
-    height: 1.4,
-  );
-
-  static const TextStyle labelMedium = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 12,
-    fontWeight: FontWeight.w400,
-    color: AppColors.textTertiary,
-    height: 1.4,
-  );
-
-  static const TextStyle labelSmall = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 10,
-    fontWeight: FontWeight.w400,
-    color: AppColors.textTertiary,
-    height: 1.3,
-  );
-
-  // Display styles for special cases
-  static const TextStyle displayLarge = TextStyle(
+  // Private style builders
+  static TextStyle _displayLarge(Color color) => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 32,
     fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
+    color: color,
     height: 1.1,
   );
 
-  static const TextStyle displayMedium = TextStyle(
+  static TextStyle _displayMedium(Color color) => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 30,
     fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
+    color: color,
     height: 1.1,
   );
 
-  static const TextStyle displaySmall = TextStyle(
+  static TextStyle _displaySmall(Color color) => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 28,
     fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
+    color: color,
     height: 1.1,
   );
 
-  // Complete TextTheme
-  static const TextTheme textTheme = TextTheme(
-    displayLarge: displayLarge,
-    displayMedium: displayMedium,
-    displaySmall: displaySmall,
-    headlineLarge: headlineLarge,
-    headlineMedium: headlineMedium,
-    headlineSmall: headlineSmall,
-    titleLarge: titleLarge,
-    titleMedium: titleMedium,
-    titleSmall: titleSmall,
-    bodyLarge: bodyLarge,
-    bodyMedium: bodyMedium,
-    bodySmall: bodySmall,
-    labelLarge: labelLarge,
-    labelMedium: labelMedium,
-    labelSmall: labelSmall,
+  static TextStyle _headlineLarge(Color color) => TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 28,
+    fontWeight: FontWeight.bold,
+    color: color,
+    height: 1.2,
+  );
+
+  static TextStyle _headlineMedium(Color color) => TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 26,
+    fontWeight: FontWeight.bold,
+    color: color,
+    height: 1.2,
+  );
+
+  static TextStyle _headlineSmall(Color color) => TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    color: color,
+    height: 1.2,
+  );
+
+  static TextStyle _titleLarge(Color color) => TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    color: color,
+    height: 1.3,
+  );
+
+  static TextStyle _titleMedium(Color color) => TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    color: color,
+    height: 1.3,
+  );
+
+  static TextStyle _titleSmall(Color color) => TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: color,
+    height: 1.3,
+  );
+
+  static TextStyle _bodyLarge(Color color) => TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 16,
+    fontWeight: FontWeight.w400,
+    color: color,
+    height: 1.5,
+  );
+
+  static TextStyle _bodyMedium(Color color) => TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    color: color,
+    height: 1.5,
+  );
+
+  static TextStyle _bodySmall(Color color) => TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: color,
+    height: 1.4,
+  );
+
+  static TextStyle _labelLarge(Color color) => TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    color: color,
+    height: 1.4,
+  );
+
+  static TextStyle _labelMedium(Color color) => TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: color,
+    height: 1.4,
+  );
+
+  static TextStyle _labelSmall(Color color) => TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 10,
+    fontWeight: FontWeight.w400,
+    color: color,
+    height: 1.3,
   );
 }

@@ -55,6 +55,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return;
     }
 
+    final cachedUser = await _tokenStorage.getUserData();
+
     // Check if access token is expired
     final isExpired = await _tokenStorage.isAccessTokenExpired();
 
@@ -63,23 +65,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final refreshToken = await _tokenStorage.getRefreshToken();
       if (refreshToken != null) {
         try {
-          await _authRepository.refreshToken(refreshToken);
+          final response = await _authRepository.refreshToken(refreshToken);
           // If refresh succeeds, user is authenticated
-          state = state.copyWith(isAuthenticated: true);
+          await _tokenStorage.saveUserData(response.user);
+          state = state.copyWith(isAuthenticated: true, user: response.user);
         } catch (e) {
           // Refresh failed, clear tokens and remain unauthenticated
           debugPrint('Token refresh failed on startup: $e');
           await _tokenStorage.clearTokens();
+          await _tokenStorage.clearUserData();
           state = state.copyWith(isAuthenticated: false);
         }
       } else {
         // No refresh token, clear everything
         await _tokenStorage.clearTokens();
+        await _tokenStorage.clearUserData();
         state = state.copyWith(isAuthenticated: false);
       }
     } else {
       // Token is still valid
-      state = state.copyWith(isAuthenticated: true);
+      state = state.copyWith(isAuthenticated: true, user: cachedUser);
     }
   }
 
@@ -95,6 +100,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
 
       final response = await _authRepository.login(request);
+
+      await _tokenStorage.saveUserData(response.user);
+      await _tokenStorage.saveTokens(
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+        userId: response.user.id!,
+      );
 
       state = state.copyWith(
         isLoading: false,
@@ -119,6 +131,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
 
       final response = await _authRepository.register(request);
+      await _tokenStorage.saveUserData(response.user);
+      await _tokenStorage.saveTokens(
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+        userId: response.user.id!,
+      );
 
       state = state.copyWith(
         isLoading: false,
@@ -135,9 +153,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     try {
       await _authRepository.logout();
+      await _tokenStorage.clearUserData();
+      await _tokenStorage.clearTokens();
       state = const AuthState();
     } catch (e) {
       // Clear state even if logout fails
+      await _tokenStorage.clearUserData();
+      await _tokenStorage.clearTokens();
       state = const AuthState();
     }
   }

@@ -27,6 +27,7 @@ class AppRoutes {
   static const expenses = '/expenses';
   static const addExpense = 'add';
   static const settings = '/settings';
+  static const profileSettings = 'profile';
 }
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -111,6 +112,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: AppRoutes.settings,
                 name: 'settings',
                 builder: (context, state) => const SettingsView(),
+                routes: [
+                  GoRoute(
+                    path: AppRoutes.profileSettings,
+                    name: 'profileSettings',
+                    builder: (context, state) => const ProfileSettingsView(),
+                    parentNavigatorKey: _rootNavigatorKey,
+                  ),
+                ],
               ),
             ],
           ),

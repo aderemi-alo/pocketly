@@ -104,6 +104,10 @@ extension ResponsiveLayout on BuildContext {
     );
   }
 
+  EdgeInsets screenPadding() {
+    return EdgeInsets.symmetric(horizontal: w(24), vertical: h(20));
+  }
+
   /// Get responsive padding with specific sides
   EdgeInsets only({
     double top = 0,
