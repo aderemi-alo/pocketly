@@ -237,25 +237,11 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Avatar Section
-                  // _buildAvatarSection(user),
-                  const UserAvatarWidget(),
-                  const SizedBox(height: 24),
-
-                  // // Email Verification Status
-                  // _buildEmailVerificationStatus(),
-                  // const SizedBox(height: 24),
-
-                  // Success/Error Messages
-                  if (_errorMessage != null) ...[
-                    _buildMessageCard(_errorMessage!, true),
-                    const SizedBox(height: 16),
-                  ],
-                  if (_successMessage != null) ...[
-                    _buildMessageCard(_successMessage!, false),
-                    const SizedBox(height: 16),
-                  ],
+                  const Center(child: UserAvatarWidget()),
+                  context.verticalSpace(24),
 
                   // Profile Information
                   if (!_changePasswordMode) _buildProfileSection(user),
@@ -413,22 +399,29 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
           children: [
             Text(
               'Account Information',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             if (!_editMode)
-              IconButton(
-                padding: EdgeInsets.zero,
-                visualDensity: VisualDensity.compact,
+              TextButton.icon(
                 onPressed: () => setState(() => _editMode = true),
                 icon: Icon(
                   LucideIcons.pencil,
-                  size: 20,
+                  size: 16,
                   color: Theme.of(context).colorScheme.primary,
+                ),
+                label: Text(
+                  'Edit',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
         if (_editMode) ...[
           Form(
@@ -513,9 +506,7 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
             ),
           ),
         ] else ...[
-          _buildInfoRow('Full Name', user?.name ?? ''),
-          const SizedBox(height: 12),
-          _buildInfoRow('Email', user?.email ?? ''),
+          _buildProfileInfoCard(user),
         ],
       ],
     );
@@ -531,26 +522,29 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
           children: [
             Text(
               'Password',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             if (!_changePasswordMode)
-              IconButton(
-                padding: EdgeInsets.zero,
-                visualDensity: VisualDensity.compact,
+              TextButton.icon(
                 onPressed: () => setState(() => _changePasswordMode = true),
-                icon: const Icon(
+                icon: Icon(
                   LucideIcons.pencil,
-                  size: 20,
-                  color: AppColors.primary,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                label: Text(
+                  'Change',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
         if (_changePasswordMode) ...[
           Form(
@@ -653,14 +647,7 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
             ),
           ),
         ] else ...[
-          Text(
-            '••••••••',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 16,
-              letterSpacing: 4,
-            ),
-          ),
+          _buildPasswordInfoCard(),
         ],
       ],
     );
@@ -803,20 +790,114 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+  Widget _buildProfileInfoCard(UserModel? user) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Column(
+        children: [
+          _buildInfoRow(
+            'Full Name',
+            user?.name ?? 'Not provided',
+            LucideIcons.user,
+          ),
+          const SizedBox(height: 16),
+          _buildInfoRow(
+            'Email',
+            user?.email ?? 'Not provided',
+            LucideIcons.mail,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPasswordInfoCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            LucideIcons.lock,
+            size: 20,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Password',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '••••••••',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 16,
+                    letterSpacing: 4,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, IconData icon) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 20,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface,
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ),
       ],
