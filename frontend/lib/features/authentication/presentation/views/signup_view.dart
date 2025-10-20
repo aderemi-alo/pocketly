@@ -155,7 +155,23 @@ class _SignupViewState extends ConsumerState<SignupView> {
                               ),
                         ),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 8),
+
+                        // Forgot Password
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => context.push('/forgot-password'),
+                            child: Text(
+                              'Forgot Password?',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
 
                         // Sign Up Button
                         SizedBox(

@@ -164,6 +164,30 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> updatePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    state = state.copyWith(isLoading: true);
+
+    try {
+      await _authRepository.updatePassword(currentPassword, newPassword);
+
+      // Logout after successful password change
+      await logout();
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> updateUserEmailVerification(bool isVerified) async {
+    if (state.user != null) {
+      final updatedUser = state.user!.copyWith(isEmailVerified: isVerified);
+      await _tokenStorage.saveUserData(updatedUser);
+      state = state.copyWith(user: updatedUser);
+    }
+  }
+
   void clearError() {
     state = state.copyWith(error: null);
   }

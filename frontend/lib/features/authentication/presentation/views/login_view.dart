@@ -48,10 +48,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
   }
 
   void _navigateToForgotPassword() {
-    // TODO: Navigate to forgot password screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Forgot password screen coming soon!')),
-    );
+    context.push('/forgot-password');
   }
 
   @override

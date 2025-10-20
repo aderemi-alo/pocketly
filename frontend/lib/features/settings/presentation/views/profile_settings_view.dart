@@ -28,8 +28,6 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
   bool _showNewPassword = false;
   bool _showConfirmPassword = false;
   bool _isLoading = false;
-  String? _errorMessage;
-  String? _successMessage;
 
   @override
   void initState() {
@@ -53,27 +51,6 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
     super.dispose();
   }
 
-  void _clearMessages() {
-    setState(() {
-      _errorMessage = null;
-      _successMessage = null;
-    });
-  }
-
-  void _setError(String message) {
-    setState(() {
-      _errorMessage = message;
-      _successMessage = null;
-    });
-  }
-
-  void _setSuccess(String message) {
-    setState(() {
-      _successMessage = message;
-      _errorMessage = null;
-    });
-  }
-
   void _setLoading(bool loading) {
     setState(() {
       _isLoading = loading;
@@ -83,7 +60,6 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
   Future<void> _handleUpdateProfile() async {
     if (!_profileFormKey.currentState!.validate()) return;
 
-    _clearMessages();
     _setLoading(true);
 
     try {
@@ -91,12 +67,11 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
       // For now, just simulate success
       await Future.delayed(const Duration(seconds: 1));
 
-      _setSuccess('Profile updated successfully');
       setState(() {
         _editMode = false;
       });
     } catch (e) {
-      _setError('Failed to update profile: ${e.toString()}');
+      // Handle error
     } finally {
       _setLoading(false);
     }
@@ -106,39 +81,48 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
     if (!_passwordFormKey.currentState!.validate()) return;
 
     if (_newPasswordController.text != _confirmPasswordController.text) {
-      _setError('Passwords do not match');
       return;
     }
 
-    _clearMessages();
     _setLoading(true);
 
     try {
-      // TODO: Implement password update API call
-      // For now, just simulate success
-      await Future.delayed(const Duration(seconds: 1));
+      // Show confirmation dialog
+      final shouldProceed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Change Password'),
+          content: const Text(
+            'Your password will be changed and you\'ll be logged out for security. Continue?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Continue'),
+            ),
+          ],
+        ),
+      );
 
-      _setSuccess('Password updated successfully');
+      if (shouldProceed != true) {
+        _setLoading(false);
+        return;
+      }
+
+      await ref
+          .read(authProvider.notifier)
+          .updatePassword(
+            _currentPasswordController.text,
+            _newPasswordController.text,
+          );
+
       _handleCancelPasswordChange();
     } catch (e) {
-      _setError('Failed to update password: ${e.toString()}');
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> _handleSendVerification() async {
-    _clearMessages();
-    _setLoading(true);
-
-    try {
-      // TODO: Implement email verification API call
-      // For now, just simulate success
-      await Future.delayed(const Duration(seconds: 1));
-
-      _setSuccess('Verification email sent!');
-    } catch (e) {
-      _setError('Failed to send verification email: ${e.toString()}');
+      // Handle error
     } finally {
       _setLoading(false);
     }
@@ -149,7 +133,6 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
     setState(() {
       _editMode = false;
     });
-    _clearMessages();
   }
 
   void _handleCancelPasswordChange() {
@@ -162,7 +145,6 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
       _showNewPassword = false;
       _showConfirmPassword = false;
     });
-    _clearMessages();
   }
 
   void _handleDeleteAccount() {
@@ -183,7 +165,6 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
             onPressed: () {
               Navigator.of(context).pop();
               // TODO: Implement actual delete account
-              _setError('Delete account functionality not implemented yet');
             },
             child: const Text(
               'Delete',
@@ -255,136 +236,6 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAvatarSection(UserModel? user) {
-    final name = user?.name ?? '';
-    final email = user?.email ?? '';
-
-    debugPrint('Avatar name: $name'); // Debug to verify name is being passed
-
-    return Column(
-      children: [
-        const UserAvatarWidget(),
-        // Avatar
-        Container(
-          width: 100,
-          height: 100,
-          padding: context.all(16),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: AvatarColorGenerator.generate(name),
-          ),
-          child: name.isEmpty
-              ? const Icon(LucideIcons.user, color: AppColors.surface, size: 40)
-              : Center(
-                  child: Text(
-                    name[0].toUpperCase(),
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleLarge!.copyWith(color: AppColors.surface),
-                  ),
-                ),
-        ),
-        const SizedBox(height: 16),
-
-        // Name and Email
-        Text(
-          name.isEmpty ? 'User' : name,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          email,
-          style: TextStyle(
-            fontSize: 16,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmailVerificationStatus() {
-    // TODO: Implement actual email verification check
-    // For now, always show unverified status
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.warning.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.warning, color: AppColors.warning, size: 20),
-              const SizedBox(width: 12),
-              Text(
-                'Email not verified',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Verify your email to secure your account',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: _isLoading ? null : _handleSendVerification,
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: AppColors.warning),
-                foregroundColor: AppColors.warning,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text('Send Verification Email'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageCard(String message, bool isError) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isError
-            ? AppColors.error.withValues(alpha: 0.1)
-            : AppColors.secondaryLight,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isError
-              ? AppColors.error.withValues(alpha: 0.2)
-              : AppColors.secondary.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Text(
-        message,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: isError ? AppColors.error : AppColors.secondary,
-          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -810,11 +661,7 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
             LucideIcons.user,
           ),
           const SizedBox(height: 16),
-          _buildInfoRow(
-            'Email',
-            user?.email ?? 'Not provided',
-            LucideIcons.mail,
-          ),
+          _buildEmailRow(user),
         ],
       ),
     );
@@ -866,6 +713,68 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildEmailRow(UserModel? user) {
+    final isVerified = user?.isEmailVerified ?? true;
+
+    return Row(
+      children: [
+        Icon(
+          LucideIcons.mail,
+          size: 20,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Email',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      user?.email ?? 'Not provided',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  if (!isVerified)
+                    GestureDetector(
+                      onTap: () => context.push(
+                        '/email-verification',
+                        extra: user?.email,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Icon(
+                          Icons.warning,
+                          size: 16,
+                          color: AppColors.warning,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

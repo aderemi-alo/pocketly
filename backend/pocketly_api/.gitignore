@@ -17,3 +17,4 @@ build/
 # Test related files
 coverage/
 run_dev.sh
+gray-horst.db

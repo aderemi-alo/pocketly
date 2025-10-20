@@ -100,4 +100,19 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('Token refresh failed: ${e.toString()}');
     }
   }
+
+  @override
+  Future<void> updatePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    try {
+      await _apiClient.dio.post(
+        '/auth/update-password',
+        data: {'currentPassword': currentPassword, 'newPassword': newPassword},
+      );
+    } catch (e) {
+      throw Exception('Password update failed: ${e.toString()}');
+    }
+  }
 }

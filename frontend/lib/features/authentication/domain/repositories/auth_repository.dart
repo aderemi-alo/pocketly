@@ -6,4 +6,5 @@ abstract class AuthRepository {
   Future<AuthResponse> register(LoginRequest request);
   Future<void> logout();
   Future<AuthResponse> refreshToken(String refreshToken);
+  Future<void> updatePassword(String currentPassword, String newPassword);
 }

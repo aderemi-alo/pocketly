@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
+import 'package:pocketly/features/authentication/presentation/views/forgot_password_view.dart';
+import 'package:pocketly/features/authentication/presentation/views/email_verification_view.dart';
 
 // Helper class to refresh router when auth state changes
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -23,6 +25,8 @@ class GoRouterRefreshStream extends ChangeNotifier {
 class AppRoutes {
   static const login = '/login';
   static const signup = '/signup';
+  static const forgotPassword = '/forgot-password';
+  static const emailVerification = '/email-verification';
   static const dashboard = '/';
   static const expenses = '/expenses';
   static const addExpense = 'add';
@@ -47,7 +51,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthenticated = authState.isAuthenticated;
       final isOnAuthPage =
           state.matchedLocation == AppRoutes.login ||
-          state.matchedLocation == AppRoutes.signup;
+          state.matchedLocation == AppRoutes.signup ||
+          state.matchedLocation == AppRoutes.forgotPassword;
 
       // Redirect to login if not authenticated and not on auth page
       if (!isAuthenticated && !isOnAuthPage) {
@@ -71,6 +76,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.signup,
         name: 'signup',
         builder: (context, state) => const SignupView(),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        name: 'forgotPassword',
+        builder: (context, state) => const ForgotPasswordView(),
+      ),
+      GoRoute(
+        path: AppRoutes.emailVerification,
+        name: 'emailVerification',
+        builder: (context, state) {
+          final email = state.extra as String? ?? '';
+          return EmailVerificationView(email: email);
+        },
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

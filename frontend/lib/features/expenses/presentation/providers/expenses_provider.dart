@@ -39,6 +39,24 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       return;
     }
 
+    // Check email verification limits
+    final authState = ref.read(authProvider);
+    final isVerified = authState.user?.isEmailVerified ?? true;
+    final expenseCount = state.expenses.length;
+
+    if (!isVerified) {
+      if (expenseCount >= 20) {
+        // Block at 21st expense
+        setError('Verify your email to add more expenses');
+        // Show dialog prompting verification
+        _showVerificationDialog();
+        return;
+      } else if (expenseCount >= 14) {
+        // Warning at 15th expense
+        _showWarningSnackbar();
+      }
+    }
+
     try {
       setLoading(true);
       final expense = Expense(
@@ -133,6 +151,16 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
 
   void setError(String error) {
     state = state.copyWith(error: error, isLoading: false);
+  }
+
+  void _showWarningSnackbar() {
+    // This will be handled by the UI layer
+    // The warning will be shown as a snackbar in the add expense view
+  }
+
+  void _showVerificationDialog() {
+    // This will be handled by the UI layer
+    // The dialog will be shown in the add expense view
   }
 
   // Get expenses by category
