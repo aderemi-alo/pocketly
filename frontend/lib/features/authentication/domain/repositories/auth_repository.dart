@@ -1,4 +1,4 @@
-import 'package:pocketly/core/models/auth_response.dart';
+import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/authentication/domain/entities/entities.dart';
 
 abstract class AuthRepository {
@@ -7,4 +7,6 @@ abstract class AuthRepository {
   Future<void> logout();
   Future<AuthResponse> refreshToken(String refreshToken);
   Future<void> updatePassword(String currentPassword, String newPassword);
+  Future<UserModel> updateProfile(UpdateProfileRequest request);
+  Future<UserModel> fetchUserProfile();
 }

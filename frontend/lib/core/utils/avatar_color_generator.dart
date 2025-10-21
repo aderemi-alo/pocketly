@@ -31,9 +31,6 @@ class AvatarColorGenerator {
     final colorIndex1 = hash % brightColors.length;
     final colorIndex2 = (hash + 1) % brightColors.length;
 
-    debugPrint('colorIndex1: $colorIndex1');
-    debugPrint('colorIndex2: $colorIndex2');
-
     return LinearGradient(
       colors: [brightColors[colorIndex1], brightColors[colorIndex2]],
       begin: Alignment.topLeft,

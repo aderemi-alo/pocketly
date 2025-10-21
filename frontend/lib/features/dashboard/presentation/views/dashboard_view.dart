@@ -206,7 +206,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
         padding: context.symmetric(vertical: 32),
         alignment: Alignment.center,
         child: TextWidget(
-          text: 'No data yet',
+          text: 'Add your first Expense',
           color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontSize: 14,
         ),

@@ -3,6 +3,7 @@ import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
 import 'package:pocketly/features/authentication/presentation/views/forgot_password_view.dart';
 import 'package:pocketly/features/authentication/presentation/views/email_verification_view.dart';
+import 'package:pocketly/features/settings/presentation/views/change_password_view.dart';
 
 // Helper class to refresh router when auth state changes
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -32,6 +33,7 @@ class AppRoutes {
   static const addExpense = 'add';
   static const settings = '/settings';
   static const profileSettings = 'profile';
+  static const changePassword = 'change-password';
 }
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -135,6 +137,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: AppRoutes.profileSettings,
                     name: 'profileSettings',
                     builder: (context, state) => const ProfileSettingsView(),
+                    parentNavigatorKey: _rootNavigatorKey,
+                  ),
+                  GoRoute(
+                    path: AppRoutes.changePassword,
+                    name: 'changePassword',
+                    builder: (context, state) => const ChangePasswordView(),
                     parentNavigatorKey: _rootNavigatorKey,
                   ),
                 ],

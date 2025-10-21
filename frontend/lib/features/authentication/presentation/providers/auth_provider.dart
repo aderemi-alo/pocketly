@@ -188,6 +188,31 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> updateUserName(String name) async {
+    state = state.copyWith(isLoading: true);
+
+    try {
+      final request = UpdateProfileRequest(name: name);
+      final updatedUser = await _authRepository.updateProfile(request);
+
+      state = state.copyWith(isLoading: false, user: updatedUser);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> refreshUserProfile() async {
+    state = state.copyWith(isLoading: true);
+
+    try {
+      final user = await _authRepository.fetchUserProfile();
+
+      state = state.copyWith(isLoading: false, user: user);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
   void clearError() {
     state = state.copyWith(error: null);
   }
