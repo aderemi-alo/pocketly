@@ -1,5 +1,8 @@
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
+import 'package:pocketly/core/providers/app_state_provider.dart';
+import 'package:pocketly/core/services/sync/sync_queue_service.dart';
+import 'package:pocketly/core/services/sync/sync_models.dart';
 
 class ExpensesNotifier extends Notifier<ExpensesState> {
   @override
@@ -74,6 +77,9 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
 
       // Persist to database in background
       await expenseHiveRepository.addExpense(expense);
+
+      // Try to sync if authenticated, otherwise queue for later
+      await _handleSyncForExpense(expense, SyncOperation.create);
     } catch (e) {
       setError('Failed to add expense: $e');
     }
@@ -123,6 +129,9 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
 
       // Persist to database in background
       await expenseHiveRepository.updateExpense(updatedExpense);
+
+      // Try to sync if authenticated, otherwise queue for later
+      await _handleSyncForExpense(updatedExpense, SyncOperation.update);
     } catch (e) {
       setError('Failed to update expense: $e');
     }
@@ -140,6 +149,9 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
 
       // Persist to database in background
       await expenseHiveRepository.deleteExpense(expenseId);
+
+      // Try to sync if authenticated, otherwise queue for later
+      await _handleSyncForDelete(expenseId);
     } catch (e) {
       setError('Failed to delete expense: $e');
     }
@@ -202,15 +214,75 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
   }
 
   /// Persist current state to database without affecting UI
-  // Future<void> _persistStateToDatabase() async {
-  //   try {
-  //     // This method can be used to sync state changes to database
-  //     // Currently not needed since we persist immediately after state changes
-  //   } catch (e) {
-  //     // Log persistence errors but don't affect UI state
-  //     debugPrint('Failed to persist state to database: $e');
-  //   }
-  // }
+  /// Handle sync for expense operations
+  Future<void> _handleSyncForExpense(
+    Expense expense,
+    SyncOperation operation,
+  ) async {
+    try {
+      final appState = ref.read(appStateProvider);
+
+      if (appState.canSync) {
+        // Try to sync immediately if authenticated
+        // TODO: Implement actual sync logic here
+        debugPrint('Syncing expense: ${expense.name}');
+      } else {
+        // Queue for later sync
+        final syncQueue = locator<SyncQueueService>();
+        await syncQueue.enqueue(
+          entityType: 'expense',
+          operation: operation,
+          data: {
+            'id': expense.id,
+            'name': expense.name,
+            'amount': expense.amount,
+            'date': expense.date.toIso8601String(),
+            'categoryId': expense.category.id,
+            'description': expense.description,
+          },
+        );
+
+        // Update pending sync count
+        final pendingCount = await syncQueue.getPendingItems().length;
+        ref
+            .read(appStateProvider.notifier)
+            .updatePendingSyncCount(pendingCount);
+      }
+    } catch (e) {
+      // Don't fail the operation if sync fails
+      debugPrint('Failed to sync expense: $e');
+    }
+  }
+
+  /// Handle sync for expense deletion
+  Future<void> _handleSyncForDelete(String expenseId) async {
+    try {
+      final appState = ref.read(appStateProvider);
+
+      if (appState.canSync) {
+        // Try to sync immediately if authenticated
+        // TODO: Implement actual sync logic here
+        debugPrint('Syncing expense deletion: $expenseId');
+      } else {
+        // Queue for later sync
+        final syncQueue = locator<SyncQueueService>();
+        await syncQueue.enqueue(
+          entityType: 'expense',
+          operation: SyncOperation.delete,
+          data: {'id': expenseId},
+        );
+
+        // Update pending sync count
+        final pendingCount = await syncQueue.getPendingItems().length;
+        ref
+            .read(appStateProvider.notifier)
+            .updatePendingSyncCount(pendingCount);
+      }
+    } catch (e) {
+      // Don't fail the operation if sync fails
+      debugPrint('Failed to sync expense deletion: $e');
+    }
+  }
 }
 
 final expensesProvider = NotifierProvider<ExpensesNotifier, ExpensesState>(() {

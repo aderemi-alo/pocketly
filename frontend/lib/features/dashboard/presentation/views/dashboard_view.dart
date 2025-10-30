@@ -18,182 +18,198 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     final totalTransactions = expensesState.transactionCountCurrentMonth;
 
     return SingleChildScrollView(
-      child: Padding(
-        padding: context.all(20),
-        child: Column(
-          children: [
-            // Summary Cards
-            Row(
+      child: Column(
+        children: [
+          const LocalModeBanner(),
+          Padding(
+            padding: context.all(20),
+            child: Column(
               children: [
-                // Total Spent
-                Expanded(
-                  flex: 3,
-                  child: Container(
-                    padding: context.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.shadow.withValues(alpha: 0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                // Summary Cards
+                Row(
+                  children: [
+                    // Total Spent
+                    Expanded(
+                      flex: 3,
+                      child: Container(
+                        padding: context.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.shadow.withValues(alpha: 0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                      ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextWidget(
+                              text: 'Total Spent',
+                              fontSize: 12,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                            context.verticalSpace(4),
+                            TextWidget(
+                              text:
+                                  '₦${FormatUtils.formatCurrency(totalSpent)}',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                            context.verticalSpace(2),
+                            TextWidget(
+                              text: 'This Month',
+                              fontSize: 10,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextWidget(
-                          text: 'Total Spent',
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    context.horizontalSpace(12),
+
+                    // Transactions
+                    Expanded(
+                      flex: 2,
+                      child: Container(
+                        padding: context.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.shadow.withValues(alpha: 0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                        context.verticalSpace(4),
-                        TextWidget(
-                          text: '₦${FormatUtils.formatCurrency(totalSpent)}',
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurface,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextWidget(
+                              text: 'Transactions',
+                              fontSize: 12,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                            context.verticalSpace(4),
+                            TextWidget(
+                              text: '$totalTransactions',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                            context.verticalSpace(2),
+                            TextWidget(
+                              text: 'This Month',
+                              fontSize: 10,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                          ],
                         ),
-                        context.verticalSpace(2),
-                        TextWidget(
-                          text: 'This Month',
-                          fontSize: 10,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ],
+                      ),
                     ),
+                    context.horizontalSpace(12),
+                  ],
+                ),
+                context.verticalSpace(24),
+
+                // Spending by Category Card
+                Container(
+                  padding: context.all(20),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.shadow.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextWidget(
+                            text: 'Spending by Category',
+                            fontSize: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          TextWidget(
+                            text: 'This Month',
+                            fontSize: 12,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
+                      context.verticalSpace(16),
+
+                      _buildCategoryChart(expensesState),
+                    ],
                   ),
                 ),
-                context.horizontalSpace(12),
+                context.verticalSpace(24),
 
-                // Transactions
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                    padding: context.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.shadow.withValues(alpha: 0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextWidget(
-                          text: 'Transactions',
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        context.verticalSpace(4),
-                        TextWidget(
-                          text: '$totalTransactions',
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                        context.verticalSpace(2),
-                        TextWidget(
-                          text: 'This Month',
-                          fontSize: 10,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ],
-                    ),
+                // Weekly Spending Bar Chart
+                Container(
+                  padding: context.all(20),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.shadow.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ),
-                context.horizontalSpace(12),
-              ],
-            ),
-            context.verticalSpace(24),
-
-            // Spending by Category Card
-            Container(
-              padding: context.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.shadow.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       TextWidget(
-                        text: 'Spending by Category',
+                        text: 'This Week\'s Spending',
                         fontSize: 16,
                         color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.w600,
                       ),
-                      TextWidget(
-                        text: 'This Month',
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                      context.verticalSpace(16),
+
+                      _buildWeeklyChart(expensesState),
                     ],
                   ),
-                  context.verticalSpace(16),
-
-                  _buildCategoryChart(expensesState),
-                ],
-              ),
+                ),
+              ],
             ),
-            context.verticalSpace(24),
-
-            // Weekly Spending Bar Chart
-            Container(
-              padding: context.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.shadow.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextWidget(
-                    text: 'This Week\'s Spending',
-                    fontSize: 16,
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  context.verticalSpace(16),
-
-                  _buildWeeklyChart(expensesState),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

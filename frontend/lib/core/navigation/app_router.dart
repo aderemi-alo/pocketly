@@ -4,6 +4,7 @@ import 'package:pocketly/features/features.dart';
 import 'package:pocketly/features/authentication/presentation/views/forgot_password_view.dart';
 import 'package:pocketly/features/authentication/presentation/views/email_verification_view.dart';
 import 'package:pocketly/features/settings/presentation/views/change_password_view.dart';
+import 'package:pocketly/core/services/local_data_service.dart';
 
 // Helper class to refresh router when auth state changes
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -51,17 +52,23 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
     redirect: (context, state) {
       final isAuthenticated = authState.isAuthenticated;
+      final hasLocalData = LocalDataService.hasLocalData();
       final isOnAuthPage =
           state.matchedLocation == AppRoutes.login ||
           state.matchedLocation == AppRoutes.signup ||
           state.matchedLocation == AppRoutes.forgotPassword;
 
-      // Redirect to login if not authenticated and not on auth page
-      if (!isAuthenticated && !isOnAuthPage) {
+      // New users (no local data) → Login screen
+      if (!hasLocalData && !isOnAuthPage) {
         return AppRoutes.login;
       }
 
-      // Redirect to dashboard if authenticated and on auth page
+      // Returning users (has local data) → Dashboard (regardless of auth)
+      if (hasLocalData && isOnAuthPage) {
+        return AppRoutes.dashboard;
+      }
+
+      // Authenticated users on auth page → Dashboard
       if (isAuthenticated && isOnAuthPage) {
         return AppRoutes.dashboard;
       }

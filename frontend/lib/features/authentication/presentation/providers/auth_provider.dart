@@ -1,6 +1,7 @@
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/authentication/domain/domain.dart';
 import 'package:pocketly/features/authentication/data/data.dart';
+import 'package:pocketly/core/providers/app_state_provider.dart';
 
 // Repository provider
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -43,8 +44,9 @@ class AuthState {
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _authRepository;
   final TokenStorageService _tokenStorage;
+  final Ref _ref;
 
-  AuthNotifier(this._authRepository, this._tokenStorage)
+  AuthNotifier(this._authRepository, this._tokenStorage, this._ref)
     : super(const AuthState()) {
     _checkAuthStatus();
   }
@@ -52,6 +54,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> _checkAuthStatus() async {
     final hasTokens = await _tokenStorage.hasValidTokens();
     if (!hasTokens) {
+      // No tokens - switch to local mode
+      _ref.read(appStateProvider.notifier).setLocalMode();
       return;
     }
 
@@ -69,22 +73,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
           // If refresh succeeds, user is authenticated
           await _tokenStorage.saveUserData(response.user);
           state = state.copyWith(isAuthenticated: true, user: response.user);
+          _ref.read(appStateProvider.notifier).setOnlineMode();
         } catch (e) {
-          // Refresh failed, clear tokens and remain unauthenticated
+          // Refresh failed - switch to local mode (don't clear tokens)
           debugPrint('Token refresh failed on startup: $e');
-          await _tokenStorage.clearTokens();
-          await _tokenStorage.clearUserData();
           state = state.copyWith(isAuthenticated: false);
+          _ref.read(appStateProvider.notifier).setLocalMode();
         }
       } else {
-        // No refresh token, clear everything
-        await _tokenStorage.clearTokens();
-        await _tokenStorage.clearUserData();
+        // No refresh token - switch to local mode
         state = state.copyWith(isAuthenticated: false);
+        _ref.read(appStateProvider.notifier).setLocalMode();
       }
     } else {
       // Token is still valid
       state = state.copyWith(isAuthenticated: true, user: cachedUser);
+      _ref.read(appStateProvider.notifier).setOnlineMode();
     }
   }
 
@@ -113,6 +117,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         user: response.user,
         isAuthenticated: true,
       );
+      _ref.read(appStateProvider.notifier).setOnlineMode();
+
+      // Process pending sync queue after successful login
+      await _processPendingSyncQueue();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -143,6 +151,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         user: response.user,
         isAuthenticated: true,
       );
+      _ref.read(appStateProvider.notifier).setOnlineMode();
+
+      // Process pending sync queue after successful registration
+      await _processPendingSyncQueue();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -156,11 +168,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _tokenStorage.clearUserData();
       await _tokenStorage.clearTokens();
       state = const AuthState();
+      _ref.read(appStateProvider.notifier).setLocalMode();
     } catch (e) {
       // Clear state even if logout fails
       await _tokenStorage.clearUserData();
       await _tokenStorage.clearTokens();
       state = const AuthState();
+      _ref.read(appStateProvider.notifier).setLocalMode();
     }
   }
 
@@ -216,6 +230,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
   void clearError() {
     state = state.copyWith(error: null);
   }
+
+  /// Process pending sync queue after login
+  Future<void> _processPendingSyncQueue() async {
+    try {
+      // TODO: Implement sync queue processing
+      // This would trigger the sync manager to process pending items
+      debugPrint('Processing pending sync queue...');
+
+      // Update pending sync count
+      final syncQueue = locator<SyncQueueService>();
+      final pendingCount = syncQueue.getPendingItems().length;
+      _ref.read(appStateProvider.notifier).updatePendingSyncCount(pendingCount);
+    } catch (e) {
+      debugPrint('Failed to process sync queue: $e');
+    }
+  }
 }
 
 // Auth provider
@@ -223,5 +253,6 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(
     ref.watch(authRepositoryProvider),
     locator<TokenStorageService>(),
+    ref,
   );
 });
