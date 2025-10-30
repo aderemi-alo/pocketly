@@ -61,6 +61,43 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<UserModel> updateProfile(UpdateProfileRequest request) async {
+    try {
+      final response = await _apiClient.dio.put(
+        '/auth/user',
+        data: request.toJson(),
+      );
+
+      // Backend wraps response in 'data' field
+      final user = UserModel.fromJson(response.data['data']);
+
+      // Update stored user data
+      await _tokenStorage.saveUserData(user);
+
+      return user;
+    } catch (e) {
+      throw Exception('Update profile failed: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<UserModel> fetchUserProfile() async {
+    try {
+      final response = await _apiClient.dio.get('/auth/user');
+
+      // Backend wraps response in 'data' field
+      final user = UserModel.fromJson(response.data['data']);
+
+      // Update stored user data
+      await _tokenStorage.saveUserData(user);
+
+      return user;
+    } catch (e) {
+      throw Exception('Fetch user profile failed: ${e.toString()}');
+    }
+  }
+
+  @override
   Future<void> logout() async {
     try {
       await _apiClient.dio.post('/auth/logout');
@@ -98,6 +135,21 @@ class AuthRepositoryImpl implements AuthRepository {
       return authResponse;
     } catch (e) {
       throw Exception('Token refresh failed: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> updatePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    try {
+      await _apiClient.dio.post(
+        '/auth/update-password',
+        data: {'currentPassword': currentPassword, 'newPassword': newPassword},
+      );
+    } catch (e) {
+      throw Exception('Password update failed: ${e.toString()}');
     }
   }
 }

@@ -8,6 +8,7 @@
 .packages
 pubspec.lock
 .env.json
+.env
 
 # Files and directories created by dart_frog
 build/
@@ -15,3 +16,5 @@ build/
 
 # Test related files
 coverage/
+run_dev.sh
+gray-horst.db

@@ -164,15 +164,17 @@ class _ScaffoldWithNestedNavigationState
       // appBar: _buildAnimatedAppBar(),
       appBar: AppBar(
         title: _buildAnimatedTitle(Theme.of(context).textTheme),
-        actions: widget.navigationShell.currentIndex != 2
-            ? [
-                GestureDetector(
-                  onTap: () => context.push('/settings/profile'),
-                  child: const UserAvatarWidget(isSmall: true),
-                ),
-                context.horizontalSpace(12),
-              ]
-            : [],
+        actions: [
+          const SyncStatusIndicator(),
+          context.horizontalSpace(8),
+          if (widget.navigationShell.currentIndex != 2) ...[
+            GestureDetector(
+              onTap: () => context.push('/settings/profile'),
+              child: const UserAvatarWidget(isSmall: true),
+            ),
+            context.horizontalSpace(12),
+          ],
+        ],
       ),
       body: _buildCarouselBody(),
       bottomNavigationBar: BottomNavigationBar(

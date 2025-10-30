@@ -8,6 +8,7 @@ class UserResponse {
     required this.id,
     required this.name,
     required this.email,
+    required this.isEmailVerified,
     this.createdAt,
     this.updatedAt,
   });
@@ -18,6 +19,7 @@ class UserResponse {
       id: user.id,
       name: user.name,
       email: user.email,
+      isEmailVerified: user.isEmailVerified,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     );
@@ -32,6 +34,9 @@ class UserResponse {
   /// The user's email
   final String email;
 
+  /// Whether the user's email is verified
+  final bool isEmailVerified;
+
   /// The date and time the user was created
   final DateTime? createdAt;
 
@@ -44,6 +49,7 @@ class UserResponse {
       'id': id,
       'name': name,
       'email': email,
+      'isEmailVerified': isEmailVerified,
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     };
@@ -56,6 +62,7 @@ class UserResponse {
       'id': id,
       'name': name,
       'email': email,
+      'isEmailVerified': isEmailVerified,
     };
   }
 }

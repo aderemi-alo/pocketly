@@ -2,6 +2,7 @@ class UserModel {
   final String? id;
   final String? name;
   final String? email;
+  final bool? isEmailVerified;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -9,6 +10,7 @@ class UserModel {
     this.id,
     this.name,
     this.email,
+    this.isEmailVerified,
     this.createdAt,
     this.updatedAt,
   });
@@ -18,6 +20,7 @@ class UserModel {
       id: json['id'] as String?,
       name: json['name'] as String?,
       email: json['email'] as String?,
+      isEmailVerified: json['isEmailVerified'] as bool?,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : null,
@@ -32,6 +35,7 @@ class UserModel {
       'id': id,
       'name': name,
       'email': email,
+      'isEmailVerified': isEmailVerified,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };
@@ -41,6 +45,7 @@ class UserModel {
     String? id,
     String? name,
     String? email,
+    bool? isEmailVerified,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -48,6 +53,7 @@ class UserModel {
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
+      isEmailVerified: isEmailVerified ?? this.isEmailVerified,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

@@ -16,4 +16,17 @@ class Settings {
 
   static const int tokenExpirationInMinutes = 30; // 30 minutes
   static const int refreshTokenExpirationInDays = 14; // 14 days
+
+  // Brevo Email Service Settings
+  static String brevoApiKey = Platform.environment['BREVO_API_KEY'] ?? '';
+
+  static String brevoSenderEmail =
+      Platform.environment['BREVO_SENDER_EMAIL'] ?? 'noreply@pocketly.app';
+
+  static String brevoSenderName =
+      Platform.environment['BREVO_SENDER_NAME'] ?? 'Pocketly';
+
+  // OTP Settings
+  static const int otpExpirationInMinutes = 10; // 10 minutes
+  static const int maxOtpAttempts = 3; // Max verification attempts
 }

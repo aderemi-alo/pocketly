@@ -89,6 +89,53 @@ Logout from device(s).
 }
 ```
 
+#### GET /auth/user
+Get current user profile details.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "isEmailVerified": true,
+    "createdAt": "2024-10-12T12:00:00Z",
+    "updatedAt": "2024-10-12T12:00:00Z"
+  }
+}
+```
+
+#### PUT /auth/user
+Update user profile (name only).
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request:**
+```json
+{
+  "name": "John Smith"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "name": "John Smith",
+    "email": "john@example.com",
+    "isEmailVerified": true,
+    "createdAt": "2024-10-12T12:00:00Z",
+    "updatedAt": "2024-10-12T12:00:00Z"
+  }
+}
+```
+
 ---
 
 ### 📁 Category Endpoints

@@ -22,6 +22,10 @@ class Users extends Table {
   /// The password hash of the user.
   TextColumn get passwordHash => text()();
 
+  /// Whether the user's email is verified.
+  BoolColumn get isEmailVerified =>
+      boolean().withDefault(const Constant(false))();
+
   /// The date and time the user was created.
   DateTimeColumn get createdAt => dateTime()();
 
@@ -33,7 +37,6 @@ class Users extends Table {
 }
 
 /// Defines the 'refresh_tokens' table.
-
 class RefreshTokens extends Table {
   /// The ID of the refresh token.
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
@@ -52,6 +55,36 @@ class RefreshTokens extends Table {
   DateTimeColumn get expiresAt => dateTime().withDefault(currentDateAndTime)();
 
   /// The date and time the refresh token was created.
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Defines the 'otps' table.
+class Otps extends Table {
+  /// The ID of the OTP.
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
+
+  /// The email the OTP is sent to.
+  TextColumn get email => text()();
+
+  /// The hashed OTP code.
+  TextColumn get otpCodeHash => text()();
+
+  /// The purpose of the OTP (email_verification or password_reset).
+  TextColumn get purpose => text()();
+
+  /// The date and time the OTP expires.
+  DateTimeColumn get expiresAt => dateTime()();
+
+  /// Whether the OTP has been used.
+  BoolColumn get isUsed => boolean().withDefault(const Constant(false))();
+
+  /// The number of verification attempts.
+  IntColumn get attemptCount => integer().withDefault(const Constant(0))();
+
+  /// The date and time the OTP was created.
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
@@ -122,7 +155,7 @@ class Expenses extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [Expenses, Users, Categories, RefreshTokens])
+@DriftDatabase(tables: [Expenses, Users, Categories, RefreshTokens, Otps])
 
 /// The database for the Pocketly app.
 class PocketlyDatabase extends _$PocketlyDatabase {
@@ -132,7 +165,7 @@ class PocketlyDatabase extends _$PocketlyDatabase {
   }
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   static QueryExecutor _openConnection() {
     return NativeDatabase.opened(sqlite3.open(Settings.dbName));

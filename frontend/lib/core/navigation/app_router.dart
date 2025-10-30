@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
+import 'package:pocketly/features/authentication/presentation/views/forgot_password_view.dart';
+import 'package:pocketly/features/authentication/presentation/views/email_verification_view.dart';
+import 'package:pocketly/features/settings/presentation/views/change_password_view.dart';
+import 'package:pocketly/core/services/local_data_service.dart';
 
 // Helper class to refresh router when auth state changes
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -23,11 +27,14 @@ class GoRouterRefreshStream extends ChangeNotifier {
 class AppRoutes {
   static const login = '/login';
   static const signup = '/signup';
+  static const forgotPassword = '/forgot-password';
+  static const emailVerification = '/email-verification';
   static const dashboard = '/';
   static const expenses = '/expenses';
   static const addExpense = 'add';
   static const settings = '/settings';
   static const profileSettings = 'profile';
+  static const changePassword = 'change-password';
 }
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -45,16 +52,23 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
     redirect: (context, state) {
       final isAuthenticated = authState.isAuthenticated;
+      final hasLocalData = LocalDataService.hasLocalData();
       final isOnAuthPage =
           state.matchedLocation == AppRoutes.login ||
-          state.matchedLocation == AppRoutes.signup;
+          state.matchedLocation == AppRoutes.signup ||
+          state.matchedLocation == AppRoutes.forgotPassword;
 
-      // Redirect to login if not authenticated and not on auth page
-      if (!isAuthenticated && !isOnAuthPage) {
+      // New users (no local data) → Login screen
+      if (!hasLocalData && !isOnAuthPage) {
         return AppRoutes.login;
       }
 
-      // Redirect to dashboard if authenticated and on auth page
+      // Returning users (has local data) → Dashboard (regardless of auth)
+      if (hasLocalData && isOnAuthPage) {
+        return AppRoutes.dashboard;
+      }
+
+      // Authenticated users on auth page → Dashboard
       if (isAuthenticated && isOnAuthPage) {
         return AppRoutes.dashboard;
       }
@@ -71,6 +85,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.signup,
         name: 'signup',
         builder: (context, state) => const SignupView(),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        name: 'forgotPassword',
+        builder: (context, state) => const ForgotPasswordView(),
+      ),
+      GoRoute(
+        path: AppRoutes.emailVerification,
+        name: 'emailVerification',
+        builder: (context, state) {
+          final email = state.extra as String? ?? '';
+          return EmailVerificationView(email: email);
+        },
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -117,6 +144,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: AppRoutes.profileSettings,
                     name: 'profileSettings',
                     builder: (context, state) => const ProfileSettingsView(),
+                    parentNavigatorKey: _rootNavigatorKey,
+                  ),
+                  GoRoute(
+                    path: AppRoutes.changePassword,
+                    name: 'changePassword',
+                    builder: (context, state) => const ChangePasswordView(),
                     parentNavigatorKey: _rootNavigatorKey,
                   ),
                 ],

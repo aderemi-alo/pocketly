@@ -2,8 +2,8 @@ import 'package:pocketly/core/core.dart';
 
 class CustomTextField extends StatefulWidget {
   final String label;
-  final String hint;
-  final IconData icon;
+  final String? hint;
+  final IconData? icon;
   final bool isPassword;
   final TextEditingController controller;
   final String? errorText;
@@ -14,8 +14,8 @@ class CustomTextField extends StatefulWidget {
   const CustomTextField({
     super.key,
     required this.label,
-    required this.hint,
-    required this.icon,
+    this.hint,
+    this.icon,
     required this.controller,
     this.isPassword = false,
     this.errorText,
@@ -40,8 +40,11 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(widget.label, style: textTheme.titleSmall),
-        const SizedBox(height: 8),
+        Text(
+          widget.label,
+          style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+        ),
+        context.verticalSpace(8),
         TextFormField(
           validator: widget.validator,
           autovalidateMode: widget.autovalidateMode,
@@ -52,11 +55,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
           decoration: InputDecoration(
             hintText: widget.hint,
             hintStyle: textTheme.bodyLarge,
-            prefixIcon: Icon(
-              widget.icon,
-              color: theme.colorScheme.onSurfaceVariant,
-              size: 20,
-            ),
+            prefixIcon: widget.icon != null
+                ? Icon(
+                    widget.icon,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    size: 20,
+                  )
+                : null,
             suffixIcon: widget.isPassword
                 ? IconButton(
                     icon: Icon(

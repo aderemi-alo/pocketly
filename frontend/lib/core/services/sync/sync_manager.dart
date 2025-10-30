@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pocketly/core/services/network_service.dart';
 import 'package:pocketly/core/services/sync/conflict_resolution_service.dart';
 import 'package:pocketly/core/services/sync/sync_models.dart';
@@ -9,6 +10,7 @@ import 'package:pocketly/features/expenses/data/cache/expense_cache_manager.dart
 import 'package:pocketly/features/expenses/data/models/expense_hive.dart';
 import 'package:pocketly/features/expenses/data/repositories/category_api_repository.dart';
 import 'package:pocketly/features/expenses/data/repositories/expense_api_repository.dart';
+import 'package:pocketly/core/providers/app_state_provider.dart';
 
 class SyncManager {
   final SyncQueueService _syncQueue;
@@ -16,6 +18,7 @@ class SyncManager {
   final ExpenseApiRepository _expenseApi;
   final CategoryApiRepository _categoryApi;
   final ExpenseCacheManager _cacheManager;
+  final Ref _ref;
 
   bool _isSyncing = false;
   Timer? _periodicSyncTimer;
@@ -27,12 +30,14 @@ class SyncManager {
     required ExpenseApiRepository expenseApi,
     required CategoryApiRepository categoryApi,
     required ExpenseCacheManager cacheManager,
+    required Ref ref,
     ConflictResolution? conflictResolver,
   }) : _syncQueue = syncQueue,
        _networkService = networkService,
        _expenseApi = expenseApi,
        _categoryApi = categoryApi,
-       _cacheManager = cacheManager;
+       _cacheManager = cacheManager,
+       _ref = ref;
 
   /// Initialize sync manager
   Future<void> initialize() async {
@@ -63,6 +68,13 @@ class SyncManager {
       return;
     }
 
+    // Check app state first - only sync if can sync
+    final appState = _ref.read(appStateProvider);
+    if (!appState.canSync) {
+      debugPrint('📴 Cannot sync - not authenticated');
+      return;
+    }
+
     final isOnline = await _networkService.isConnected;
     if (!isOnline) {
       debugPrint('📴 Offline, skipping sync');
@@ -83,9 +95,15 @@ class SyncManager {
         await _syncItem(item);
       }
 
+      // Update app state after successful sync
+      _ref.read(appStateProvider.notifier).updateLastSyncTime(DateTime.now());
+      final pendingCount = _syncQueue.getPendingItems().length;
+      _ref.read(appStateProvider.notifier).updatePendingSyncCount(pendingCount);
+
       debugPrint('✅ Sync completed successfully');
     } catch (e) {
       debugPrint('❌ Sync failed: $e');
+      // Don't throw - just log the error
     } finally {
       _isSyncing = false;
     }

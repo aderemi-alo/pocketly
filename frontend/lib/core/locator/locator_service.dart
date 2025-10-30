@@ -45,6 +45,7 @@ Future<void> setupLocator() async {
       categoryApi: locator(),
       cacheManager: locator(),
       conflictResolver: locator(),
+      ref: locator(),
     ),
   );
 
