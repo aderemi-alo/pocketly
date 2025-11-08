@@ -36,7 +36,7 @@ Future<void> setupLocator() async {
   // Local repositories
   locator.registerLazySingleton(() => ExpenseHiveRepository());
 
-  // Sync manager
+  // Sync manager (callbacks will be set up via provider wrapper)
   locator.registerLazySingleton(
     () => SyncManager(
       syncQueue: locator(),
@@ -45,7 +45,8 @@ Future<void> setupLocator() async {
       categoryApi: locator(),
       cacheManager: locator(),
       conflictResolver: locator(),
-      ref: locator(),
+      appStateUpdater: null, // Set up via provider wrapper
+      canSyncChecker: null, // Set up via provider wrapper
     ),
   );
 

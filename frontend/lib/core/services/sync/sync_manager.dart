@@ -1,6 +1,7 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pocketly/core/services/network_service.dart';
 import 'package:pocketly/core/services/sync/conflict_resolution_service.dart';
 import 'package:pocketly/core/services/sync/sync_models.dart';
@@ -10,7 +11,14 @@ import 'package:pocketly/features/expenses/data/cache/expense_cache_manager.dart
 import 'package:pocketly/features/expenses/data/models/expense_hive.dart';
 import 'package:pocketly/features/expenses/data/repositories/category_api_repository.dart';
 import 'package:pocketly/features/expenses/data/repositories/expense_api_repository.dart';
-import 'package:pocketly/core/providers/app_state_provider.dart';
+import 'package:dio/dio.dart';
+
+/// Callback interface for updating app state from sync manager
+typedef AppStateUpdater =
+    void Function({DateTime? lastSyncTime, int? pendingSyncCount});
+
+/// Callback for checking if sync is allowed
+typedef CanSyncChecker = bool Function();
 
 class SyncManager {
   final SyncQueueService _syncQueue;
@@ -18,7 +26,9 @@ class SyncManager {
   final ExpenseApiRepository _expenseApi;
   final CategoryApiRepository _categoryApi;
   final ExpenseCacheManager _cacheManager;
-  final Ref _ref;
+  final ConflictResolution? _conflictResolver;
+  final AppStateUpdater? _appStateUpdater;
+  final CanSyncChecker? _canSyncChecker;
 
   bool _isSyncing = false;
   Timer? _periodicSyncTimer;
@@ -30,14 +40,17 @@ class SyncManager {
     required ExpenseApiRepository expenseApi,
     required CategoryApiRepository categoryApi,
     required ExpenseCacheManager cacheManager,
-    required Ref ref,
     ConflictResolution? conflictResolver,
+    AppStateUpdater? appStateUpdater,
+    CanSyncChecker? canSyncChecker,
   }) : _syncQueue = syncQueue,
        _networkService = networkService,
        _expenseApi = expenseApi,
        _categoryApi = categoryApi,
        _cacheManager = cacheManager,
-       _ref = ref;
+       _conflictResolver = conflictResolver,
+       _appStateUpdater = appStateUpdater,
+       _canSyncChecker = canSyncChecker;
 
   /// Initialize sync manager
   Future<void> initialize() async {
@@ -69,8 +82,7 @@ class SyncManager {
     }
 
     // Check app state first - only sync if can sync
-    final appState = _ref.read(appStateProvider);
-    if (!appState.canSync) {
+    if (_canSyncChecker != null && !_canSyncChecker()) {
       debugPrint('📴 Cannot sync - not authenticated');
       return;
     }
@@ -92,13 +104,21 @@ class SyncManager {
       debugPrint('📊 Sync queue: ${allItems.length} items');
 
       for (final item in allItems) {
+        // Apply exponential backoff for failed items
+        if (item.status == 'failed' && item.retryCount > 0) {
+          final delaySeconds = pow(2, item.retryCount).clamp(1, 60).toInt();
+          debugPrint(
+            '⏱️ Waiting ${delaySeconds}s before retry (attempt ${item.retryCount})',
+          );
+          await Future.delayed(Duration(seconds: delaySeconds));
+        }
         await _syncItem(item);
       }
 
       // Update app state after successful sync
-      _ref.read(appStateProvider.notifier).updateLastSyncTime(DateTime.now());
+      _appStateUpdater?.call(lastSyncTime: DateTime.now());
       final pendingCount = _syncQueue.getPendingItems().length;
-      _ref.read(appStateProvider.notifier).updatePendingSyncCount(pendingCount);
+      _appStateUpdater?.call(pendingSyncCount: pendingCount);
 
       debugPrint('✅ Sync completed successfully');
     } catch (e) {
@@ -128,28 +148,86 @@ class SyncManager {
       await _syncQueue.markCompleted(item.id);
       debugPrint('✅ Synced ${item.entityType} ${item.operation}');
     } catch (e) {
-      await _syncQueue.markFailed(item.id, e.toString());
-      debugPrint('❌ Failed to sync ${item.entityType}: $e');
+      // Check if error is retryable
+      if (_isRetryableError(e)) {
+        await _syncQueue.markFailed(item.id, e.toString());
+        debugPrint('❌ Failed to sync ${item.entityType}: $e (will retry)');
 
-      // Remove from queue if max retries exceeded
-      if (item.retryCount >= SyncQueueService.maxRetries) {
+        // Remove from queue if max retries exceeded
+        if (item.retryCount >= SyncQueueService.maxRetries) {
+          await _syncQueue.remove(item.id);
+          debugPrint('🗑️ Removed item from queue (max retries exceeded)');
+        }
+      } else {
+        // Non-retryable error (client error), remove immediately
         await _syncQueue.remove(item.id);
-        debugPrint('🗑️ Removed item from queue (max retries exceeded)');
+        debugPrint(
+          '❌ Failed to sync ${item.entityType}: $e (non-retryable, removed)',
+        );
       }
     }
+  }
+
+  /// Check if error is retryable
+  bool _isRetryableError(dynamic error) {
+    // Network errors - retryable
+    if (error is SocketException || error is TimeoutException) {
+      return true;
+    }
+
+    // Dio errors
+    if (error is DioException) {
+      final statusCode = error.response?.statusCode;
+
+      // Server errors (5xx) - retryable
+      if (statusCode != null && statusCode >= 500) {
+        return true;
+      }
+
+      // Client errors (4xx) - not retryable (except 401 which is handled by token refresh)
+      if (statusCode != null && statusCode >= 400 && statusCode < 500) {
+        // 401 is handled by token refresh in ApiClient, so we can retry
+        if (statusCode == 401) {
+          return true;
+        }
+        return false;
+      }
+
+      // Network-related Dio errors - retryable
+      if (error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.sendTimeout ||
+          error.type == DioExceptionType.receiveTimeout ||
+          error.type == DioExceptionType.connectionError) {
+        return true;
+      }
+    }
+
+    // Conflict exceptions - not retryable (needs manual resolution)
+    if (error is ConflictException) {
+      return false;
+    }
+
+    // Default: retryable for unknown errors
+    return true;
   }
 
   /// Sync expense operation
   Future<void> _syncExpense(SyncQueueItem item) async {
     switch (item.operation) {
       case 'create':
-        final expense = await _expenseApi.createExpense(
-          name: item.data['name'],
-          amount: item.data['amount'],
-          date: DateTime.parse(item.data['date']),
-          categoryId: item.data['categoryId'],
-          description: item.data['description'],
-        );
+        final expense = await _expenseApi
+            .createExpense(
+              name: item.data['name'],
+              amount: (item.data['amount'] as num).toDouble(),
+              date: DateTime.parse(item.data['date']),
+              categoryId: item.data['categoryId'],
+              description: item.data['description'],
+            )
+            .timeout(
+              const Duration(seconds: 30),
+              onTimeout: () =>
+                  throw TimeoutException('Expense creation timed out'),
+            );
 
         // Update local ID mapping
         if (item.localId != null) {
@@ -176,16 +254,24 @@ class SyncManager {
         break;
 
       case 'update':
-        final expense = await _expenseApi.updateExpense(
-          expenseId: item.data['id'],
-          name: item.data['name'],
-          amount: item.data['amount'],
-          date: item.data['date'] != null
-              ? DateTime.parse(item.data['date'])
-              : null,
-          categoryId: item.data['categoryId'],
-          description: item.data['description'],
-        );
+        final expense = await _expenseApi
+            .updateExpense(
+              expenseId: item.data['id'],
+              name: item.data['name'],
+              amount: item.data['amount'] != null
+                  ? (item.data['amount'] as num).toDouble()
+                  : null,
+              date: item.data['date'] != null
+                  ? DateTime.parse(item.data['date'])
+                  : null,
+              categoryId: item.data['categoryId'],
+              description: item.data['description'],
+            )
+            .timeout(
+              const Duration(seconds: 30),
+              onTimeout: () =>
+                  throw TimeoutException('Expense update timed out'),
+            );
 
         // Update cache
         if (expense.category != null) {
@@ -207,7 +293,13 @@ class SyncManager {
         break;
 
       case 'delete':
-        await _expenseApi.deleteExpense(item.data['id']);
+        await _expenseApi
+            .deleteExpense(item.data['id'])
+            .timeout(
+              const Duration(seconds: 30),
+              onTimeout: () =>
+                  throw TimeoutException('Expense deletion timed out'),
+            );
         await _cacheManager.removeCachedExpense(item.data['id']);
         break;
     }

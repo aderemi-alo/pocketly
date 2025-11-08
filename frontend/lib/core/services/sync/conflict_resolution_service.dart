@@ -37,6 +37,7 @@ class ConflictResolution {
           localData: localData,
           serverData: serverData,
           message: 'Manual conflict resolution required',
+          entityName: 'item',
         );
     }
   }
@@ -62,11 +63,13 @@ class ConflictException implements Exception {
   final Map<String, dynamic> localData;
   final Map<String, dynamic> serverData;
   final String message;
+  final String? entityName;
 
   ConflictException({
     required this.localData,
     required this.serverData,
     required this.message,
+    this.entityName,
   });
 
   @override

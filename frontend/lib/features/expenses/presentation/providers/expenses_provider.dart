@@ -221,32 +221,70 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
   ) async {
     try {
       final appState = ref.read(appStateProvider);
+      final networkService = locator<NetworkService>();
+      final isOnline = await networkService.isConnected;
 
-      if (appState.canSync) {
-        // Try to sync immediately if authenticated
-        // TODO: Implement actual sync logic here
-        debugPrint('Syncing expense: ${expense.name}');
+      if (appState.canSync && isOnline) {
+        // Try to sync immediately if authenticated and online
+        try {
+          final expenseApi = expenseApiRepository;
+          final localId = expense.id; // Store local ID for mapping
+
+          if (operation == SyncOperation.create) {
+            // Create expense on server
+            final apiExpense = await expenseApi.createExpense(
+              name: expense.name,
+              amount: expense.amount,
+              date: expense.date,
+              categoryId: expense.category.id,
+              description: expense.description,
+            );
+
+            // Update local expense with server ID
+            final updatedExpense = Expense(
+              id: apiExpense.id,
+              name: apiExpense.name,
+              amount: apiExpense.amount,
+              date: apiExpense.date,
+              category: expense.category, // Keep local category
+              description: apiExpense.description,
+            );
+
+            // Update in Hive with server ID
+            await expenseHiveRepository.deleteExpense(localId);
+            await expenseHiveRepository.addExpense(updatedExpense);
+
+            // Update state with server ID
+            final updatedExpenses = state.expenses.map((e) {
+              return e.id == localId ? updatedExpense : e;
+            }).toList();
+            state = state.copyWith(expenses: updatedExpenses);
+
+            debugPrint('✅ Synced expense create: ${expense.name} -> ${apiExpense.id}');
+          } else if (operation == SyncOperation.update) {
+            // Update expense on server
+            await expenseApi.updateExpense(
+              expenseId: expense.id,
+              name: expense.name,
+              amount: expense.amount,
+              date: expense.date,
+              categoryId: expense.category.id,
+              description: expense.description,
+            );
+
+            debugPrint('✅ Synced expense update: ${expense.name}');
+          }
+
+          // Update last sync time
+          ref.read(appStateProvider.notifier).updateLastSyncTime(DateTime.now());
+        } catch (e) {
+          // If sync fails, queue for later
+          debugPrint('⚠️ Online sync failed, queueing for later: $e');
+          await _queueExpenseSync(expense, operation);
+        }
       } else {
         // Queue for later sync
-        final syncQueue = locator<SyncQueueService>();
-        await syncQueue.enqueue(
-          entityType: 'expense',
-          operation: operation,
-          data: {
-            'id': expense.id,
-            'name': expense.name,
-            'amount': expense.amount,
-            'date': expense.date.toIso8601String(),
-            'categoryId': expense.category.id,
-            'description': expense.description,
-          },
-        );
-
-        // Update pending sync count
-        final pendingCount = await syncQueue.getPendingItems().length;
-        ref
-            .read(appStateProvider.notifier)
-            .updatePendingSyncCount(pendingCount);
+        await _queueExpenseSync(expense, operation);
       }
     } catch (e) {
       // Don't fail the operation if sync fails
@@ -254,34 +292,77 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     }
   }
 
+  /// Queue expense for later sync
+  Future<void> _queueExpenseSync(
+    Expense expense,
+    SyncOperation operation,
+  ) async {
+    final syncQueue = locator<SyncQueueService>();
+    final localId = operation == SyncOperation.create ? expense.id : null;
+
+    await syncQueue.enqueue(
+      entityType: 'expense',
+      operation: operation,
+      data: {
+        'id': expense.id,
+        'name': expense.name,
+        'amount': expense.amount,
+        'date': expense.date.toIso8601String(),
+        'categoryId': expense.category.id,
+        'description': expense.description,
+      },
+      localId: localId,
+    );
+
+    // Update pending sync count
+    final pendingCount = syncQueue.getPendingItems().length;
+    ref.read(appStateProvider.notifier).updatePendingSyncCount(pendingCount);
+  }
+
   /// Handle sync for expense deletion
   Future<void> _handleSyncForDelete(String expenseId) async {
     try {
       final appState = ref.read(appStateProvider);
+      final networkService = locator<NetworkService>();
+      final isOnline = await networkService.isConnected;
 
-      if (appState.canSync) {
-        // Try to sync immediately if authenticated
-        // TODO: Implement actual sync logic here
-        debugPrint('Syncing expense deletion: $expenseId');
+      if (appState.canSync && isOnline) {
+        // Try to sync immediately if authenticated and online
+        try {
+          final expenseApi = expenseApiRepository;
+          await expenseApi.deleteExpense(expenseId);
+
+          debugPrint('✅ Synced expense deletion: $expenseId');
+
+          // Update last sync time
+          ref.read(appStateProvider.notifier).updateLastSyncTime(DateTime.now());
+        } catch (e) {
+          // If sync fails, queue for later
+          debugPrint('⚠️ Online sync failed, queueing for later: $e');
+          await _queueDeleteSync(expenseId);
+        }
       } else {
         // Queue for later sync
-        final syncQueue = locator<SyncQueueService>();
-        await syncQueue.enqueue(
-          entityType: 'expense',
-          operation: SyncOperation.delete,
-          data: {'id': expenseId},
-        );
-
-        // Update pending sync count
-        final pendingCount = await syncQueue.getPendingItems().length;
-        ref
-            .read(appStateProvider.notifier)
-            .updatePendingSyncCount(pendingCount);
+        await _queueDeleteSync(expenseId);
       }
     } catch (e) {
       // Don't fail the operation if sync fails
       debugPrint('Failed to sync expense deletion: $e');
     }
+  }
+
+  /// Queue delete for later sync
+  Future<void> _queueDeleteSync(String expenseId) async {
+    final syncQueue = locator<SyncQueueService>();
+    await syncQueue.enqueue(
+      entityType: 'expense',
+      operation: SyncOperation.delete,
+      data: {'id': expenseId},
+    );
+
+    // Update pending sync count
+    final pendingCount = syncQueue.getPendingItems().length;
+    ref.read(appStateProvider.notifier).updatePendingSyncCount(pendingCount);
   }
 }
 

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/core/providers/app_state_provider.dart';
 
-class SyncDetailsBottomSheet extends ConsumerWidget {
+class SyncDetailsBottomSheet extends ConsumerStatefulWidget {
   const SyncDetailsBottomSheet({super.key});
 
   static void show({required BuildContext context}) {
@@ -16,7 +16,56 @@ class SyncDetailsBottomSheet extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SyncDetailsBottomSheet> createState() =>
+      _SyncDetailsBottomSheetState();
+}
+
+class _SyncDetailsBottomSheetState
+    extends ConsumerState<SyncDetailsBottomSheet> {
+  bool _isSyncing = false;
+
+  Future<void> _triggerSync() async {
+    if (_isSyncing) return;
+
+    setState(() => _isSyncing = true);
+
+    try {
+      await syncManager.forceSyncNow();
+
+      // Update app state
+      ref.read(appStateProvider.notifier).updateLastSyncTime(DateTime.now());
+      final syncQueue = syncQueueService;
+      final pendingCount = syncQueue.getPendingItems().length;
+      ref.read(appStateProvider.notifier).updatePendingSyncCount(pendingCount);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sync completed successfully'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sync failed: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSyncing = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final appState = ref.watch(appStateProvider);
 
     return Container(
@@ -60,13 +109,16 @@ class SyncDetailsBottomSheet extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: appState.canSync
-                    ? () {
-                        // TODO: Trigger sync
-                        Navigator.of(context).pop();
-                      }
+                onPressed: appState.canSync && !_isSyncing
+                    ? _triggerSync
                     : null,
-                child: Text(appState.canSync ? 'Sync Now' : 'Offline'),
+                child: _isSyncing
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(appState.canSync ? 'Sync Now' : 'Offline'),
               ),
             ),
             const SizedBox(height: 16),
