@@ -213,6 +213,47 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     await _loadExpenses();
   }
 
+  /// Get backend category ID for a local category
+  /// Maps predefined categories by name, or uses UUID directly for custom categories
+  Future<String?> _getBackendCategoryId(Category localCategory) async {
+    try {
+      final categoriesNotifier = ref.read(categoriesProvider.notifier);
+
+      // Try to find by name first (for predefined categories)
+      final backendCategory = categoriesNotifier.getCategoryByName(localCategory.name);
+
+      if (backendCategory != null) {
+        return backendCategory.id; // Backend UUID
+      }
+
+      // If not found by name, check if the ID is already a UUID (custom category)
+      // UUIDs are typically 36 characters with dashes: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      if (_isUUID(localCategory.id)) {
+        // Verify it exists in our categories
+        final categoryById = categoriesNotifier.getCategoryById(localCategory.id);
+        if (categoryById != null) {
+          return localCategory.id;
+        }
+      }
+
+      // Category not found - return null (expense will be created without category)
+      debugPrint('⚠️ Category not found for sync: ${localCategory.name} (${localCategory.id})');
+      return null;
+    } catch (e) {
+      debugPrint('Error getting backend category ID: $e');
+      return null;
+    }
+  }
+
+  /// Check if a string is a valid UUID format
+  bool _isUUID(String id) {
+    final uuidRegex = RegExp(
+      r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+      caseSensitive: false,
+    );
+    return uuidRegex.hasMatch(id);
+  }
+
   /// Persist current state to database without affecting UI
   /// Handle sync for expense operations
   Future<void> _handleSyncForExpense(
@@ -230,13 +271,17 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
           final expenseApi = expenseApiRepository;
           final localId = expense.id; // Store local ID for mapping
 
+          // Get backend category ID
+          final backendCategoryId = await _getBackendCategoryId(expense.category);
+
           if (operation == SyncOperation.create) {
             // Create expense on server
+            // categoryId is optional - only include if we found a valid backend category
             final apiExpense = await expenseApi.createExpense(
               name: expense.name,
               amount: expense.amount,
               date: expense.date,
-              categoryId: expense.category.id,
+              categoryId: backendCategoryId,
               description: expense.description,
             );
 
@@ -262,13 +307,16 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
 
             debugPrint('✅ Synced expense create: ${expense.name} -> ${apiExpense.id}');
           } else if (operation == SyncOperation.update) {
+            // Get backend category ID
+            final backendCategoryId = await _getBackendCategoryId(expense.category);
+
             // Update expense on server
             await expenseApi.updateExpense(
               expenseId: expense.id,
               name: expense.name,
               amount: expense.amount,
               date: expense.date,
-              categoryId: expense.category.id,
+              categoryId: backendCategoryId,
               description: expense.description,
             );
 
@@ -300,6 +348,9 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     final syncQueue = locator<SyncQueueService>();
     final localId = operation == SyncOperation.create ? expense.id : null;
 
+    // Get backend category ID for queue
+    final backendCategoryId = await _getBackendCategoryId(expense.category);
+
     await syncQueue.enqueue(
       entityType: 'expense',
       operation: operation,
@@ -308,7 +359,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
         'name': expense.name,
         'amount': expense.amount,
         'date': expense.date.toIso8601String(),
-        'categoryId': expense.category.id,
+        'categoryId': backendCategoryId,
         'description': expense.description,
       },
       localId: localId,

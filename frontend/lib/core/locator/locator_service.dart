@@ -35,6 +35,7 @@ Future<void> setupLocator() async {
 
   // Local repositories
   locator.registerLazySingleton(() => ExpenseHiveRepository());
+  locator.registerLazySingleton(() => CategoryHiveRepository());
 
   // Sync manager (callbacks will be set up via provider wrapper)
   locator.registerLazySingleton(

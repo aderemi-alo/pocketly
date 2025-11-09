@@ -2,6 +2,7 @@ import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/authentication/domain/domain.dart';
 import 'package:pocketly/features/authentication/data/data.dart';
 import 'package:pocketly/core/providers/app_state_provider.dart';
+import 'package:pocketly/features/expenses/presentation/providers/categories_provider.dart';
 
 // Repository provider
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -119,6 +120,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       _ref.read(appStateProvider.notifier).setOnlineMode();
 
+      // Sync categories from backend after successful login
+      try {
+        await _ref.read(categoriesProvider.notifier).syncCategories();
+      } catch (e) {
+        debugPrint('Failed to sync categories on login: $e');
+        // Don't fail login if category sync fails
+      }
+
       // Process pending sync queue after successful login
       await _processPendingSyncQueue();
     } catch (e) {
@@ -152,6 +161,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isAuthenticated: true,
       );
       _ref.read(appStateProvider.notifier).setOnlineMode();
+
+      // Sync categories from backend after successful registration
+      try {
+        await _ref.read(categoriesProvider.notifier).syncCategories();
+      } catch (e) {
+        debugPrint('Failed to sync categories on registration: $e');
+        // Don't fail registration if category sync fails
+      }
 
       // Process pending sync queue after successful registration
       await _processPendingSyncQueue();

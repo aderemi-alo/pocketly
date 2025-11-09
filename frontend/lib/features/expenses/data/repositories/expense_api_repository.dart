@@ -48,7 +48,7 @@ class ExpenseApiRepository {
     required String name,
     required double amount,
     required DateTime date,
-    required String categoryId,
+    String? categoryId,
     String? description,
   }) async {
     final response = await _apiClient.dio.post(
@@ -57,7 +57,8 @@ class ExpenseApiRepository {
         'name': name,
         'amount': amount,
         'date': date.toIso8601String(),
-        'categoryId': categoryId,
+        if (categoryId != null && categoryId.isNotEmpty)
+          'categoryId': categoryId,
         if (description != null && description.isNotEmpty)
           'description': description,
       },

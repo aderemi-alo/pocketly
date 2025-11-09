@@ -8,7 +8,7 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final category = Categories.getById(expense.category.id);
+    final category = expense.category;
     final theme = Theme.of(context);
     return Container(
       padding: context.only(bottom: 16),

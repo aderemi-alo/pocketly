@@ -97,7 +97,8 @@ class _AddExpenseViewState extends ConsumerState<AddExpenseView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final categories = ref.watch(categoriesProvider);
+    final categoriesState = ref.watch(categoriesProvider);
+    final categories = categoriesState.categories;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(

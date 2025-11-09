@@ -109,7 +109,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final categories = ref.watch(categoriesProvider);
+    final categoriesState = ref.watch(categoriesProvider);
+    final categories = categoriesState.categories;
     final theme = Theme.of(context);
     return Scaffold(
       resizeToAvoidBottomInset: true,

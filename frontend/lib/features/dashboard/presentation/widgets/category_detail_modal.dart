@@ -33,12 +33,23 @@ class CategoryDetailModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final category = Categories.getById(categoryId);
+    // Get category from the first expense with this categoryId
+    // This is more reliable than looking up by ID since categoryId might be a UUID
+    final categoryExpenses = expenses
+        .where((exp) => exp.category.id == categoryId)
+        .toList();
 
-    // Get top 3 expenses for this category
-    final categoryExpenses =
-        expenses.where((exp) => exp.category.id == categoryId).toList()
-          ..sort((a, b) => b.amount.compareTo(a.amount));
+    // Get category - either from expense or fallback to Categories.getById
+    final Category category;
+    if (categoryExpenses.isNotEmpty) {
+      // Get category directly from the expense (most reliable)
+      category = categoryExpenses.first.category;
+      // Sort by amount descending
+      categoryExpenses.sort((a, b) => b.amount.compareTo(a.amount));
+    } else {
+      // Fallback to Categories.getById if no expenses found
+      category = Categories.getById(categoryId);
+    }
 
     final topExpenses = categoryExpenses.take(3).toList();
     final total = categoryExpenses.fold<double>(

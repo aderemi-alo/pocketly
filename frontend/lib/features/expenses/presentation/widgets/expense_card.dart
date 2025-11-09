@@ -100,7 +100,7 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
 
   @override
   Widget build(BuildContext context) {
-    final category = Categories.getById(widget.expense.category.id);
+    final category = widget.expense.category;
     final theme = Theme.of(context);
     // Update the slide animation with the correct screen width
     final screenWidth = MediaQuery.of(context).size.width;
@@ -143,9 +143,9 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
                             extra: widget.expense,
                           );
                         },
-                        child: Icon(
+                        child: const Icon(
                           LucideIcons.pen,
-                          color: Theme.of(context).colorScheme.onSurface,
+                          color: AppColors.surface,
                           size: 20,
                         ),
                       ),
@@ -175,7 +175,7 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
                         },
                         child: const Icon(
                           LucideIcons.trash2,
-                          color: Colors.white,
+                          color: AppColors.surface,
                           size: 20,
                         ),
                       ),
@@ -272,7 +272,7 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
                           ),
                           context.verticalSpace(4),
                           Text(
-                            widget.expense.category.name,
+                            category.name,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: Theme.of(
                                 context,

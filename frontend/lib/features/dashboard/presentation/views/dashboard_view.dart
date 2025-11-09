@@ -339,13 +339,16 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
 
     // Collect category data with values (only categories with expenses in current month)
     expensesByCategory.forEach((categoryId, expenses) {
+      if (expenses.isEmpty) return;
+
       final totalForCategory = expenses.fold<double>(
         0,
         (sum, expense) => sum + expense.amount,
       );
 
-      // Get category info from constants using the category ID
-      final category = Categories.getById(categoryId);
+      // Get category directly from the expense (more reliable than looking up by ID)
+      // All expenses in a group have the same category
+      final category = expenses.first.category;
 
       categoryData.add(
         CategoryChartData(
