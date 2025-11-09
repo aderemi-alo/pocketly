@@ -61,6 +61,14 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider).user;
 
+    // Listen for logout completion
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      // If user was authenticated and is now not authenticated, navigate to login
+      if (previous?.isAuthenticated == true && !next.isAuthenticated) {
+        context.go(AppRoutes.login);
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),

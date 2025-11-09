@@ -4,7 +4,6 @@ import 'package:pocketly/features/features.dart';
 import 'package:pocketly/features/authentication/presentation/views/forgot_password_view.dart';
 import 'package:pocketly/features/authentication/presentation/views/email_verification_view.dart';
 import 'package:pocketly/features/settings/presentation/views/change_password_view.dart';
-import 'package:pocketly/core/services/local_data_service.dart';
 
 // Helper class to refresh router when auth state changes
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -52,36 +51,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
     redirect: (context, state) {
       final isAuthenticated = authState.isAuthenticated;
-      final hasLocalData = LocalDataService.hasLocalData();
       final currentLocation = state.matchedLocation;
       final isOnAuthPage =
           currentLocation == AppRoutes.login ||
           currentLocation == AppRoutes.signup ||
           currentLocation == AppRoutes.forgotPassword;
 
-      // Prevent redirect loops - don't redirect if already on target route
-      // New users (no local data, not authenticated) → Login screen
-      if (!hasLocalData && !isAuthenticated) {
-        if (!isOnAuthPage) {
-          return AppRoutes.login;
-        }
-        return null; // Already on login, don't redirect
-      }
-
-      // Returning users (has local data) → Dashboard (regardless of auth)
-      if (hasLocalData && isOnAuthPage) {
-        if (currentLocation != AppRoutes.dashboard) {
-          return AppRoutes.dashboard;
-        }
-        return null; // Already on dashboard, don't redirect
-      }
-
-      // Authenticated users on auth page → Dashboard
+      // Authenticated users should not access auth pages
       if (isAuthenticated && isOnAuthPage) {
-        if (currentLocation != AppRoutes.dashboard) {
-          return AppRoutes.dashboard;
-        }
-        return null; // Already on dashboard, don't redirect
+        return AppRoutes.dashboard;
       }
 
       return null; // No redirect needed
