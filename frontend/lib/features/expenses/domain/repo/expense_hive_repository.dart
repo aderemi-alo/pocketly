@@ -102,6 +102,31 @@ class ExpenseHiveRepository {
     }
   }
 
+  /// Replace expense ID (atomic operation for local to server ID mapping)
+  Future<void> replaceExpenseId(String oldId, String newId) async {
+    final expense = _box.values
+        .where((e) => e.expenseId == oldId)
+        .firstOrNull;
+    
+    if (expense != null) {
+      final index = _box.values.toList().indexOf(expense);
+      // Create updated expense with new ID
+      final updated = ExpenseHive.create(
+        expenseId: newId,
+        name: expense.name,
+        amount: expense.amount,
+        date: expense.date,
+        categoryId: expense.categoryId,
+        categoryName: expense.categoryName,
+        categoryIcon: IconMapper.getIcon(expense.categoryIconCodePoint),
+        categoryColor: Color(expense.categoryColorValue),
+        description: expense.description,
+      );
+      // Single atomic operation: replace at same index
+      await _box.putAt(index, updated);
+    }
+  }
+
   /// Get expenses by date range
   Future<List<Expense>> getExpensesByDateRange(
     DateTime startDate,

@@ -45,6 +45,7 @@ Future<void> setupLocator() async {
       expenseApi: locator(),
       categoryApi: locator(),
       cacheManager: locator(),
+      expenseHiveRepository: locator(),
       conflictResolver: locator(),
       appStateUpdater: null, // Set up via provider wrapper
       canSyncChecker: null, // Set up via provider wrapper

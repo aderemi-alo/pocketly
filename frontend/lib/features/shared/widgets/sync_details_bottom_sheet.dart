@@ -138,14 +138,21 @@ class _SyncDetailsBottomSheetState
   }
 
   Widget _buildStatusInfo(BuildContext context, AppState appState) {
+    final syncQueue = syncQueueService;
+    final failedItems = syncQueue.getFailedItems();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildInfoRow(
           context,
           'Status',
-          _getStatusText(appState.mode),
-          _getStatusIcon(appState.mode),
+          appState.isSyncing
+              ? 'Syncing...'
+              : _getStatusText(appState.mode),
+          appState.isSyncing
+              ? Icons.sync
+              : _getStatusIcon(appState.mode),
         ),
         const SizedBox(height: 12),
 
@@ -165,7 +172,128 @@ class _SyncDetailsBottomSheetState
           '${appState.pendingSyncCount}',
           Icons.queue,
         ),
+        if (appState.failedSyncCount > 0) ...[
+          const SizedBox(height: 12),
+          _buildInfoRow(
+            context,
+            'Failed Items',
+            '${appState.failedSyncCount}',
+            Icons.error_outline,
+            errorColor: true,
+          ),
+        ],
+        if (appState.lastSyncError != null) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    appState.lastSyncError!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onErrorContainer,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        if (failedItems.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Text(
+            'Failed Items',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...failedItems.map((item) => _buildFailedItem(context, item)),
+        ],
       ],
+    );
+  }
+
+  Widget _buildFailedItem(BuildContext context, SyncQueueItem item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 16,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${item.entityType} - ${item.operation}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  // Retry this item
+                  syncManager.forceSyncNow();
+                },
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'Retry',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (item.error != null && item.error!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              item.error!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onErrorContainer,
+              ),
+            ),
+          ],
+          Text(
+            'Retry attempt: ${item.retryCount}/${SyncQueueService.maxRetries}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -173,27 +301,35 @@ class _SyncDetailsBottomSheetState
     BuildContext context,
     String label,
     String value,
-    IconData icon,
-  ) {
+    IconData icon, {
+    bool errorColor = false,
+  }) {
     return Row(
       children: [
         Icon(
           icon,
           size: 20,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          color: errorColor
+              ? Theme.of(context).colorScheme.error
+              : Theme.of(context).colorScheme.onSurfaceVariant,
         ),
         const SizedBox(width: 12),
         Text(
           '$label: ',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            color: errorColor
+                ? Theme.of(context).colorScheme.error
+                : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         Text(
           value,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+            color: errorColor
+                ? Theme.of(context).colorScheme.error
+                : null,
+          ),
         ),
       ],
     );

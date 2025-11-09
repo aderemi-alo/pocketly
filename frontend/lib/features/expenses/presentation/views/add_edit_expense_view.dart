@@ -21,6 +21,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
 
   Category _selectedCategory = Categories.predefined.first;
   DateTime _selectedDate = DateTime.now();
+  ExpenseSyncStatus? _previousSyncStatus;
 
   @override
   void initState() {
@@ -39,6 +40,12 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
       _selectedCategory = widget.expense!.category;
       _selectedDate = widget.expense!.date;
     }
+
+    // Initialize previous sync status
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final expensesState = ref.read(expensesProvider);
+      _previousSyncStatus = expensesState.syncStatus;
+    });
   }
 
   @override
@@ -89,6 +96,53 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     }
   }
 
+  void _handleSyncStatusChange(ExpensesState state) {
+    if (!mounted) return;
+
+    switch (state.syncStatus) {
+      case ExpenseSyncStatus.success:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Expense saved and synced'),
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        break;
+      case ExpenseSyncStatus.queued:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Expense saved offline, will sync when online'),
+            backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        break;
+      case ExpenseSyncStatus.failed:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              state.lastSyncError ?? 'Expense saved but sync failed',
+            ),
+            backgroundColor: Theme.of(context).colorScheme.errorContainer,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Dismiss',
+              textColor: Theme.of(context).colorScheme.onErrorContainer,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
+          ),
+        );
+        break;
+      case ExpenseSyncStatus.syncing:
+      case ExpenseSyncStatus.idle:
+        // No feedback needed for these states
+        break;
+    }
+  }
+
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -109,6 +163,16 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final expensesState = ref.watch(expensesProvider);
+
+    // Listen to sync status changes and show feedback
+    if (_previousSyncStatus != expensesState.syncStatus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleSyncStatusChange(expensesState);
+      });
+      _previousSyncStatus = expensesState.syncStatus;
+    }
+
     final categoriesState = ref.watch(categoriesProvider);
     final categories = categoriesState.categories;
     final theme = Theme.of(context);

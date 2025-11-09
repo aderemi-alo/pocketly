@@ -7,6 +7,9 @@ class AppState {
   final DateTime? lastSyncTime;
   final int pendingSyncCount;
   final bool isAuthenticated;
+  final int failedSyncCount;
+  final bool isSyncing;
+  final String? lastSyncError;
 
   AppState({
     required this.mode,
@@ -14,6 +17,9 @@ class AppState {
     this.lastSyncTime,
     this.pendingSyncCount = 0,
     required this.isAuthenticated,
+    this.failedSyncCount = 0,
+    this.isSyncing = false,
+    this.lastSyncError,
   });
 
   AppState copyWith({
@@ -22,6 +28,9 @@ class AppState {
     DateTime? lastSyncTime,
     int? pendingSyncCount,
     bool? isAuthenticated,
+    int? failedSyncCount,
+    bool? isSyncing,
+    String? lastSyncError,
   }) {
     return AppState(
       mode: mode ?? this.mode,
@@ -29,6 +38,9 @@ class AppState {
       lastSyncTime: lastSyncTime ?? this.lastSyncTime,
       pendingSyncCount: pendingSyncCount ?? this.pendingSyncCount,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+      failedSyncCount: failedSyncCount ?? this.failedSyncCount,
+      isSyncing: isSyncing ?? this.isSyncing,
+      lastSyncError: lastSyncError ?? this.lastSyncError,
     );
   }
 }
@@ -69,6 +81,34 @@ class AppStateNotifier extends StateNotifier<AppState> {
 
   void updatePendingSyncCount(int count) {
     state = state.copyWith(pendingSyncCount: count);
+  }
+
+  void updateFailedSyncCount(int count) {
+    state = state.copyWith(failedSyncCount: count);
+  }
+
+  void setSyncing(bool isSyncing) {
+    state = state.copyWith(isSyncing: isSyncing);
+  }
+
+  void setLastSyncError(String? error) {
+    state = state.copyWith(lastSyncError: error);
+  }
+
+  void updateSyncState({
+    DateTime? lastSyncTime,
+    int? pendingSyncCount,
+    int? failedSyncCount,
+    bool? isSyncing,
+    String? lastSyncError,
+  }) {
+    state = state.copyWith(
+      lastSyncTime: lastSyncTime,
+      pendingSyncCount: pendingSyncCount,
+      failedSyncCount: failedSyncCount,
+      isSyncing: isSyncing,
+      lastSyncError: lastSyncError,
+    );
   }
 }
 

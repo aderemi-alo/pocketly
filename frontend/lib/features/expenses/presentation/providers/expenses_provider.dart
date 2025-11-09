@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
 import 'package:pocketly/core/providers/app_state_provider.dart';
@@ -5,11 +6,23 @@ import 'package:pocketly/core/services/sync/sync_queue_service.dart';
 import 'package:pocketly/core/services/sync/sync_models.dart';
 
 class ExpensesNotifier extends Notifier<ExpensesState> {
+  bool _isPulling = false;
+
   @override
   ExpensesState build() {
     // Initialize with loading state and load data after build completes
     Future.microtask(() => _loadExpenses());
     return const ExpensesState(isLoading: true);
+  }
+
+  /// Load expenses from Hive database only (no sync trigger)
+  Future<void> _loadExpensesFromHiveOnly() async {
+    try {
+      final expenses = await expenseHiveRepository.getAllExpenses();
+      state = state.copyWith(expenses: expenses, isLoading: false);
+    } catch (e) {
+      debugPrint('Failed to load expenses from Hive: $e');
+    }
   }
 
   /// Load expenses from Hive database
@@ -18,8 +31,43 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       setLoading(true);
       final expenses = await expenseHiveRepository.getAllExpenses();
       state = state.copyWith(expenses: expenses, isLoading: false);
+
+      // Smart background sync: only if authenticated, online, and stale
+      final appState = ref.read(appStateProvider);
+      final networkService = locator<NetworkService>();
+      final isOnline = await networkService.isConnected;
+      final lastSync = appState.lastSyncTime;
+      final isSyncStale = lastSync == null || 
+                          DateTime.now().difference(lastSync) > const Duration(minutes: 5);
+
+      if (appState.canSync && isOnline && isSyncStale) {
+        // Use flag to prevent recursive calls
+        if (!_isPulling) {
+          _isPulling = true;
+          syncManager.pullExpensesFromServer().then((_) {
+            // Reload only LOCAL data, don't trigger another pull
+            _loadExpensesFromHiveOnly();
+          }).catchError((e) {
+            debugPrint('Background pull sync failed: $e');
+          }).whenComplete(() {
+            _isPulling = false;
+          });
+        }
+      }
     } catch (e) {
       setError('Failed to load expenses: $e');
+    }
+  }
+
+  /// Sync expenses from server
+  Future<void> syncFromServer() async {
+    try {
+      setLoading(true);
+      await syncManager.pullExpensesFromServer();
+      // Reload expenses after sync
+      await _loadExpenses();
+    } catch (e) {
+      setError('Failed to sync from server: $e');
     }
   }
 
@@ -165,6 +213,18 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     state = state.copyWith(error: error, isLoading: false);
   }
 
+  /// Update sync status for a specific expense
+  void _updateExpenseSyncStatus(String expenseId, ExpenseSyncStatus status) {
+    final updatedStatuses = Map<String, ExpenseSyncStatus>.from(state.expenseSyncStatuses);
+    updatedStatuses[expenseId] = status;
+    state = state.copyWith(expenseSyncStatuses: updatedStatuses);
+  }
+
+  /// Get sync status for a specific expense
+  ExpenseSyncStatus getExpenseSyncStatus(String expenseId) {
+    return state.expenseSyncStatuses[expenseId] ?? ExpenseSyncStatus.idle;
+  }
+
   void _showWarningSnackbar() {
     // This will be handled by the UI layer
     // The warning will be shown as a snackbar in the add expense view
@@ -265,6 +325,9 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       final networkService = locator<NetworkService>();
       final isOnline = await networkService.isConnected;
 
+      // Set syncing status for this specific expense
+      _updateExpenseSyncStatus(expense.id, ExpenseSyncStatus.syncing);
+
       if (appState.canSync && isOnline) {
         // Try to sync immediately if authenticated and online
         try {
@@ -295,15 +358,22 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
               description: apiExpense.description,
             );
 
-            // Update in Hive with server ID
-            await expenseHiveRepository.deleteExpense(localId);
-            await expenseHiveRepository.addExpense(updatedExpense);
+            // Update in Hive with server ID (atomic operation)
+            await expenseHiveRepository.replaceExpenseId(localId, apiExpense.id);
 
             // Update state with server ID
             final updatedExpenses = state.expenses.map((e) {
               return e.id == localId ? updatedExpense : e;
             }).toList();
-            state = state.copyWith(expenses: updatedExpenses);
+            state = state.copyWith(
+              expenses: updatedExpenses,
+              syncStatus: ExpenseSyncStatus.success,
+              isQueued: false,
+              lastSyncError: null,
+            );
+
+            // Update per-expense status
+            _updateExpenseSyncStatus(apiExpense.id, ExpenseSyncStatus.success);
 
             debugPrint('✅ Synced expense create: ${expense.name} -> ${apiExpense.id}');
           } else if (operation == SyncOperation.update) {
@@ -320,24 +390,110 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
               description: expense.description,
             );
 
+            state = state.copyWith(
+              syncStatus: ExpenseSyncStatus.success,
+              isQueued: false,
+              lastSyncError: null,
+            );
+
+            // Update per-expense status
+            _updateExpenseSyncStatus(expense.id, ExpenseSyncStatus.success);
+
             debugPrint('✅ Synced expense update: ${expense.name}');
           }
 
           // Update last sync time
           ref.read(appStateProvider.notifier).updateLastSyncTime(DateTime.now());
         } catch (e) {
-          // If sync fails, queue for later
-          debugPrint('⚠️ Online sync failed, queueing for later: $e');
-          await _queueExpenseSync(expense, operation);
+          // Check if this is a validation error (400 status)
+          final isValidationError = _isValidationError(e);
+          final errorMessage = _getUserFriendlyError(e);
+          
+          if (isValidationError) {
+            // Validation error - remove from local state and Hive
+            debugPrint('❌ Validation error, removing expense from local: $e');
+            final updatedExpenses = state.expenses
+                .where((exp) => exp.id != expense.id)
+                .toList();
+            await expenseHiveRepository.deleteExpense(expense.id);
+            state = state.copyWith(
+              expenses: updatedExpenses,
+              syncStatus: ExpenseSyncStatus.failed,
+              isQueued: false,
+              lastSyncError: 'Invalid expense data: $errorMessage',
+            );
+            // Update per-expense status
+            _updateExpenseSyncStatus(expense.id, ExpenseSyncStatus.failed);
+          } else {
+            // Network/server error - queue for later
+            debugPrint('⚠️ Online sync failed, queueing for later: $e');
+            await _queueExpenseSync(expense, operation);
+            state = state.copyWith(
+              syncStatus: ExpenseSyncStatus.failed,
+              isQueued: true,
+              lastSyncError: errorMessage,
+            );
+            // Update per-expense status
+            _updateExpenseSyncStatus(expense.id, ExpenseSyncStatus.queued);
+          }
         }
       } else {
         // Queue for later sync
         await _queueExpenseSync(expense, operation);
+        state = state.copyWith(
+          syncStatus: ExpenseSyncStatus.queued,
+          isQueued: true,
+          lastSyncError: isOnline
+              ? 'Not authenticated'
+              : 'No internet connection',
+        );
+        // Update per-expense status
+        _updateExpenseSyncStatus(expense.id, ExpenseSyncStatus.queued);
       }
     } catch (e) {
       // Don't fail the operation if sync fails
+      final errorMessage = _getUserFriendlyError(e);
       debugPrint('Failed to sync expense: $e');
+      state = state.copyWith(
+        syncStatus: ExpenseSyncStatus.failed,
+        lastSyncError: errorMessage,
+      );
     }
+  }
+
+  /// Check if error is a validation error (400 status)
+  bool _isValidationError(dynamic error) {
+    if (error is DioException) {
+      final statusCode = error.response?.statusCode;
+      // 400 Bad Request or 422 Unprocessable Entity are validation errors
+      return statusCode == 400 || statusCode == 422;
+    }
+    final errorString = error.toString().toLowerCase();
+    return errorString.contains('400') || errorString.contains('bad request') ||
+           errorString.contains('validation') || errorString.contains('invalid');
+  }
+
+  /// Get user-friendly error message
+  String _getUserFriendlyError(dynamic error) {
+    final errorString = error.toString().toLowerCase();
+    if (errorString.contains('network') ||
+        errorString.contains('connection') ||
+        errorString.contains('socket')) {
+      return 'No internet connection';
+    }
+    if (errorString.contains('timeout')) {
+      return 'Request timed out';
+    }
+    if (errorString.contains('401') || errorString.contains('unauthorized')) {
+      return 'Please sign in to sync';
+    }
+    if (errorString.contains('400') || errorString.contains('bad request')) {
+      return 'Invalid expense data';
+    }
+    if (errorString.contains('500') || errorString.contains('server')) {
+      return 'Server error, please try again';
+    }
+    return 'Sync failed. Please try again';
   }
 
   /// Queue expense for later sync
@@ -377,28 +533,69 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       final networkService = locator<NetworkService>();
       final isOnline = await networkService.isConnected;
 
+      // Set syncing status
+      state = state.copyWith(syncStatus: ExpenseSyncStatus.syncing);
+
       if (appState.canSync && isOnline) {
         // Try to sync immediately if authenticated and online
         try {
           final expenseApi = expenseApiRepository;
           await expenseApi.deleteExpense(expenseId);
 
+          state = state.copyWith(
+            syncStatus: ExpenseSyncStatus.success,
+            isQueued: false,
+            lastSyncError: null,
+          );
+
           debugPrint('✅ Synced expense deletion: $expenseId');
 
           // Update last sync time
           ref.read(appStateProvider.notifier).updateLastSyncTime(DateTime.now());
         } catch (e) {
-          // If sync fails, queue for later
-          debugPrint('⚠️ Online sync failed, queueing for later: $e');
-          await _queueDeleteSync(expenseId);
+          // Check if this is a validation error (400 status)
+          final isValidationError = _isValidationError(e);
+          final errorMessage = _getUserFriendlyError(e);
+          
+          if (isValidationError) {
+            // Validation error - item already deleted or doesn't exist on server
+            debugPrint('⚠️ Delete validation error (item may not exist on server): $e');
+            // Don't re-add locally, just mark as successful since it's already gone
+            state = state.copyWith(
+              syncStatus: ExpenseSyncStatus.success,
+              isQueued: false,
+              lastSyncError: null,
+            );
+          } else {
+            // Network/server error - queue for later
+            debugPrint('⚠️ Online sync failed, queueing for later: $e');
+            await _queueDeleteSync(expenseId);
+            state = state.copyWith(
+              syncStatus: ExpenseSyncStatus.failed,
+              isQueued: true,
+              lastSyncError: errorMessage,
+            );
+          }
         }
       } else {
         // Queue for later sync
         await _queueDeleteSync(expenseId);
+        state = state.copyWith(
+          syncStatus: ExpenseSyncStatus.queued,
+          isQueued: true,
+          lastSyncError: isOnline
+              ? 'Not authenticated'
+              : 'No internet connection',
+        );
       }
     } catch (e) {
       // Don't fail the operation if sync fails
+      final errorMessage = _getUserFriendlyError(e);
       debugPrint('Failed to sync expense deletion: $e');
+      state = state.copyWith(
+        syncStatus: ExpenseSyncStatus.failed,
+        lastSyncError: errorMessage,
+      );
     }
   }
 

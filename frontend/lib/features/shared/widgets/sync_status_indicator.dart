@@ -15,37 +15,49 @@ class SyncStatusIndicator extends ConsumerWidget {
     IconData statusIcon;
     Color statusColor;
 
-    switch (appState.mode) {
-      case AppMode.online:
-        if (appState.lastSyncTime != null) {
-          final timeAgo = _getTimeAgo(appState.lastSyncTime!);
-          statusText = 'Synced $timeAgo';
-        } else {
-          statusText = 'Synced';
-        }
-        statusIcon = Icons.cloud_done;
-        statusColor = Theme.of(context).colorScheme.primary;
-        break;
+    // Check if syncing
+    if (appState.isSyncing) {
+      statusText = 'Syncing...';
+      statusIcon = Icons.sync;
+      statusColor = Theme.of(context).colorScheme.primary;
+    } else if (appState.failedSyncCount > 0) {
+      // Show failed count if there are failures
+      statusText = '${appState.failedSyncCount} failed';
+      statusIcon = Icons.error_outline;
+      statusColor = Theme.of(context).colorScheme.error;
+    } else {
+      switch (appState.mode) {
+        case AppMode.online:
+          if (appState.lastSyncTime != null) {
+            final timeAgo = _getTimeAgo(appState.lastSyncTime!);
+            statusText = 'Synced $timeAgo';
+          } else {
+            statusText = 'Synced';
+          }
+          statusIcon = Icons.cloud_done;
+          statusColor = Theme.of(context).colorScheme.primary;
+          break;
 
-      case AppMode.offline:
-        if (appState.pendingSyncCount > 0) {
-          statusText = '${appState.pendingSyncCount} pending';
-        } else {
-          statusText = 'Offline';
-        }
-        statusIcon = Icons.cloud_off;
-        statusColor = Theme.of(context).colorScheme.onSurfaceVariant;
-        break;
+        case AppMode.offline:
+          if (appState.pendingSyncCount > 0) {
+            statusText = '${appState.pendingSyncCount} pending';
+          } else {
+            statusText = 'Offline';
+          }
+          statusIcon = Icons.cloud_off;
+          statusColor = Theme.of(context).colorScheme.onSurfaceVariant;
+          break;
 
-      case AppMode.localMode:
-        if (appState.pendingSyncCount > 0) {
-          statusText = '${appState.pendingSyncCount} pending sync';
-        } else {
-          statusText = 'Local';
-        }
-        statusIcon = Icons.cloud_queue;
-        statusColor = Theme.of(context).colorScheme.tertiary;
-        break;
+        case AppMode.localMode:
+          if (appState.pendingSyncCount > 0) {
+            statusText = '${appState.pendingSyncCount} pending sync';
+          } else {
+            statusText = 'Local';
+          }
+          statusIcon = Icons.cloud_queue;
+          statusColor = Theme.of(context).colorScheme.tertiary;
+          break;
+      }
     }
 
     return GestureDetector(
@@ -59,7 +71,17 @@ class SyncStatusIndicator extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(statusIcon, size: 16, color: statusColor),
+            if (appState.isSyncing)
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                ),
+              )
+            else
+              Icon(statusIcon, size: 16, color: statusColor),
             const SizedBox(width: 4),
             Text(
               statusText,
