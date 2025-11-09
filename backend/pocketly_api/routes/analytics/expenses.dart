@@ -9,7 +9,7 @@ Future<Response> onRequest(RequestContext context) async {
   };
 }
 
-/// GET /expenses/stats - Get expense statistics and analytics
+/// GET /analytics/expenses - Get expense statistics and analytics
 Future<Response> _getAnalytics(RequestContext context) async {
   final expenseQueryRepo = context.read<ExpenseQueryRepository>();
   final expenseAnalyticsRepo = context.read<ExpenseAnalyticsRepository>();
@@ -28,9 +28,9 @@ Future<Response> _getAnalytics(RequestContext context) async {
     final startDateStr = queryParams['startDate'];
     final endDateStr = queryParams['endDate'];
 
-    Map<String, dynamic> stats;
+    Map<String, dynamic> analytics;
 
-    // Stats for date range
+    // Analytics for date range
     if (startDateStr != null && endDateStr != null) {
       try {
         final startDate = DateTime.parse(startDateStr);
@@ -59,7 +59,7 @@ Future<Response> _getAnalytics(RequestContext context) async {
         final daysDifference = endDate.difference(startDate).inDays + 1;
         final dailyAverage = daysDifference > 0 ? total / daysDifference : 0.0;
 
-        stats = {
+        analytics = {
           'total': total,
           'count': expensesCount,
           'categoryBreakdown': categoryBreakdown,
@@ -74,7 +74,7 @@ Future<Response> _getAnalytics(RequestContext context) async {
         );
       }
     }
-    // Overall stats
+    // Overall analytics
     else {
       final total = await expenseAnalyticsRepo.getTotalExpensesAmount(userId);
       final expensesCount = await expenseQueryRepo.getExpensesCount(
@@ -86,7 +86,7 @@ Future<Response> _getAnalytics(RequestContext context) async {
       // Calculate average (total / number of expenses, not daily)
       final average = expensesCount > 0 ? total / expensesCount : 0.0;
 
-      stats = {
+      analytics = {
         'total': total,
         'count': expensesCount,
         'categoryBreakdown': categoryBreakdown,
@@ -95,9 +95,9 @@ Future<Response> _getAnalytics(RequestContext context) async {
       };
     }
 
-    return ApiResponse.success(data: stats);
+    return ApiResponse.success(data: analytics);
   } catch (e) {
-    AppLogger.error('Get stats error: $e');
-    return ApiResponse.internalError(message: 'Failed to fetch statistics');
+    AppLogger.error('Get analytics error: $e');
+    return ApiResponse.internalError(message: 'Failed to fetch analytics');
   }
 }

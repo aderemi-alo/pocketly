@@ -6,9 +6,16 @@ import 'package:pocketly_api/utils/utils.dart';
 Handler middleware(Handler handler) {
   return handler
       .use(
-        provider<CategoryRepository>(
-          (context) => CategoryRepository(context.read<PocketlyDatabase>()),
+        provider<ExpenseQueryRepository>(
+          (context) => ExpenseQueryRepository(context.read<PocketlyDatabase>()),
+        ),
+      )
+      .use(
+        provider<ExpenseAnalyticsRepository>(
+          (context) =>
+              ExpenseAnalyticsRepository(context.read<PocketlyDatabase>()),
         ),
       )
       .use(requireAuth());
 }
+

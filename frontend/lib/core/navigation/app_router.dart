@@ -53,24 +53,35 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isAuthenticated = authState.isAuthenticated;
       final hasLocalData = LocalDataService.hasLocalData();
+      final currentLocation = state.matchedLocation;
       final isOnAuthPage =
-          state.matchedLocation == AppRoutes.login ||
-          state.matchedLocation == AppRoutes.signup ||
-          state.matchedLocation == AppRoutes.forgotPassword;
+          currentLocation == AppRoutes.login ||
+          currentLocation == AppRoutes.signup ||
+          currentLocation == AppRoutes.forgotPassword;
 
-      // New users (no local data) → Login screen
-      if (!hasLocalData && !isOnAuthPage) {
-        return AppRoutes.login;
+      // Prevent redirect loops - don't redirect if already on target route
+      // New users (no local data, not authenticated) → Login screen
+      if (!hasLocalData && !isAuthenticated) {
+        if (!isOnAuthPage) {
+          return AppRoutes.login;
+        }
+        return null; // Already on login, don't redirect
       }
 
       // Returning users (has local data) → Dashboard (regardless of auth)
       if (hasLocalData && isOnAuthPage) {
-        return AppRoutes.dashboard;
+        if (currentLocation != AppRoutes.dashboard) {
+          return AppRoutes.dashboard;
+        }
+        return null; // Already on dashboard, don't redirect
       }
 
       // Authenticated users on auth page → Dashboard
       if (isAuthenticated && isOnAuthPage) {
-        return AppRoutes.dashboard;
+        if (currentLocation != AppRoutes.dashboard) {
+          return AppRoutes.dashboard;
+        }
+        return null; // Already on dashboard, don't redirect
       }
 
       return null; // No redirect needed

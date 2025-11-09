@@ -95,7 +95,7 @@ class ExpenseApiRepository {
     DateTime? endDate,
   }) async {
     final response = await _apiClient.dio.get(
-      '/expenses/stats',
+      '/analytics/expenses',
       queryParameters: {
         if (startDate != null) 'startDate': startDate.toIso8601String(),
         if (endDate != null) 'endDate': endDate.toIso8601String(),

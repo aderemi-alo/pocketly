@@ -1,7 +1,13 @@
 import 'package:dart_frog/dart_frog.dart';
+import 'package:pocketly_api/database/database.dart';
+
+final _db = PocketlyDatabase();
 
 Handler middleware(Handler handler) {
-  return handler.use(requestLogger()).use(_corsHeaders());
+  return handler
+      .use(provider<PocketlyDatabase>((_) => _db))
+      .use(requestLogger())
+      .use(_corsHeaders());
 }
 
 Middleware _corsHeaders() {
