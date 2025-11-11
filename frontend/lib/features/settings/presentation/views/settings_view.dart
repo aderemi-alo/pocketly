@@ -12,9 +12,7 @@ class SettingsView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authProvider).user;
     final themeState = ref.watch(themeProvider);
-    final name = user?.name ?? '';
     return SingleChildScrollView(
       child: Padding(
         padding: context.screenPadding(),

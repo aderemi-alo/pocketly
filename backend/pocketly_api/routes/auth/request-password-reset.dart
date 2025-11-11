@@ -57,7 +57,7 @@ Future<Response> _requestPasswordReset(RequestContext context) async {
       }
     }
 
-    final response = OtpResponse(
+    const response = OtpResponse(
       message:
           'If an account exists with this email, a password reset code has been sent',
       expiresInMinutes: Settings.otpExpirationInMinutes,

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:pocketly/core/services/logger_service.dart';
 
 enum ConflictResolutionStrategy { serverWins, clientWins, newerWins, manual }
 
@@ -16,19 +16,19 @@ class ConflictResolution {
   }) {
     switch (strategy) {
       case ConflictResolutionStrategy.serverWins:
-        debugPrint('🔀 Conflict resolved: Server wins');
+        AppLogger.debug('🔀 Conflict resolved: Server wins');
         return serverData;
 
       case ConflictResolutionStrategy.clientWins:
-        debugPrint('🔀 Conflict resolved: Client wins');
+        AppLogger.debug('🔀 Conflict resolved: Client wins');
         return localData;
 
       case ConflictResolutionStrategy.newerWins:
         if (localUpdatedAt.isAfter(serverUpdatedAt)) {
-          debugPrint('🔀 Conflict resolved: Local is newer');
+          AppLogger.debug('🔀 Conflict resolved: Local is newer');
           return localData;
         } else {
-          debugPrint('🔀 Conflict resolved: Server is newer');
+          AppLogger.debug('🔀 Conflict resolved: Server is newer');
           return serverData;
         }
 

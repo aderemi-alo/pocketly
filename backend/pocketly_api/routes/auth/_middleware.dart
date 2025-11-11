@@ -3,7 +3,7 @@ import 'package:pocketly_api/database/database.dart';
 import 'package:pocketly_api/repositories/repositories.dart';
 import 'package:pocketly_api/services/email_service.dart';
 
-final _emailService = EmailService();
+const _emailService = EmailService();
 
 Handler middleware(Handler handler) {
   return handler.use(

@@ -1,9 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
 import 'package:pocketly/features/expenses/domain/states/categories_state.dart';
-import 'package:pocketly/features/expenses/domain/repo/category_hive_repository.dart';
-import 'package:pocketly/features/expenses/data/repositories/category_api_repository.dart';
 
 class CategoriesNotifier extends Notifier<CategoriesState> {
   late final CategoryHiveRepository _categoryHiveRepository;
@@ -28,19 +25,13 @@ class CategoriesNotifier extends Notifier<CategoriesState> {
 
       // If no categories in local storage, use predefined as fallback
       if (categories.isEmpty) {
-        final predefined = Categories.predefined;
-        state = state.copyWith(
-          categories: predefined,
-          isLoading: false,
-        );
+        const predefined = Categories.predefined;
+        state = state.copyWith(categories: predefined, isLoading: false);
       } else {
-        state = state.copyWith(
-          categories: categories,
-          isLoading: false,
-        );
+        state = state.copyWith(categories: categories, isLoading: false);
       }
     } catch (e) {
-      debugPrint('Failed to load local categories: $e');
+      ErrorHandler.logError('Failed to load local categories', e);
       // Fallback to predefined categories
       state = state.copyWith(
         categories: Categories.predefined,
@@ -53,7 +44,7 @@ class CategoriesNotifier extends Notifier<CategoriesState> {
   /// Sync categories from backend
   Future<void> syncCategories() async {
     try {
-      state = state.copyWith(isLoading: true, error: null);
+      state = state.copyWith(isLoading: true);
 
       // Fetch categories from backend
       final apiCategories = await _categoryApiRepository.getAllCategories();
@@ -71,7 +62,7 @@ class CategoriesNotifier extends Notifier<CategoriesState> {
         lastSyncedAt: DateTime.now(),
       );
     } catch (e) {
-      debugPrint('Failed to sync categories: $e');
+      ErrorHandler.logError('Failed to sync categories', e);
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to sync categories: $e',
@@ -105,9 +96,10 @@ class CategoriesNotifier extends Notifier<CategoriesState> {
 }
 
 // Provider
-final categoriesProvider = NotifierProvider<CategoriesNotifier, CategoriesState>(
-  () => CategoriesNotifier(),
-);
+final categoriesProvider =
+    NotifierProvider<CategoriesNotifier, CategoriesState>(
+      () => CategoriesNotifier(),
+    );
 
 // Legacy provider for backward compatibility
 final categoryByIdProvider = Provider.family<Category?, String>((ref, id) {

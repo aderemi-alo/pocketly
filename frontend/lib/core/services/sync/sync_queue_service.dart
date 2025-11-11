@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
+import 'package:pocketly/core/services/logger_service.dart';
 import 'package:pocketly/core/services/sync/sync_models.dart';
 import 'package:uuid/uuid.dart';
 
@@ -36,7 +36,7 @@ class SyncQueueService {
     );
 
     await _box.put(id, item);
-    debugPrint('📝 Enqueued ${operation.name} for $entityType (ID: $id)');
+    AppLogger.debug('📝 Enqueued ${operation.name} for $entityType (ID: $id)');
     return id;
   }
 

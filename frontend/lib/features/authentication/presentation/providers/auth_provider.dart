@@ -1,4 +1,6 @@
 import 'package:pocketly/core/core.dart';
+import 'package:pocketly/core/services/logger_service.dart';
+import 'package:pocketly/core/utils/error_handler.dart';
 import 'package:pocketly/features/authentication/domain/domain.dart';
 import 'package:pocketly/features/authentication/data/data.dart';
 import 'package:pocketly/core/providers/app_state_provider.dart';
@@ -77,7 +79,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           _ref.read(appStateProvider.notifier).setOnlineMode();
         } catch (e) {
           // Refresh failed - switch to local mode (don't clear tokens)
-          debugPrint('Token refresh failed on startup: $e');
+          ErrorHandler.logError('Token refresh failed on startup', e);
           state = state.copyWith(isAuthenticated: false);
           _ref.read(appStateProvider.notifier).setLocalMode();
         }
@@ -124,7 +126,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       try {
         await _ref.read(categoriesProvider.notifier).syncCategories();
       } catch (e) {
-        debugPrint('Failed to sync categories on login: $e');
+        ErrorHandler.logError('Failed to sync categories on login', e);
         // Don't fail login if category sync fails
       }
 
@@ -166,7 +168,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       try {
         await _ref.read(categoriesProvider.notifier).syncCategories();
       } catch (e) {
-        debugPrint('Failed to sync categories on registration: $e');
+        ErrorHandler.logError('Failed to sync categories on registration', e);
         // Don't fail registration if category sync fails
       }
 
@@ -253,14 +255,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       // TODO: Implement sync queue processing
       // This would trigger the sync manager to process pending items
-      debugPrint('Processing pending sync queue...');
+      AppLogger.debug('Processing pending sync queue...');
 
       // Update pending sync count
       final syncQueue = locator<SyncQueueService>();
       final pendingCount = syncQueue.getPendingItems().length;
       _ref.read(appStateProvider.notifier).updatePendingSyncCount(pendingCount);
     } catch (e) {
-      debugPrint('Failed to process sync queue: $e');
+      ErrorHandler.logError('Failed to process sync queue', e);
     }
   }
 }

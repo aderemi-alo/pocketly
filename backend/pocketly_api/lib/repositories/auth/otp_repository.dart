@@ -35,8 +35,8 @@ class OtpRepository {
     final otpCode = OtpGenerator.generateOtp();
     final otpCodeHash = Encryption.encryptPassword(otpCode);
 
-    final expiresAt =
-        DateTime.now().add(Duration(minutes: Settings.otpExpirationInMinutes));
+    final expiresAt = DateTime.now()
+        .add(const Duration(minutes: Settings.otpExpirationInMinutes));
 
     final companion = OtpsCompanion.insert(
       email: email,
@@ -88,8 +88,8 @@ class OtpRepository {
     if (isValid) {
       // Mark OTP as used
       await (_db.update(_db.otps)..where((o) => o.id.equals(otp.id))).write(
-        OtpsCompanion(
-          isUsed: const Value(true),
+        const OtpsCompanion(
+          isUsed: Value(true),
         ),
       );
 

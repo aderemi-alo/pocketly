@@ -1,7 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pocketly/core/core.dart';
-import 'package:pocketly/core/providers/app_state_provider.dart';
 import 'package:pocketly/features/shared/widgets/sync_details_bottom_sheet.dart';
 
 class SyncStatusIndicator extends ConsumerWidget {

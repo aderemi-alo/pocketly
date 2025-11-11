@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
+import 'package:pocketly/core/services/logger_service.dart';
 import 'package:pocketly/features/expenses/data/models/expense_hive.dart';
 
 class ExpenseCacheManager {
@@ -22,7 +22,7 @@ class ExpenseCacheManager {
     }
 
     await _box.put(expense.expenseId, expense);
-    debugPrint('💾 Cached expense: ${expense.expenseId}');
+    AppLogger.debug('💾 Cached expense: ${expense.expenseId}');
   }
 
   /// Cache multiple expenses
@@ -42,7 +42,7 @@ class ExpenseCacheManager {
     };
 
     await _box.putAll(cacheMap);
-    debugPrint('💾 Cached ${toCache.length} expenses');
+    AppLogger.debug('💾 Cached ${toCache.length} expenses');
   }
 
   /// Get cached expense by ID
@@ -61,13 +61,13 @@ class ExpenseCacheManager {
   /// Remove expense from cache
   Future<void> removeCachedExpense(String expenseId) async {
     await _box.delete(expenseId);
-    debugPrint('🗑️ Removed expense from cache: $expenseId');
+    AppLogger.debug('🗑️ Removed expense from cache: $expenseId');
   }
 
   /// Update cached expense
   Future<void> updateCachedExpense(ExpenseHive expense) async {
     await _box.put(expense.expenseId, expense);
-    debugPrint('✏️ Updated cached expense: ${expense.expenseId}');
+    AppLogger.debug('✏️ Updated cached expense: ${expense.expenseId}');
   }
 
   /// Evict oldest expense from cache
@@ -80,13 +80,15 @@ class ExpenseCacheManager {
     final oldest = expenses.first;
 
     await _box.delete(oldest.expenseId);
-    debugPrint('♻️ Evicted oldest expense from cache: ${oldest.expenseId}');
+    AppLogger.debug(
+      '♻️ Evicted oldest expense from cache: ${oldest.expenseId}',
+    );
   }
 
   /// Clear entire cache
   Future<void> clearCache() async {
     await _box.clear();
-    debugPrint('🗑️ Cleared expense cache');
+    AppLogger.debug('🗑️ Cleared expense cache');
   }
 
   /// Get cache size

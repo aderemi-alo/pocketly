@@ -6,6 +6,7 @@ import 'package:pocketly/core/services/network_service.dart';
 import 'package:pocketly/core/services/sync/conflict_resolution_service.dart';
 import 'package:pocketly/core/services/sync/sync_models.dart';
 import 'package:pocketly/core/services/sync/sync_queue_service.dart';
+import 'package:pocketly/core/services/logger_service.dart';
 import 'package:pocketly/core/utils/icon_mapper.dart';
 import 'package:pocketly/features/expenses/data/cache/expense_cache_manager.dart';
 import 'package:pocketly/features/expenses/data/models/expense_hive.dart';
@@ -105,7 +106,7 @@ class SyncManager {
       isConnected,
     ) {
       if (isConnected && !_isSyncing) {
-        debugPrint('📡 Network restored, starting sync...');
+        AppLogger.info('📡 Network restored, starting sync...');
         syncPendingOperations();
       }
     });
@@ -123,24 +124,24 @@ class SyncManager {
   /// Sync all pending operations
   Future<void> syncPendingOperations() async {
     if (_isSyncing) {
-      debugPrint('⏳ Sync already in progress');
+      AppLogger.debug('⏳ Sync already in progress');
       return;
     }
 
     // Check app state first - only sync if can sync
     if (_canSyncChecker != null && !_canSyncChecker!()) {
-      debugPrint('📴 Cannot sync - not authenticated');
+      AppLogger.debug('📴 Cannot sync - not authenticated');
       return;
     }
 
     final isOnline = await _networkService.isConnected;
     if (!isOnline) {
-      debugPrint('📴 Offline, skipping sync');
+      AppLogger.debug('📴 Offline, skipping sync');
       return;
     }
 
     _isSyncing = true;
-    debugPrint('🔄 Starting sync...');
+    AppLogger.info('🔄 Starting sync...');
     _appStateUpdater?.call(isSyncing: true);
     _onSyncStart?.call();
 
@@ -152,13 +153,13 @@ class SyncManager {
       final failedItems = _syncQueue.getFailedItems();
       final allItems = [...pendingItems, ...failedItems];
 
-      debugPrint('📊 Sync queue: ${allItems.length} items');
+      AppLogger.debug('📊 Sync queue: ${allItems.length} items');
 
       for (final item in allItems) {
         // Apply exponential backoff for failed items
         if (item.status == 'failed' && item.retryCount > 0) {
           final delaySeconds = pow(2, item.retryCount).clamp(1, 60).toInt();
-          debugPrint(
+          AppLogger.debug(
             '⏱️ Waiting ${delaySeconds}s before retry (attempt ${item.retryCount})',
           );
           await Future.delayed(Duration(seconds: delaySeconds));
@@ -187,14 +188,14 @@ class SyncManager {
         failureCount: failureCount,
       );
 
-      debugPrint(
+      AppLogger.info(
         '✅ Sync completed: $successCount succeeded, $failureCount failed',
       );
 
       // After pushing local changes, pull server changes
       await pullExpensesFromServer();
     } catch (e) {
-      debugPrint('❌ Sync failed: $e');
+      AppLogger.error('❌ Sync failed', e);
       _onSyncComplete?.call(
         successCount: successCount,
         failureCount: failureCount + 1,
@@ -207,17 +208,17 @@ class SyncManager {
   /// Pull expenses from server and merge with local
   Future<void> pullExpensesFromServer() async {
     if (!await _networkService.isConnected) {
-      debugPrint('📴 Offline, skipping pull sync');
+      AppLogger.debug('📴 Offline, skipping pull sync');
       return;
     }
 
     if (_canSyncChecker != null && !_canSyncChecker!()) {
-      debugPrint('📴 Cannot pull - not authenticated');
+      AppLogger.debug('📴 Cannot pull - not authenticated');
       return;
     }
 
     try {
-      debugPrint('📥 Pulling expenses from server...');
+      AppLogger.info('📥 Pulling expenses from server...');
 
       // Fetch all expenses from server (handle pagination)
       final List<ExpenseApiModel> serverExpenses = [];
@@ -238,7 +239,9 @@ class SyncManager {
         offset += limit;
       }
 
-      debugPrint('📥 Fetched ${serverExpenses.length} expenses from server');
+      AppLogger.info(
+        '📥 Fetched ${serverExpenses.length} expenses from server',
+      );
 
       // Get local expenses
       final localExpenses = await _expenseHiveRepository.getAllExpenses();
@@ -246,9 +249,9 @@ class SyncManager {
       // Merge expenses
       await _mergeExpenses(serverExpenses, localExpenses);
 
-      debugPrint('✅ Pull sync completed');
+      AppLogger.info('✅ Pull sync completed');
     } catch (e) {
-      debugPrint('❌ Pull sync failed: $e');
+      AppLogger.error('❌ Pull sync failed', e);
       // Don't throw - just log the error
     }
   }
@@ -295,7 +298,7 @@ class SyncManager {
     // Note: Local expenses that don't exist on server are already in the database
     // and will be pushed to server later via sync queue
 
-    debugPrint(
+    AppLogger.info(
       '✅ Merged expenses: ${expensesToAdd.length} added, ${expensesToUpdate.length} updated',
     );
   }
@@ -325,7 +328,7 @@ class SyncManager {
         category: category,
       );
     } catch (e) {
-      debugPrint('Failed to convert ExpenseApiModel to Expense: $e');
+      AppLogger.error('Failed to convert ExpenseApiModel to Expense', e);
       return null;
     }
   }
@@ -391,7 +394,7 @@ class SyncManager {
       }
 
       await _syncQueue.markCompleted(item.id);
-      debugPrint('✅ Synced ${item.entityType} ${item.operation}');
+      AppLogger.debug('✅ Synced ${item.entityType} ${item.operation}');
       return true;
     } catch (e) {
       final errorMessage = _getUserFriendlyError(e);
@@ -399,19 +402,24 @@ class SyncManager {
       // Check if error is retryable
       if (_isRetryableError(e)) {
         await _syncQueue.markFailed(item.id, errorMessage);
-        debugPrint('❌ Failed to sync ${item.entityType}: $e (will retry)');
+        AppLogger.warning(
+          '❌ Failed to sync ${item.entityType}: $e (will retry)',
+        );
         _onSyncItemFailed?.call(item.entityType, item.operation, errorMessage);
 
         // Remove from queue if max retries exceeded
         if (item.retryCount >= SyncQueueService.maxRetries) {
           await _syncQueue.remove(item.id);
-          debugPrint('🗑️ Removed item from queue (max retries exceeded)');
+          AppLogger.warning(
+            '🗑️ Removed item from queue (max retries exceeded)',
+          );
         }
       } else {
         // Non-retryable error (client error), remove immediately
         await _syncQueue.remove(item.id);
-        debugPrint(
+        AppLogger.error(
           '❌ Failed to sync ${item.entityType}: $e (non-retryable, removed)',
+          e,
         );
         _onSyncItemFailed?.call(item.entityType, item.operation, errorMessage);
       }
@@ -658,7 +666,7 @@ class SyncManager {
   void pauseSync() {
     _periodicSyncTimer?.cancel();
     _connectivitySubscription?.cancel();
-    debugPrint('⏸️ Sync paused');
+    AppLogger.info('⏸️ Sync paused');
   }
 
   /// Resume sync (restart timers and listeners)
@@ -672,7 +680,7 @@ class SyncManager {
       isConnected,
     ) {
       if (isConnected && !_isSyncing) {
-        debugPrint('📡 Network restored, starting sync...');
+        AppLogger.info('📡 Network restored, starting sync...');
         syncPendingOperations();
       }
     });
@@ -686,7 +694,7 @@ class SyncManager {
       }
     });
 
-    debugPrint('▶️ Sync resumed');
+    AppLogger.info('▶️ Sync resumed');
   }
 
   /// Get sync status
