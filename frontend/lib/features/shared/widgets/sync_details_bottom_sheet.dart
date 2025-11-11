@@ -1,7 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pocketly/core/core.dart';
-import 'package:pocketly/core/providers/app_state_provider.dart';
 
 class SyncDetailsBottomSheet extends ConsumerStatefulWidget {
   const SyncDetailsBottomSheet({super.key});
@@ -147,12 +144,8 @@ class _SyncDetailsBottomSheetState
         _buildInfoRow(
           context,
           'Status',
-          appState.isSyncing
-              ? 'Syncing...'
-              : _getStatusText(appState.mode),
-          appState.isSyncing
-              ? Icons.sync
-              : _getStatusIcon(appState.mode),
+          appState.isSyncing ? 'Syncing...' : _getStatusText(appState.mode),
+          appState.isSyncing ? Icons.sync : _getStatusIcon(appState.mode),
         ),
         const SizedBox(height: 12),
 
@@ -187,7 +180,9 @@ class _SyncDetailsBottomSheetState
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.errorContainer.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -215,9 +210,9 @@ class _SyncDetailsBottomSheetState
           const SizedBox(height: 16),
           Text(
             'Failed Items',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           ...failedItems.map((item) => _buildFailedItem(context, item)),
@@ -231,7 +226,9 @@ class _SyncDetailsBottomSheetState
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.2),
+        color: Theme.of(
+          context,
+        ).colorScheme.errorContainer.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
@@ -263,7 +260,10 @@ class _SyncDetailsBottomSheetState
                   syncManager.forceSyncNow();
                 },
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
@@ -326,9 +326,7 @@ class _SyncDetailsBottomSheetState
           value,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w500,
-            color: errorColor
-                ? Theme.of(context).colorScheme.error
-                : null,
+            color: errorColor ? Theme.of(context).colorScheme.error : null,
           ),
         ),
       ],

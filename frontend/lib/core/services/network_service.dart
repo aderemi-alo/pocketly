@@ -1,7 +1,7 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pocketly/core/services/logger_service.dart';
 
 class NetworkService {
   final Connectivity _connectivity = Connectivity();
@@ -14,7 +14,7 @@ class NetworkService {
         return resultsList.any((result) => result != ConnectivityResult.none);
       }
       // For older versions that return single result
-      final singleResult = results as ConnectivityResult;
+      final singleResult = results;
       return singleResult != ConnectivityResult.none;
     });
   }
@@ -27,7 +27,7 @@ class NetworkService {
       return resultsList.any((r) => r != ConnectivityResult.none);
     }
     // For older versions that return single result
-    final singleResult = result as ConnectivityResult;
+    final singleResult = result;
     return singleResult != ConnectivityResult.none;
   }
 
@@ -47,7 +47,7 @@ class NetworkService {
       );
       return true;
     } catch (e) {
-      debugPrint('Internet access check failed: $e');
+      AppLogger.warning('Internet access check failed', e);
       return false;
     }
   }

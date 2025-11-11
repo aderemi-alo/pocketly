@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:pocketly/core/core.dart';
+import 'package:pocketly/core/services/logger_service.dart';
+import 'package:pocketly/core/utils/error_handler.dart';
 import 'package:pocketly/features/features.dart';
 import 'package:pocketly/core/providers/app_state_provider.dart';
 import 'package:pocketly/core/services/sync/sync_queue_service.dart';
@@ -21,7 +23,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       final expenses = await expenseHiveRepository.getAllExpenses();
       state = state.copyWith(expenses: expenses, isLoading: false);
     } catch (e) {
-      debugPrint('Failed to load expenses from Hive: $e');
+      ErrorHandler.logError('Failed to load expenses from Hive', e);
     }
   }
 
@@ -48,7 +50,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
             // Reload only LOCAL data, don't trigger another pull
             _loadExpensesFromHiveOnly();
           }).catchError((e) {
-            debugPrint('Background pull sync failed: $e');
+            ErrorHandler.logError('Background pull sync failed', e);
           }).whenComplete(() {
             _isPulling = false;
           });
@@ -297,10 +299,10 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       }
 
       // Category not found - return null (expense will be created without category)
-      debugPrint('⚠️ Category not found for sync: ${localCategory.name} (${localCategory.id})');
+      AppLogger.warning('⚠️ Category not found for sync: ${localCategory.name} (${localCategory.id})');
       return null;
     } catch (e) {
-      debugPrint('Error getting backend category ID: $e');
+      ErrorHandler.logError('Error getting backend category ID', e);
       return null;
     }
   }
@@ -375,7 +377,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
             // Update per-expense status
             _updateExpenseSyncStatus(apiExpense.id, ExpenseSyncStatus.success);
 
-            debugPrint('✅ Synced expense create: ${expense.name} -> ${apiExpense.id}');
+            AppLogger.info('✅ Synced expense create: ${expense.name} -> ${apiExpense.id}');
           } else if (operation == SyncOperation.update) {
             // Get backend category ID
             final backendCategoryId = await _getBackendCategoryId(expense.category);
@@ -399,7 +401,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
             // Update per-expense status
             _updateExpenseSyncStatus(expense.id, ExpenseSyncStatus.success);
 
-            debugPrint('✅ Synced expense update: ${expense.name}');
+            AppLogger.info('✅ Synced expense update: ${expense.name}');
           }
 
           // Update last sync time
@@ -411,7 +413,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
           
           if (isValidationError) {
             // Validation error - remove from local state and Hive
-            debugPrint('❌ Validation error, removing expense from local: $e');
+            AppLogger.warning('❌ Validation error, removing expense from local', e);
             final updatedExpenses = state.expenses
                 .where((exp) => exp.id != expense.id)
                 .toList();
@@ -426,7 +428,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
             _updateExpenseSyncStatus(expense.id, ExpenseSyncStatus.failed);
           } else {
             // Network/server error - queue for later
-            debugPrint('⚠️ Online sync failed, queueing for later: $e');
+            AppLogger.warning('⚠️ Online sync failed, queueing for later', e);
             await _queueExpenseSync(expense, operation);
             state = state.copyWith(
               syncStatus: ExpenseSyncStatus.failed,
@@ -453,7 +455,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     } catch (e) {
       // Don't fail the operation if sync fails
       final errorMessage = _getUserFriendlyError(e);
-      debugPrint('Failed to sync expense: $e');
+      ErrorHandler.logError('Failed to sync expense', e);
       state = state.copyWith(
         syncStatus: ExpenseSyncStatus.failed,
         lastSyncError: errorMessage,
@@ -548,7 +550,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
             lastSyncError: null,
           );
 
-          debugPrint('✅ Synced expense deletion: $expenseId');
+          AppLogger.info('✅ Synced expense deletion: $expenseId');
 
           // Update last sync time
           ref.read(appStateProvider.notifier).updateLastSyncTime(DateTime.now());
@@ -559,7 +561,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
           
           if (isValidationError) {
             // Validation error - item already deleted or doesn't exist on server
-            debugPrint('⚠️ Delete validation error (item may not exist on server): $e');
+            AppLogger.warning('⚠️ Delete validation error (item may not exist on server)', e);
             // Don't re-add locally, just mark as successful since it's already gone
             state = state.copyWith(
               syncStatus: ExpenseSyncStatus.success,
@@ -568,7 +570,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
             );
           } else {
             // Network/server error - queue for later
-            debugPrint('⚠️ Online sync failed, queueing for later: $e');
+            AppLogger.warning('⚠️ Online sync failed, queueing for later', e);
             await _queueDeleteSync(expenseId);
             state = state.copyWith(
               syncStatus: ExpenseSyncStatus.failed,
@@ -591,7 +593,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     } catch (e) {
       // Don't fail the operation if sync fails
       final errorMessage = _getUserFriendlyError(e);
-      debugPrint('Failed to sync expense deletion: $e');
+      ErrorHandler.logError('Failed to sync expense deletion', e);
       state = state.copyWith(
         syncStatus: ExpenseSyncStatus.failed,
         lastSyncError: errorMessage,

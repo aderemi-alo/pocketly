@@ -1,4 +1,5 @@
 import 'package:pocketly/core/core.dart';
+import 'package:pocketly/core/services/logger_service.dart';
 import 'package:pocketly/features/authentication/domain/domain.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -103,7 +104,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await _apiClient.dio.post('/auth/logout');
     } catch (e) {
       // Continue with logout even if API call fails
-      debugPrint('Logout API call failed: $e');
+      AppLogger.warning('Logout API call failed', e);
     } finally {
       await _tokenStorage.clearTokens();
     }

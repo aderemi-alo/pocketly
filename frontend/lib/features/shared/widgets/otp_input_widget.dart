@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pocketly/core/core.dart';
 
@@ -78,7 +77,7 @@ class _OtpInputWidgetState extends State<OtpInputWidget> {
       _values[index] = value;
     }
 
-    final otp = _values.join('');
+    final otp = _values.join();
     widget.onChanged(otp);
 
     if (otp.length == widget.length) {
@@ -101,7 +100,7 @@ class _OtpInputWidgetState extends State<OtpInputWidget> {
       _controllers[index].clear();
     }
 
-    final otp = _values.join('');
+    final otp = _values.join();
     widget.onChanged(otp);
   }
 
@@ -129,7 +128,7 @@ class _OtpInputWidgetState extends State<OtpInputWidget> {
           const SizedBox(height: 8),
           Text(
             widget.errorText!,
-            style: TextStyle(color: AppColors.error, fontSize: 12),
+            style: const TextStyle(color: AppColors.error, fontSize: 12),
           ),
         ],
       ],

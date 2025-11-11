@@ -44,7 +44,7 @@ class AuthRepository {
             deviceId: deviceId,
             expiresAt: Value(
               DateTime.now().add(
-                Duration(days: Settings.refreshTokenExpirationInDays),
+                const Duration(days: Settings.refreshTokenExpirationInDays),
               ),
             ),
           ),
@@ -91,7 +91,7 @@ class AuthRepository {
               deviceId: deviceId,
               expiresAt: Value(
                 DateTime.now().add(
-                  Duration(days: Settings.refreshTokenExpirationInDays),
+                  const Duration(days: Settings.refreshTokenExpirationInDays),
                 ),
               ),
             ),

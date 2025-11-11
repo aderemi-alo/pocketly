@@ -1,4 +1,3 @@
-import 'package:hive/hive.dart';
 import 'package:pocketly/features/expenses/data/database/hive_database.dart';
 
 class LocalDataService {

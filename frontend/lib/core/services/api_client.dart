@@ -3,6 +3,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:pocketly/core/services/device_id_service.dart';
 import 'package:pocketly/core/services/token_storage_service.dart';
+import 'package:pocketly/core/services/logger_service.dart';
+import 'package:pocketly/core/utils/error_handler.dart';
 import 'package:pocketly/core/utils/settings.dart';
 
 class ApiClient {
@@ -43,20 +45,21 @@ class ApiClient {
             options.headers['Authorization'] = 'Bearer $token';
           }
 
-          debugPrint('📤 Request: ${options.method} ${options.path}');
+          AppLogger.debug('📤 Request: ${options.method} ${options.path}');
           return handler.next(options);
         },
 
         onResponse: (response, handler) {
-          debugPrint(
+          AppLogger.debug(
             '📥 Response: ${response.statusCode} ${response.requestOptions.path}',
           );
           return handler.next(response);
         },
 
         onError: (error, handler) async {
-          debugPrint(
-            '❌ Error: ${error.response?.statusCode} ${error.requestOptions.path}',
+          ErrorHandler.logError(
+            'API Error: ${error.requestOptions.path}',
+            error,
           );
 
           // Handle 401 - Unauthorized (token expired)
@@ -115,11 +118,11 @@ class ApiClient {
       final deviceId = await _deviceIdService.getDeviceId();
 
       if (refreshToken == null) {
-        debugPrint('❌ No refresh token available');
+        AppLogger.warning('❌ No refresh token available');
         return null;
       }
 
-      debugPrint('🔄 Refreshing access token...');
+      AppLogger.info('🔄 Refreshing access token...');
 
       final response = await _dio.post(
         '/auth/refresh',
@@ -142,7 +145,7 @@ class ApiClient {
           userId: userId,
         );
 
-        debugPrint('✅ Token refreshed successfully');
+        AppLogger.info('✅ Token refreshed successfully');
 
         // Notify all waiting completers
         for (final completer in _tokenRefreshCompleters) {
@@ -155,7 +158,7 @@ class ApiClient {
 
       return null;
     } catch (e) {
-      debugPrint('❌ Token refresh failed: $e');
+      ErrorHandler.logError('Token refresh failed', e);
 
       // Notify all waiting completers of failure
       for (final completer in _tokenRefreshCompleters) {

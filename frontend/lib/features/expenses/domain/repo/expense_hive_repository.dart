@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:pocketly/core/services/logger_service.dart';
 import 'package:pocketly/core/utils/icon_mapper.dart';
 import 'package:pocketly/features/expenses/data/database/hive_database.dart';
 import 'package:pocketly/features/expenses/data/models/expense_hive.dart';
@@ -26,7 +27,7 @@ class ExpenseHiveRepository {
         ),
       );
     } catch (e) {
-      debugPrint('Failed to convert ExpenseHive to Expense domain model: $e');
+      AppLogger.error('Failed to convert ExpenseHive to Expense domain model', e);
       rethrow;
     }
   }
@@ -46,7 +47,7 @@ class ExpenseHiveRepository {
         categoryColor: expense.category.color,
       );
     } catch (e) {
-      debugPrint('Failed to convert Expense domain model to ExpenseHive: $e');
+      AppLogger.error('Failed to convert Expense domain model to ExpenseHive', e);
       rethrow;
     }
   }
@@ -72,7 +73,7 @@ class ExpenseHiveRepository {
       final expenseHive = _toHiveModel(expense);
       await _box.add(expenseHive);
     } catch (e) {
-      debugPrint('Failed to add expense: $e');
+      AppLogger.error('Failed to add expense', e);
       rethrow;
     }
   }

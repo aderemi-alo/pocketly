@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pocketly/core/providers/app_state_provider.dart';
 import 'package:pocketly/features/shared/widgets/network_restored_banner.dart';
 
 class BannerService {

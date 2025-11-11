@@ -15,7 +15,7 @@ class EmailService {
     required String toName,
     required String otpCode,
   }) async {
-    final subject = 'Verify Your Email - Pocketly';
+    const subject = 'Verify Your Email - Pocketly';
     final htmlContent = '''
 <!DOCTYPE html>
 <html>
@@ -56,7 +56,7 @@ class EmailService {
     required String toName,
     required String otpCode,
   }) async {
-    final subject = 'Reset Your Password - Pocketly';
+    const subject = 'Reset Your Password - Pocketly';
     final htmlContent = '''
 <!DOCTYPE html>
 <html>

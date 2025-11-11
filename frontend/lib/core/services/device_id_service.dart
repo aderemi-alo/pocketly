@@ -1,5 +1,6 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:pocketly/core/services/logger_service.dart';
 import 'package:pocketly/core/services/token_storage_service.dart';
 import 'dart:io';
 
@@ -31,7 +32,7 @@ class DeviceIdService {
         deviceId = 'unknown-${DateTime.now().millisecondsSinceEpoch}';
       }
     } catch (e) {
-      debugPrint('Failed to get device ID: $e');
+      AppLogger.error('Failed to get device ID', e);
       deviceId = 'fallback-${DateTime.now().millisecondsSinceEpoch}';
     }
 

@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:pocketly/core/core.dart';
 
 class ProfileSectionHeader extends StatelessWidget {

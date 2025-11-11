@@ -83,7 +83,7 @@ Future<Response> _updateUserProfile(RequestContext context) async {
 
     if (!success) {
       return ApiResponse.internalError(
-          message: 'Failed to update user profile');
+          message: 'Failed to update user profile',);
     }
 
     // Fetch and return the updated user
