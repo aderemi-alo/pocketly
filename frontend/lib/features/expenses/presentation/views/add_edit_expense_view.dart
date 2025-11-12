@@ -68,6 +68,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
             ? null
             : _descriptionController.text.trim(),
         date: _selectedDate,
+        updatedAt: DateTime.now(),
       );
 
       if (widget.expense != null) {

@@ -25,7 +25,7 @@ class CategoriesNotifier extends Notifier<CategoriesState> {
 
       // If no categories in local storage, use predefined as fallback
       if (categories.isEmpty) {
-        const predefined = Categories.predefined;
+        final predefined = Categories.predefined;
         state = state.copyWith(categories: predefined, isLoading: false);
       } else {
         state = state.copyWith(categories: categories, isLoading: false);
