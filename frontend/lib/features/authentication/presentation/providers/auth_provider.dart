@@ -1,9 +1,6 @@
 import 'package:pocketly/core/core.dart';
-import 'package:pocketly/core/services/logger_service.dart';
-import 'package:pocketly/core/utils/error_handler.dart';
 import 'package:pocketly/features/authentication/domain/domain.dart';
 import 'package:pocketly/features/authentication/data/data.dart';
-import 'package:pocketly/core/providers/app_state_provider.dart';
 import 'package:pocketly/features/expenses/presentation/providers/categories_provider.dart';
 
 // Repository provider

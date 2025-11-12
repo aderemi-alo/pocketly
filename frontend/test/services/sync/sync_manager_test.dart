@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pocketly/core/services/sync/sync_manager.dart';
 
 // Note: Full test implementation requires mocking libraries (mocktail/mockito)
 // These tests document the expected behavior and can be expanded when mocking is added
@@ -7,7 +6,7 @@ import 'package:pocketly/core/services/sync/sync_manager.dart';
 void main() {
   group('SyncManager Tests', () {
     // Test scenarios to implement when mocking libraries are added:
-    
+
     test('syncPendingOperations should skip if already syncing', () {
       // TODO: Implement with mocks
       // Verify that concurrent sync calls are prevented
@@ -69,4 +68,3 @@ void main() {
     });
   });
 }
-

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
 import 'package:pocketly/features/authentication/data/repositories/password_reset_repository.dart';
@@ -367,7 +367,7 @@ class _ForgotPasswordViewState extends ConsumerState<ForgotPasswordView> {
                   child: Text(
                     _errorMessage!,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.error,
                       fontWeight: FontWeight.w500,
                     ),
@@ -388,7 +388,7 @@ class _ForgotPasswordViewState extends ConsumerState<ForgotPasswordView> {
                   child: Text(
                     _successMessage!,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.secondary,
                       fontWeight: FontWeight.w500,
                     ),

@@ -1,1 +1,5 @@
 include: package:dart_frog_lint/recommended.yaml
+analyzer:
+  errors:
+    lines_longer_than_80_chars: ignore
+    avoid_redundant_argument_values: ignore

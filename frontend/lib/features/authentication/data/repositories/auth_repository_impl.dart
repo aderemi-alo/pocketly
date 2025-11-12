@@ -1,5 +1,4 @@
 import 'package:pocketly/core/core.dart';
-import 'package:pocketly/core/services/logger_service.dart';
 import 'package:pocketly/features/authentication/domain/domain.dart';
 
 class AuthRepositoryImpl implements AuthRepository {

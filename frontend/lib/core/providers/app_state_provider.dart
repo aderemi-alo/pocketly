@@ -1,6 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pocketly/core/core.dart';
-import 'package:pocketly/core/enums/app_mode.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppState {

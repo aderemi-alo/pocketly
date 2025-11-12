@@ -18,4 +18,3 @@ Handler middleware(Handler handler) {
       )
       .use(requireAuth());
 }
-

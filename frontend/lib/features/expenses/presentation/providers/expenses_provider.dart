@@ -1,11 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:pocketly/core/core.dart';
-import 'package:pocketly/core/services/logger_service.dart';
-import 'package:pocketly/core/utils/error_handler.dart';
 import 'package:pocketly/features/features.dart';
-import 'package:pocketly/core/providers/app_state_provider.dart';
-import 'package:pocketly/core/services/sync/sync_queue_service.dart';
-import 'package:pocketly/core/services/sync/sync_models.dart';
 
 class ExpensesNotifier extends Notifier<ExpensesState> {
   bool _isPulling = false;
@@ -39,21 +34,26 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       final networkService = locator<NetworkService>();
       final isOnline = await networkService.isConnected;
       final lastSync = appState.lastSyncTime;
-      final isSyncStale = lastSync == null || 
-                          DateTime.now().difference(lastSync) > const Duration(minutes: 5);
+      final isSyncStale =
+          lastSync == null ||
+          DateTime.now().difference(lastSync) > const Duration(minutes: 5);
 
       if (appState.canSync && isOnline && isSyncStale) {
         // Use flag to prevent recursive calls
         if (!_isPulling) {
           _isPulling = true;
-          syncManager.syncWithServer().then((_) {
-            // Reload only LOCAL data, don't trigger another pull
-            _loadExpensesFromHiveOnly();
-          }).catchError((e) {
-            ErrorHandler.logError('Background pull sync failed', e);
-          }).whenComplete(() {
-            _isPulling = false;
-          });
+          syncManager
+              .syncWithServer()
+              .then((_) {
+                // Reload only LOCAL data, don't trigger another pull
+                _loadExpensesFromHiveOnly();
+              })
+              .catchError((e) {
+                ErrorHandler.logError('Background pull sync failed', e);
+              })
+              .whenComplete(() {
+                _isPulling = false;
+              });
         }
       }
     } catch (e) {
@@ -179,7 +179,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
           isDeleted: false,
         ),
       );
-      
+
       final updatedExpense = existingExpense.copyWith(
         name: name.trim(),
         amount: amount,
@@ -235,7 +235,9 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
 
   /// Update sync status for a specific expense
   void _updateExpenseSyncStatus(String expenseId, ExpenseSyncStatus status) {
-    final updatedStatuses = Map<String, ExpenseSyncStatus>.from(state.expenseSyncStatuses);
+    final updatedStatuses = Map<String, ExpenseSyncStatus>.from(
+      state.expenseSyncStatuses,
+    );
     updatedStatuses[expenseId] = status;
     state = state.copyWith(expenseSyncStatuses: updatedStatuses);
   }
@@ -300,7 +302,9 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       final categoriesNotifier = ref.read(categoriesProvider.notifier);
 
       // Try to find by name first (for predefined categories)
-      final backendCategory = categoriesNotifier.getCategoryByName(localCategory.name);
+      final backendCategory = categoriesNotifier.getCategoryByName(
+        localCategory.name,
+      );
 
       if (backendCategory != null) {
         return backendCategory.id; // Backend UUID
@@ -310,14 +314,18 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       // UUIDs are typically 36 characters with dashes: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
       if (_isUUID(localCategory.id)) {
         // Verify it exists in our categories
-        final categoryById = categoriesNotifier.getCategoryById(localCategory.id);
+        final categoryById = categoriesNotifier.getCategoryById(
+          localCategory.id,
+        );
         if (categoryById != null) {
           return localCategory.id;
         }
       }
 
       // Category not found - return null (expense will be created without category)
-      AppLogger.warning('⚠️ Category not found for sync: ${localCategory.name} (${localCategory.id})');
+      AppLogger.warning(
+        '⚠️ Category not found for sync: ${localCategory.name} (${localCategory.id})',
+      );
       return null;
     } catch (e) {
       ErrorHandler.logError('Error getting backend category ID', e);
@@ -355,7 +363,9 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
           final localId = expense.id; // Store local ID for mapping
 
           // Get backend category ID
-          final backendCategoryId = await _getBackendCategoryId(expense.category);
+          final backendCategoryId = await _getBackendCategoryId(
+            expense.category,
+          );
 
           if (operation == SyncOperation.create) {
             // Create expense on server
@@ -381,7 +391,10 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
             );
 
             // Update in Hive with server ID (atomic operation)
-            await expenseHiveRepository.replaceExpenseId(localId, apiExpense.id);
+            await expenseHiveRepository.replaceExpenseId(
+              localId,
+              apiExpense.id,
+            );
 
             // Update state with server ID
             final updatedExpenses = state.expenses.map((e) {
@@ -397,13 +410,17 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
             // Update per-expense status
             _updateExpenseSyncStatus(apiExpense.id, ExpenseSyncStatus.success);
 
-            AppLogger.info('✅ Synced expense create: ${expense.name} -> ${apiExpense.id}');
-            
+            AppLogger.info(
+              '✅ Synced expense create: ${expense.name} -> ${apiExpense.id}',
+            );
+
             // Trigger full sync to get any server changes
             syncManager.syncWithServer();
           } else if (operation == SyncOperation.update) {
             // Get backend category ID
-            final backendCategoryId = await _getBackendCategoryId(expense.category);
+            final backendCategoryId = await _getBackendCategoryId(
+              expense.category,
+            );
 
             // Update expense on server
             await expenseApi.updateExpense(
@@ -428,18 +445,23 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
           }
 
           // Update last sync time
-          ref.read(appStateProvider.notifier).updateLastSyncTime(DateTime.now());
-          
+          ref
+              .read(appStateProvider.notifier)
+              .updateLastSyncTime(DateTime.now());
+
           // Trigger full sync to get any server changes
           syncManager.syncWithServer();
         } catch (e) {
           // Check if this is a validation error (400 status)
           final isValidationError = _isValidationError(e);
           final errorMessage = _getUserFriendlyError(e);
-          
+
           if (isValidationError) {
             // Validation error - remove from local state and Hive
-            AppLogger.warning('❌ Validation error, removing expense from local', e);
+            AppLogger.warning(
+              '❌ Validation error, removing expense from local',
+              e,
+            );
             final updatedExpenses = state.expenses
                 .where((exp) => exp.id != expense.id)
                 .toList();
@@ -497,8 +519,10 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
       return statusCode == 400 || statusCode == 422;
     }
     final errorString = error.toString().toLowerCase();
-    return errorString.contains('400') || errorString.contains('bad request') ||
-           errorString.contains('validation') || errorString.contains('invalid');
+    return errorString.contains('400') ||
+        errorString.contains('bad request') ||
+        errorString.contains('validation') ||
+        errorString.contains('invalid');
   }
 
   /// Get user-friendly error message
@@ -579,18 +603,23 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
           AppLogger.info('✅ Synced expense deletion: $expenseId');
 
           // Update last sync time
-          ref.read(appStateProvider.notifier).updateLastSyncTime(DateTime.now());
-          
+          ref
+              .read(appStateProvider.notifier)
+              .updateLastSyncTime(DateTime.now());
+
           // Trigger full sync to get any server changes
           syncManager.syncWithServer();
         } catch (e) {
           // Check if this is a validation error (400 status)
           final isValidationError = _isValidationError(e);
           final errorMessage = _getUserFriendlyError(e);
-          
+
           if (isValidationError) {
             // Validation error - item already deleted or doesn't exist on server
-            AppLogger.warning('⚠️ Delete validation error (item may not exist on server)', e);
+            AppLogger.warning(
+              '⚠️ Delete validation error (item may not exist on server)',
+              e,
+            );
             // Don't re-add locally, just mark as successful since it's already gone
             state = state.copyWith(
               syncStatus: ExpenseSyncStatus.success,

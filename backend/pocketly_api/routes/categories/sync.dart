@@ -171,4 +171,3 @@ Future<Response> _syncCategories(RequestContext context) async {
     return ApiResponse.internalError(message: 'Failed to sync categories');
   }
 }
-

@@ -266,7 +266,7 @@ class _EmailVerificationViewState extends ConsumerState<EmailVerificationView> {
                   child: Text(
                     _successMessage!,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.secondary,
                       fontWeight: FontWeight.w500,
                     ),

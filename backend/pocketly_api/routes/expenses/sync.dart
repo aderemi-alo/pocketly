@@ -189,4 +189,3 @@ Future<Response> _syncExpenses(RequestContext context) async {
     return ApiResponse.internalError(message: 'Failed to sync expenses');
   }
 }
-

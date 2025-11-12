@@ -46,10 +46,9 @@ class CategoryHive extends HiveObject {
     this.userId,
     this.syncedAt,
     DateTime? updatedAt,
-    bool isDeleted = false,
+    this.isDeleted = false,
   }) {
     this.updatedAt = updatedAt ?? DateTime.now();
-    this.isDeleted = isDeleted;
   }
 
   /// Convert from CategoryApiModel
@@ -95,12 +94,16 @@ class CategoryHive extends HiveObject {
   }
 
   /// Convert from domain Category model
-  factory CategoryHive.fromDomain(Category category, {bool isPredefined = false}) {
+  factory CategoryHive.fromDomain(
+    Category category, {
+    bool isPredefined = false,
+  }) {
     return CategoryHive.create(
       id: category.id,
       name: category.name,
       icon: IconMapper.getIconName(category.icon),
-      color: '#${category.color.value.toRadixString(16).substring(2).toUpperCase()}',
+      color:
+          '#${category.color.value.toRadixString(16).substring(2).toUpperCase()}',
       isPredefined: isPredefined,
       syncedAt: null,
       updatedAt: category.updatedAt,
@@ -108,4 +111,3 @@ class CategoryHive extends HiveObject {
     );
   }
 }
-
