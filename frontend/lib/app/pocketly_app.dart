@@ -32,6 +32,11 @@ class _PocketlyAppState extends ConsumerState<PocketlyApp>
         bool? isSyncing,
         String? lastSyncError,
       }) {
+        // Persist lastSyncTime if provided
+        if (lastSyncTime != null) {
+          ref.read(appStateProvider.notifier).updateLastSyncTime(lastSyncTime);
+        }
+        
         ref.read(appStateProvider.notifier).updateSyncState(
           lastSyncTime: lastSyncTime,
           pendingSyncCount: pendingSyncCount,
@@ -43,6 +48,10 @@ class _PocketlyAppState extends ConsumerState<PocketlyApp>
       canSyncChecker: () {
         final appState = ref.read(appStateProvider);
         return appState.canSync;
+      },
+      lastSyncTimeGetter: () {
+        final appState = ref.read(appStateProvider);
+        return appState.lastSyncTime;
       },
     );
   }

@@ -104,4 +104,20 @@ class ExpenseApiRepository {
     );
     return ExpenseStatsModel.fromJson(response.data['data']);
   }
+
+  /// Sync expenses with server
+  /// Returns server changes and conflicts
+  Future<Map<String, dynamic>> syncExpenses({
+    DateTime? lastSyncAt,
+    required List<Map<String, dynamic>> localChanges,
+  }) async {
+    final response = await _apiClient.dio.post(
+      '/expenses/sync',
+      data: {
+        if (lastSyncAt != null) 'lastSyncAt': lastSyncAt.toIso8601String(),
+        'localChanges': localChanges,
+      },
+    );
+    return response.data['data'] as Map<String, dynamic>;
+  }
 }

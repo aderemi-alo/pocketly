@@ -186,12 +186,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _authRepository.logout();
       await _tokenStorage.clearUserData();
       await _tokenStorage.clearTokens();
+
+      // Clear lastSyncTime on logout
+      _ref.read(appStateProvider.notifier).updateLastSyncTime(null);
+
       state = const AuthState();
       _ref.read(appStateProvider.notifier).setLocalMode();
     } catch (e) {
       // Clear state even if logout fails
       await _tokenStorage.clearUserData();
       await _tokenStorage.clearTokens();
+
+      // Clear lastSyncTime even on error
+      _ref.read(appStateProvider.notifier).updateLastSyncTime(null);
+
       state = const AuthState();
       _ref.read(appStateProvider.notifier).setLocalMode();
     }
@@ -243,6 +251,28 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(isLoading: false, user: user);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> deleteAccount({String? password}) async {
+    state = state.copyWith(isLoading: true);
+
+    try {
+      await _authRepository.deleteAccount(password);
+
+      // Clear all local data after successful deletion
+      await _tokenStorage.clearUserData();
+      await _tokenStorage.clearTokens();
+
+      // Clear lastSyncTime on account deletion
+      _ref.read(appStateProvider.notifier).updateLastSyncTime(null);
+
+      // Reset state and switch to local mode
+      state = const AuthState();
+      _ref.read(appStateProvider.notifier).setLocalMode();
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
     }
   }
 

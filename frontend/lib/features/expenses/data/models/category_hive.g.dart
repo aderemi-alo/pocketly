@@ -23,13 +23,15 @@ class CategoryHiveAdapter extends TypeAdapter<CategoryHive> {
       ..color = fields[3] as String
       ..isPredefined = fields[4] as bool
       ..userId = fields[5] as String?
-      ..syncedAt = fields[6] as DateTime?;
+      ..syncedAt = fields[6] as DateTime?
+      ..updatedAt = fields[7] as DateTime
+      ..isDeleted = fields[8] as bool;
   }
 
   @override
   void write(BinaryWriter writer, CategoryHive obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -43,7 +45,11 @@ class CategoryHiveAdapter extends TypeAdapter<CategoryHive> {
       ..writeByte(5)
       ..write(obj.userId)
       ..writeByte(6)
-      ..write(obj.syncedAt);
+      ..write(obj.syncedAt)
+      ..writeByte(7)
+      ..write(obj.updatedAt)
+      ..writeByte(8)
+      ..write(obj.isDeleted);
   }
 
   @override

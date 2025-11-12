@@ -31,6 +31,9 @@ typedef AppStateUpdater =
 /// Callback for checking if sync is allowed
 typedef CanSyncChecker = bool Function();
 
+/// Callback for getting last sync time
+typedef LastSyncTimeGetter = DateTime? Function();
+
 /// Callback for sync events
 typedef OnSyncStart = void Function();
 typedef OnSyncComplete = void Function({int successCount, int failureCount});
@@ -47,6 +50,7 @@ class SyncManager {
   final ConflictResolution? _conflictResolver;
   AppStateUpdater? _appStateUpdater;
   CanSyncChecker? _canSyncChecker;
+  LastSyncTimeGetter? _lastSyncTimeGetter;
   OnSyncStart? _onSyncStart;
   OnSyncComplete? _onSyncComplete;
   OnSyncItemFailed? _onSyncItemFailed;
@@ -65,6 +69,7 @@ class SyncManager {
     ConflictResolution? conflictResolver,
     AppStateUpdater? appStateUpdater,
     CanSyncChecker? canSyncChecker,
+    LastSyncTimeGetter? lastSyncTimeGetter,
     OnSyncStart? onSyncStart,
     OnSyncComplete? onSyncComplete,
     OnSyncItemFailed? onSyncItemFailed,
@@ -77,6 +82,7 @@ class SyncManager {
        _conflictResolver = conflictResolver,
        _appStateUpdater = appStateUpdater,
        _canSyncChecker = canSyncChecker,
+       _lastSyncTimeGetter = lastSyncTimeGetter,
        _onSyncStart = onSyncStart,
        _onSyncComplete = onSyncComplete,
        _onSyncItemFailed = onSyncItemFailed;
@@ -85,15 +91,17 @@ class SyncManager {
   void setupCallbacks({
     AppStateUpdater? appStateUpdater,
     CanSyncChecker? canSyncChecker,
+    LastSyncTimeGetter? lastSyncTimeGetter,
     OnSyncStart? onSyncStart,
     OnSyncComplete? onSyncComplete,
     OnSyncItemFailed? onSyncItemFailed,
   }) {
-    _appStateUpdater = appStateUpdater ?? _appStateUpdater;
-    _canSyncChecker = canSyncChecker ?? _canSyncChecker;
-    _onSyncStart = onSyncStart ?? _onSyncStart;
-    _onSyncComplete = onSyncComplete ?? _onSyncComplete;
-    _onSyncItemFailed = onSyncItemFailed ?? _onSyncItemFailed;
+    if (appStateUpdater != null) _appStateUpdater = appStateUpdater;
+    if (canSyncChecker != null) _canSyncChecker = canSyncChecker;
+    if (lastSyncTimeGetter != null) _lastSyncTimeGetter = lastSyncTimeGetter;
+    if (onSyncStart != null) _onSyncStart = onSyncStart;
+    if (onSyncComplete != null) _onSyncComplete = onSyncComplete;
+    if (onSyncItemFailed != null) _onSyncItemFailed = onSyncItemFailed;
   }
 
   /// Initialize sync manager
@@ -192,8 +200,8 @@ class SyncManager {
         '✅ Sync completed: $successCount succeeded, $failureCount failed',
       );
 
-      // After pushing local changes, pull server changes
-      await pullExpensesFromServer();
+      // After pushing local changes, sync with server
+      await syncWithServer();
     } catch (e) {
       AppLogger.error('❌ Sync failed', e);
       _onSyncComplete?.call(
@@ -205,53 +213,73 @@ class SyncManager {
     }
   }
 
-  /// Pull expenses from server and merge with local
-  Future<void> pullExpensesFromServer() async {
+  /// Sync with server using new sync endpoint
+  Future<void> syncWithServer() async {
     if (!await _networkService.isConnected) {
-      AppLogger.debug('📴 Offline, skipping pull sync');
+      AppLogger.debug('📴 Offline, skipping sync');
       return;
     }
 
     if (_canSyncChecker != null && !_canSyncChecker!()) {
-      AppLogger.debug('📴 Cannot pull - not authenticated');
+      AppLogger.debug('📴 Cannot sync - not authenticated');
       return;
     }
 
     try {
-      AppLogger.info('📥 Pulling expenses from server...');
+      AppLogger.info('🔄 Syncing with server...');
 
-      // Fetch all expenses from server (handle pagination)
-      final List<ExpenseApiModel> serverExpenses = [];
-      int offset = 0;
-      const limit = 50;
-      bool hasMore = true;
+      // Get last sync time from app state
+      final lastSyncAt = _lastSyncTimeGetter != null
+          ? _lastSyncTimeGetter!()
+          : null;
 
-      while (hasMore) {
-        final response = await _expenseApi.getExpenses(
-          limit: limit,
-          offset: offset,
-          includeCategory: true,
-        );
+      // Get local expenses for sync (including deleted)
+      final localExpenses = await _expenseHiveRepository
+          .getAllExpensesForSync();
 
-        final expenses = response['expenses'] as List<ExpenseApiModel>;
-        serverExpenses.addAll(expenses);
-        hasMore = response['hasMore'] as bool;
-        offset += limit;
-      }
+      // Prepare local changes for sync
+      final localChanges = localExpenses.map((expense) {
+        return {
+          'id': expense.id,
+          'name': expense.name,
+          'amount': expense.amount,
+          'date': expense.date.toIso8601String(),
+          'categoryId': expense.category.id,
+          if (expense.description != null) 'description': expense.description,
+          'updatedAt': expense.updatedAt.toIso8601String(),
+          'isDeleted': expense.isDeleted,
+        };
+      }).toList();
 
-      AppLogger.info(
-        '📥 Fetched ${serverExpenses.length} expenses from server',
+      // Call sync endpoint
+      final syncResponse = await _expenseApi.syncExpenses(
+        lastSyncAt: lastSyncAt,
+        localChanges: localChanges,
       );
 
-      // Get local expenses
-      final localExpenses = await _expenseHiveRepository.getAllExpenses();
+      // Process server changes
+      final serverChanges =
+          syncResponse['serverChanges'] as List<dynamic>? ?? [];
+      final serverExpenses = serverChanges
+          .map((json) => ExpenseApiModel.fromJson(json as Map<String, dynamic>))
+          .toList();
 
-      // Merge expenses
-      await _mergeExpenses(serverExpenses, localExpenses);
+      // Get current local expenses (excluding deleted for merge)
+      final currentLocalExpenses = await _expenseHiveRepository
+          .getAllExpenses();
 
-      AppLogger.info('✅ Pull sync completed');
+      // Merge server changes with local
+      await _mergeExpenses(serverExpenses, currentLocalExpenses);
+
+      // Update last sync time after successful sync
+      final now = DateTime.now();
+      _appStateUpdater?.call(lastSyncTime: now);
+
+      AppLogger.info(
+        '✅ Sync completed: ${serverExpenses.length} server changes',
+      );
     } catch (e) {
-      AppLogger.error('❌ Pull sync failed', e);
+      AppLogger.error('❌ Sync failed', e);
       // Don't throw - just log the error
     }
   }
@@ -273,7 +301,7 @@ class SyncManager {
       final localExpense = localExpenseMap[serverExpense.id];
 
       if (localExpense == null) {
-        // New expense from server - add it
+        // New expense from server - add it (even if deleted, for sync purposes)
         final expense = _convertApiModelToExpense(serverExpense);
         if (expense != null) {
           expensesToAdd.add(expense);
@@ -282,6 +310,24 @@ class SyncManager {
         // Expense exists in both - resolve conflict and update
         final expense = _resolveConflict(localExpense, serverExpense);
         expensesToUpdate.add(expense);
+      }
+    }
+
+    // Handle server-deleted expenses (soft delete locally)
+    final expensesToDelete = <String>[];
+    for (final serverExpense in serverExpenses) {
+      if (serverExpense.isDeleted == true) {
+        final localExpense = localExpenseMap[serverExpense.id];
+        if (localExpense != null && !localExpense.isDeleted) {
+          // Server says deleted, but local is not - check timestamps
+          if (serverExpense.updatedAt.isAfter(localExpense.updatedAt) ||
+              serverExpense.updatedAt.isAtSameMomentAs(
+                localExpense.updatedAt,
+              )) {
+            // Server deletion is newer or same - apply deletion
+            expensesToDelete.add(serverExpense.id);
+          }
+        }
       }
     }
 
@@ -295,11 +341,16 @@ class SyncManager {
       await _expenseHiveRepository.updateExpense(expense);
     }
 
+    // Apply server deletions (soft delete)
+    for (final expenseId in expensesToDelete) {
+      await _expenseHiveRepository.deleteExpense(expenseId);
+    }
+
     // Note: Local expenses that don't exist on server are already in the database
     // and will be pushed to server later via sync queue
 
     AppLogger.info(
-      '✅ Merged expenses: ${expensesToAdd.length} added, ${expensesToUpdate.length} updated',
+      '✅ Merged expenses: ${expensesToAdd.length} added, ${expensesToUpdate.length} updated, ${expensesToDelete.length} deleted',
     );
   }
 
@@ -316,6 +367,8 @@ class SyncManager {
           name: 'Uncategorized',
           icon: Icons.category,
           color: Colors.grey,
+          updatedAt: DateTime.now(),
+          isDeleted: false,
         );
       }
 
@@ -326,6 +379,8 @@ class SyncManager {
         date: apiExpense.date,
         description: apiExpense.description,
         category: category,
+        updatedAt: apiExpense.updatedAt,
+        isDeleted: apiExpense.isDeleted ?? false,
       );
     } catch (e) {
       AppLogger.error('Failed to convert ExpenseApiModel to Expense', e);
@@ -356,7 +411,8 @@ class SyncManager {
       final resolved = _conflictResolver.resolve(
         localData: localData,
         serverData: serverData,
-        localUpdatedAt: DateTime.now(), // We don't track this in Expense model
+        localUpdatedAt:
+            localExpense.updatedAt, // Use actual updatedAt from domain model
         serverUpdatedAt: serverExpense.updatedAt,
       );
 
@@ -368,12 +424,24 @@ class SyncManager {
           amount: (resolved['amount'] as num).toDouble(),
           date: DateTime.parse(resolved['date'] as String),
           description: resolved['description'] as String?,
+          updatedAt: localExpense.updatedAt.isAfter(serverExpense.updatedAt)
+              ? localExpense.updatedAt
+              : serverExpense.updatedAt,
         );
       }
     }
 
-    // Default: server wins if newer (or always server wins if no timestamp)
-    return _convertApiModelToExpense(serverExpense) ?? localExpense;
+    // Default: newer wins, client wins on tie
+    if (localExpense.updatedAt.isAfter(serverExpense.updatedAt)) {
+      // Local is newer - keep local
+      return localExpense;
+    } else if (localExpense.updatedAt.isBefore(serverExpense.updatedAt)) {
+      // Server is newer - use server
+      return _convertApiModelToExpense(serverExpense) ?? localExpense;
+    } else {
+      // Timestamps are identical - client wins
+      return localExpense;
+    }
   }
 
   /// Sync individual item

@@ -115,6 +115,9 @@ class Categories extends Table {
   /// The date and time the category was updated.
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 
+  /// Whether the category is deleted (soft delete).
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -151,6 +154,9 @@ class Expenses extends Table {
   /// The date and time the expense was updated.
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 
+  /// Whether the expense is deleted (soft delete).
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -165,7 +171,26 @@ class PocketlyDatabase extends _$PocketlyDatabase {
   }
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onUpgrade: (migrator, from, to) async {
+        if (from < 3) {
+          // Add isDeleted column to expenses table
+          // Using custom SQL since addColumn has type issues with boolean columns
+          await customStatement(
+            'ALTER TABLE expenses ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0;',
+          );
+          // Add isDeleted column to categories table
+          await customStatement(
+            'ALTER TABLE categories ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0;',
+          );
+        }
+      },
+    );
+  }
 
   static QueryExecutor _openConnection() {
     return NativeDatabase.opened(sqlite3.open(Settings.dbName));

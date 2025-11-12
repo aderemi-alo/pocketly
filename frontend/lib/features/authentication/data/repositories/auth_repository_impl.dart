@@ -153,4 +153,16 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('Password update failed: ${e.toString()}');
     }
   }
+
+  @override
+  Future<void> deleteAccount(String? password) async {
+    try {
+      await _apiClient.dio.delete(
+        '/auth/delete',
+        data: password != null ? {'password': password} : null,
+      );
+    } catch (e) {
+      throw Exception('Account deletion failed: ${e.toString()}');
+    }
+  }
 }

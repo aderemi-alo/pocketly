@@ -46,7 +46,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
         // Use flag to prevent recursive calls
         if (!_isPulling) {
           _isPulling = true;
-          syncManager.pullExpensesFromServer().then((_) {
+          syncManager.syncWithServer().then((_) {
             // Reload only LOCAL data, don't trigger another pull
             _loadExpensesFromHiveOnly();
           }).catchError((e) {
@@ -65,7 +65,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
   Future<void> syncFromServer() async {
     try {
       setLoading(true);
-      await syncManager.pullExpensesFromServer();
+      await syncManager.syncWithServer();
       // Reload expenses after sync
       await _loadExpenses();
     } catch (e) {
@@ -112,6 +112,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
 
     try {
       setLoading(true);
+      final now = DateTime.now();
       final expense = Expense(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: name.trim(),
@@ -119,6 +120,8 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
         category: category,
         date: date,
         description: description,
+        updatedAt: now,
+        isDeleted: false,
       );
 
       // Update state immediately for UI responsiveness
@@ -162,13 +165,28 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
 
     try {
       setLoading(true);
-      final updatedExpense = Expense(
-        id: expenseId,
+      // Get existing expense to preserve updatedAt if needed, or set to now
+      final existingExpense = state.expenses.firstWhere(
+        (e) => e.id == expenseId,
+        orElse: () => Expense(
+          id: expenseId,
+          name: name.trim(),
+          amount: amount,
+          category: category,
+          date: date,
+          description: description,
+          updatedAt: DateTime.now(),
+          isDeleted: false,
+        ),
+      );
+      
+      final updatedExpense = existingExpense.copyWith(
         name: name.trim(),
         amount: amount,
         category: category,
         date: date,
         description: description,
+        updatedAt: DateTime.now(), // Update timestamp on modification
       );
 
       // Update state immediately for UI responsiveness
@@ -358,6 +376,8 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
               date: apiExpense.date,
               category: expense.category, // Keep local category
               description: apiExpense.description,
+              updatedAt: apiExpense.updatedAt,
+              isDeleted: apiExpense.isDeleted ?? false,
             );
 
             // Update in Hive with server ID (atomic operation)
@@ -378,6 +398,9 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
             _updateExpenseSyncStatus(apiExpense.id, ExpenseSyncStatus.success);
 
             AppLogger.info('✅ Synced expense create: ${expense.name} -> ${apiExpense.id}');
+            
+            // Trigger full sync to get any server changes
+            syncManager.syncWithServer();
           } else if (operation == SyncOperation.update) {
             // Get backend category ID
             final backendCategoryId = await _getBackendCategoryId(expense.category);
@@ -406,6 +429,9 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
 
           // Update last sync time
           ref.read(appStateProvider.notifier).updateLastSyncTime(DateTime.now());
+          
+          // Trigger full sync to get any server changes
+          syncManager.syncWithServer();
         } catch (e) {
           // Check if this is a validation error (400 status)
           final isValidationError = _isValidationError(e);
@@ -554,6 +580,9 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
 
           // Update last sync time
           ref.read(appStateProvider.notifier).updateLastSyncTime(DateTime.now());
+          
+          // Trigger full sync to get any server changes
+          syncManager.syncWithServer();
         } catch (e) {
           // Check if this is a validation error (400 status)
           final isValidationError = _isValidationError(e);

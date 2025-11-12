@@ -29,6 +29,12 @@ class CategoryHive extends HiveObject {
   @HiveField(6)
   DateTime? syncedAt;
 
+  @HiveField(7)
+  late DateTime updatedAt;
+
+  @HiveField(8)
+  late bool isDeleted;
+
   CategoryHive();
 
   CategoryHive.create({
@@ -39,7 +45,12 @@ class CategoryHive extends HiveObject {
     required this.isPredefined,
     this.userId,
     this.syncedAt,
-  });
+    DateTime? updatedAt,
+    bool isDeleted = false,
+  }) {
+    this.updatedAt = updatedAt ?? DateTime.now();
+    this.isDeleted = isDeleted;
+  }
 
   /// Convert from CategoryApiModel
   factory CategoryHive.fromApiModel(CategoryApiModel apiModel) {
@@ -51,6 +62,8 @@ class CategoryHive extends HiveObject {
       isPredefined: apiModel.isPredefined,
       userId: apiModel.userId,
       syncedAt: DateTime.now(),
+      updatedAt: apiModel.updatedAt,
+      isDeleted: apiModel.isDeleted ?? false,
     );
   }
 
@@ -64,7 +77,8 @@ class CategoryHive extends HiveObject {
       isPredefined: isPredefined,
       userId: userId,
       createdAt: syncedAt ?? DateTime.now(),
-      updatedAt: syncedAt ?? DateTime.now(),
+      updatedAt: updatedAt,
+      isDeleted: isDeleted,
     );
   }
 
@@ -75,6 +89,8 @@ class CategoryHive extends HiveObject {
       name: name,
       icon: IconMapper.getIconFromString(icon),
       color: Color(int.parse(color.replaceFirst('#', '0xFF'))),
+      updatedAt: updatedAt,
+      isDeleted: isDeleted,
     );
   }
 
@@ -87,6 +103,8 @@ class CategoryHive extends HiveObject {
       color: '#${category.color.value.toRadixString(16).substring(2).toUpperCase()}',
       isPredefined: isPredefined,
       syncedAt: null,
+      updatedAt: category.updatedAt,
+      isDeleted: category.isDeleted,
     );
   }
 }

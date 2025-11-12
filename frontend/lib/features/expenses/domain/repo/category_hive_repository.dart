@@ -4,25 +4,35 @@ import 'package:pocketly/features/expenses/domain/models/category.dart';
 import 'package:pocketly/features/expenses/data/database/hive_database.dart';
 
 class CategoryHiveRepository {
-  /// Get all categories from local storage
+  /// Get all categories from local storage (excluding deleted)
   Future<List<Category>> getAllCategories() async {
+    final box = HiveDatabase.categoryBox;
+    final categoryHives = box.values
+        .where((hive) => !hive.isDeleted)
+        .toList();
+    return categoryHives.map((hive) => hive.toDomain()).toList();
+  }
+
+  /// Get all categories for sync (including deleted)
+  Future<List<Category>> getAllCategoriesForSync() async {
     final box = HiveDatabase.categoryBox;
     final categoryHives = box.values.toList();
     return categoryHives.map((hive) => hive.toDomain()).toList();
   }
 
-  /// Get category by backend UUID
+  /// Get category by backend UUID (excluding deleted)
   Future<Category?> getCategoryById(String id) async {
     final box = HiveDatabase.categoryBox;
     final categoryHive = box.get(id);
-    return categoryHive?.toDomain();
+    if (categoryHive == null || categoryHive.isDeleted) return null;
+    return categoryHive.toDomain();
   }
 
-  /// Get category by name (useful for mapping predefined categories)
+  /// Get category by name (useful for mapping predefined categories, excluding deleted)
   Future<Category?> getCategoryByName(String name) async {
     final box = HiveDatabase.categoryBox;
     final categoryHive = box.values.firstWhere(
-      (hive) => hive.name.toLowerCase() == name.toLowerCase(),
+      (hive) => !hive.isDeleted && hive.name.toLowerCase() == name.toLowerCase(),
       orElse: () => throw StateError('Category not found'),
     );
     return categoryHive.toDomain();
@@ -53,10 +63,24 @@ class CategoryHiveRepository {
     await box.put(categoryHive.id, categoryHive);
   }
 
-  /// Delete a category by ID
+  /// Soft delete a category by ID (sets isDeleted = true)
   Future<void> deleteCategory(String id) async {
     final box = HiveDatabase.categoryBox;
-    await box.delete(id);
+    final categoryHive = box.get(id);
+    if (categoryHive != null) {
+      final deletedCategory = CategoryHive.create(
+        id: categoryHive.id,
+        name: categoryHive.name,
+        icon: categoryHive.icon,
+        color: categoryHive.color,
+        isPredefined: categoryHive.isPredefined,
+        userId: categoryHive.userId,
+        syncedAt: categoryHive.syncedAt,
+        updatedAt: DateTime.now(),
+        isDeleted: true,
+      );
+      await box.put(id, deletedCategory);
+    }
   }
 
   /// Clear all categories
@@ -71,20 +95,20 @@ class CategoryHiveRepository {
     return box.containsKey(id);
   }
 
-  /// Get all predefined categories
+  /// Get all predefined categories (excluding deleted)
   Future<List<Category>> getPredefinedCategories() async {
     final box = HiveDatabase.categoryBox;
     final categoryHives = box.values
-        .where((hive) => hive.isPredefined)
+        .where((hive) => hive.isPredefined && !hive.isDeleted)
         .toList();
     return categoryHives.map((hive) => hive.toDomain()).toList();
   }
 
-  /// Get all custom categories
+  /// Get all custom categories (excluding deleted)
   Future<List<Category>> getCustomCategories() async {
     final box = HiveDatabase.categoryBox;
     final categoryHives = box.values
-        .where((hive) => !hive.isPredefined)
+        .where((hive) => !hive.isPredefined && !hive.isDeleted)
         .toList();
     return categoryHives.map((hive) => hive.toDomain()).toList();
   }

@@ -11,6 +11,7 @@ class CategoryApiModel {
   final String? userId;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool? isDeleted;
 
   const CategoryApiModel({
     required this.id,
@@ -21,6 +22,7 @@ class CategoryApiModel {
     this.userId,
     required this.createdAt,
     required this.updatedAt,
+    this.isDeleted,
   });
 
   factory CategoryApiModel.fromJson(Map<String, dynamic> json) {
@@ -33,6 +35,7 @@ class CategoryApiModel {
       userId: json['userId'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
+      isDeleted: json['isDeleted'] as bool?,
     );
   }
 
@@ -46,6 +49,7 @@ class CategoryApiModel {
       if (userId != null) 'userId': userId,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      if (isDeleted != null) 'isDeleted': isDeleted,
     };
   }
 
@@ -56,6 +60,8 @@ class CategoryApiModel {
       name: name,
       icon: IconMapper.getIconFromString(icon),
       color: Color(int.parse(color.replaceFirst('#', '0xFF'))),
+      updatedAt: updatedAt,
+      isDeleted: isDeleted ?? false,
     );
   }
 
@@ -80,7 +86,8 @@ class CategoryApiModel {
       color: '#${colorValue.toUpperCase()}',
       isPredefined: false,
       createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
+      updatedAt: category.updatedAt,
+      isDeleted: category.isDeleted,
     );
   }
 

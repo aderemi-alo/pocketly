@@ -11,6 +11,7 @@ class ExpenseApiModel {
   final String userId;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool? isDeleted;
 
   const ExpenseApiModel({
     required this.id,
@@ -23,6 +24,7 @@ class ExpenseApiModel {
     required this.userId,
     required this.createdAt,
     required this.updatedAt,
+    this.isDeleted,
   });
 
   factory ExpenseApiModel.fromJson(Map<String, dynamic> json) {
@@ -39,6 +41,7 @@ class ExpenseApiModel {
       userId: json['userId'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
+      isDeleted: json['isDeleted'] as bool?,
     );
   }
 
@@ -54,6 +57,7 @@ class ExpenseApiModel {
       'userId': userId,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      if (isDeleted != null) 'isDeleted': isDeleted,
     };
   }
 
@@ -91,6 +95,7 @@ class ExpenseApiModel {
     String? userId,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? isDeleted,
   }) {
     return ExpenseApiModel(
       id: id ?? this.id,
@@ -103,6 +108,7 @@ class ExpenseApiModel {
       userId: userId ?? this.userId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
     );
   }
 

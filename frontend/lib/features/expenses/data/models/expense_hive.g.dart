@@ -25,13 +25,15 @@ class ExpenseHiveAdapter extends TypeAdapter<ExpenseHive> {
       ..categoryId = fields[5] as String
       ..categoryName = fields[6] as String
       ..categoryIconCodePoint = fields[7] as int
-      ..categoryColorValue = fields[8] as int;
+      ..categoryColorValue = fields[8] as int
+      ..updatedAt = fields[9] as DateTime
+      ..isDeleted = fields[10] as bool;
   }
 
   @override
   void write(BinaryWriter writer, ExpenseHive obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.expenseId)
       ..writeByte(1)
@@ -49,7 +51,11 @@ class ExpenseHiveAdapter extends TypeAdapter<ExpenseHive> {
       ..writeByte(7)
       ..write(obj.categoryIconCodePoint)
       ..writeByte(8)
-      ..write(obj.categoryColorValue);
+      ..write(obj.categoryColorValue)
+      ..writeByte(9)
+      ..write(obj.updatedAt)
+      ..writeByte(10)
+      ..write(obj.isDeleted);
   }
 
   @override

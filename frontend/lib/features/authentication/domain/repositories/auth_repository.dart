@@ -9,4 +9,5 @@ abstract class AuthRepository {
   Future<void> updatePassword(String currentPassword, String newPassword);
   Future<UserModel> updateProfile(UpdateProfileRequest request);
   Future<UserModel> fetchUserProfile();
+  Future<void> deleteAccount(String? password);
 }

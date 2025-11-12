@@ -27,9 +27,15 @@ class ConflictResolution {
         if (localUpdatedAt.isAfter(serverUpdatedAt)) {
           AppLogger.debug('🔀 Conflict resolved: Local is newer');
           return localData;
-        } else {
+        } else if (localUpdatedAt.isBefore(serverUpdatedAt)) {
           AppLogger.debug('🔀 Conflict resolved: Server is newer');
           return serverData;
+        } else {
+          // Timestamps are identical - client wins (preserve user's recent action)
+          AppLogger.debug(
+            '🔀 Conflict resolved: Timestamps identical, client wins',
+          );
+          return localData;
         }
 
       case ConflictResolutionStrategy.manual:

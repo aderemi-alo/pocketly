@@ -12,6 +12,7 @@ class CategoryResponse {
     this.userId,
     this.createdAt,
     this.updatedAt,
+    this.isDeleted,
   });
 
   /// Creates a [CategoryResponse] from a [Category] entity
@@ -25,6 +26,7 @@ class CategoryResponse {
       userId: category.userId,
       createdAt: category.createdAt,
       updatedAt: category.updatedAt,
+      isDeleted: category.isDeleted,
     );
   }
 
@@ -52,6 +54,9 @@ class CategoryResponse {
   /// The date and time the category was last updated
   final DateTime? updatedAt;
 
+  /// Whether the category is deleted (soft delete)
+  final bool? isDeleted;
+
   /// Converts the category response to JSON
   Map<String, dynamic> toJson() {
     return {
@@ -63,6 +68,7 @@ class CategoryResponse {
       if (userId != null) 'userId': userId,
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
+      if (isDeleted != null) 'isDeleted': isDeleted,
     };
   }
 

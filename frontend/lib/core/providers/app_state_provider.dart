@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pocketly/core/core.dart';
 import 'package:pocketly/core/enums/app_mode.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AppState {
   final AppMode mode;
@@ -46,14 +48,32 @@ class AppState {
 }
 
 class AppStateNotifier extends StateNotifier<AppState> {
-  AppStateNotifier()
+  final SharedPreferences _prefs;
+  static const String _lastSyncTimeKey = 'last_sync_time';
+
+  AppStateNotifier(this._prefs)
     : super(
         AppState(
           mode: AppMode.localMode,
           canSync: false,
           isAuthenticated: false,
+          lastSyncTime: _loadLastSyncTime(_prefs),
         ),
       );
+
+  static DateTime? _loadLastSyncTime(SharedPreferences prefs) {
+    final timestamp = prefs.getInt(_lastSyncTimeKey);
+    if (timestamp == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(timestamp);
+  }
+
+  Future<void> _saveLastSyncTime(DateTime? time) async {
+    if (time == null) {
+      await _prefs.remove(_lastSyncTimeKey);
+    } else {
+      await _prefs.setInt(_lastSyncTimeKey, time.millisecondsSinceEpoch);
+    }
+  }
 
   void setOnlineMode() {
     state = state.copyWith(
@@ -75,7 +95,8 @@ class AppStateNotifier extends StateNotifier<AppState> {
     );
   }
 
-  void updateLastSyncTime(DateTime time) {
+  Future<void> updateLastSyncTime(DateTime? time) async {
+    await _saveLastSyncTime(time);
     state = state.copyWith(lastSyncTime: time);
   }
 
@@ -115,5 +136,5 @@ class AppStateNotifier extends StateNotifier<AppState> {
 final appStateProvider = StateNotifierProvider<AppStateNotifier, AppState>((
   ref,
 ) {
-  return AppStateNotifier();
+  return AppStateNotifier(locator<SharedPreferences>());
 });

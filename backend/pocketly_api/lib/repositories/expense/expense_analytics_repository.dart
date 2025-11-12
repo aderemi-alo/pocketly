@@ -17,7 +17,8 @@ class ExpenseAnalyticsRepository {
   }) async {
     final query = _db.selectOnly(_db.expenses)
       ..addColumns([_db.expenses.amount.sum()])
-      ..where(_db.expenses.userId.equals(userId));
+      ..where(_db.expenses.userId.equals(userId))
+      ..where(_db.expenses.isDeleted.equals(false));
 
     // Apply optional filters
     if (categoryId != null) {
@@ -73,6 +74,7 @@ class ExpenseAnalyticsRepository {
     final query = _db.selectOnly(_db.expenses)
       ..addColumns([_db.expenses.categoryId, _db.expenses.amount.sum()])
       ..where(_db.expenses.userId.equals(userId))
+      ..where(_db.expenses.isDeleted.equals(false))
       ..where(_db.expenses.categoryId.isNotNull())
       ..groupBy([_db.expenses.categoryId]);
 

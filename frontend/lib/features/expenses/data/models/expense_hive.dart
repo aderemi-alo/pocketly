@@ -33,6 +33,12 @@ class ExpenseHive extends HiveObject {
   @HiveField(8)
   late int categoryColorValue;
 
+  @HiveField(9)
+  late DateTime updatedAt;
+
+  @HiveField(10)
+  late bool isDeleted;
+
   ExpenseHive();
 
   ExpenseHive.create({
@@ -45,8 +51,12 @@ class ExpenseHive extends HiveObject {
     required this.categoryName,
     required IconData categoryIcon,
     required Color categoryColor,
+    DateTime? updatedAt,
+    bool isDeleted = false,
   }) {
     categoryIconCodePoint = categoryIcon.codePoint;
     categoryColorValue = categoryColor.toARGB32();
+    this.updatedAt = updatedAt ?? DateTime.now();
+    this.isDeleted = isDeleted;
   }
 }

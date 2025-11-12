@@ -35,7 +35,7 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
       builder: (context) => AlertDialog(
         title: const Text('Delete Account'),
         content: const Text(
-          'Are you sure you want to delete your account? This action cannot be undone.',
+          'Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently deleted.',
         ),
         actions: [
           TextButton(
@@ -43,9 +43,9 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(context).pop();
-              // TODO: Implement actual delete account
+              await _confirmDeleteAccount();
             },
             child: const Text(
               'Delete',
@@ -55,6 +55,81 @@ class _ProfileSettingsViewState extends ConsumerState<ProfileSettingsView> {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmDeleteAccount() async {
+    // Show password confirmation dialog
+    final passwordController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Deletion'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter your password to confirm account deletion:'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(
+              'Delete Account',
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      passwordController.dispose();
+      return;
+    }
+
+    try {
+      await ref
+          .read(authProvider.notifier)
+          .deleteAccount(
+            password: passwordController.text.isNotEmpty
+                ? passwordController.text
+                : null,
+          );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account deleted successfully'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        // Navigation will happen automatically via auth state listener
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete account: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      passwordController.dispose();
+    }
   }
 
   @override

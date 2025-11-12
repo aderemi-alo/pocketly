@@ -49,4 +49,20 @@ class CategoryApiRepository {
   Future<void> deleteCategory(String categoryId) async {
     await _apiClient.dio.delete('/categories/$categoryId');
   }
+
+  /// Sync categories with server
+  /// Returns server changes and conflicts
+  Future<Map<String, dynamic>> syncCategories({
+    DateTime? lastSyncAt,
+    required List<Map<String, dynamic>> localChanges,
+  }) async {
+    final response = await _apiClient.dio.post(
+      '/categories/sync',
+      data: {
+        if (lastSyncAt != null) 'lastSyncAt': lastSyncAt.toIso8601String(),
+        'localChanges': localChanges,
+      },
+    );
+    return response.data['data'] as Map<String, dynamic>;
+  }
 }
