@@ -1,0 +1,797 @@
+---
+alwaysApply: true
+---
+# Dart Backend Architecture - Cursor Rules (Dart Frog + Drift ORM)
+
+## Project Structure
+
+Follow a layered architecture with clear separation of concerns:
+```
+backend/
+├── routes/
+│   ├── api/
+│   │   └── v1/
+│   │       ├── users/
+│   │       │   ├── index.dart
+│   │       │   └── [id].dart
+│   │       ├── auth/
+│   │       └── posts/
+│   └── _middleware.dart
+├── lib/
+│   ├── core/
+│   │   ├── config/
+│   │   ├── constants/
+│   │   ├── exceptions/
+│   │   ├── middleware/
+│   │   └── utils/
+│   ├── features/
+│   │   ├── users/
+│   │   │   ├── data/
+│   │   │   │   ├── datasources/
+│   │   │   │   ├── models/
+│   │   │   │   └── repositories/
+│   │   │   ├── domain/
+│   │   │   │   ├── entities/
+│   │   │   │   ├── repositories/
+│   │   │   │   └── usecases/
+│   │   │   └── presentation/
+│   │   │       ├── dto/
+│   │   │       └── handlers/
+│   │   ├── auth/
+│   │   └── shared/
+│   │       ├── dto/
+│   │       └── validators/
+│   ├── database/
+│   │   ├── drift/
+│   │   │   ├── database.dart
+│   │   │   ├── database.g.dart
+│   │   │   └── tables/
+│   │   │       ├── users_table.dart
+│   │   │       └── posts_table.dart
+│   │   └── migrations/
+│   └── services/
+│       ├── auth_service.dart
+│       ├── email_service.dart
+│       └── storage_service.dart
+├── test/
+│   ├── routes/
+│   ├── features/
+│   └── database/
+├── pubspec.yaml
+└── README.md
+```
+
+## Layer Responsibilities
+
+### Routes Layer (Dart Frog)
+- **Purpose**: HTTP endpoint definitions and request routing
+- **Location**: `routes/` directory
+- **Rules**:
+  - Keep routes thin - delegate to handlers
+  - Handle only HTTP concerns (parsing, status codes, headers)
+  - Use middleware for cross-cutting concerns (auth, logging, CORS)
+  - Follow RESTful conventions
+```dart
+// routes/api/v1/users/index.dart
+import 'package:dart_frog/dart_frog.dart';
+
+Future<Response> onRequest(RequestContext context) async {
+  return switch (context.request.method) {
+    HttpMethod.get => _getUsers(context),
+    HttpMethod.post => _createUser(context),
+    _ => Response(statusCode: 405),
+  };
+}
+
+Future<Response> _getUsers(RequestContext context) async {
+  final handler = context.read<GetUsersHandler>();
+  return handler.handle(context);
+}
+```
+
+### Data Layer
+- **Purpose**: Database operations and external data sources
+- **Contains**:
+  - `datasources/`: Database queries, API calls, file operations
+  - `models/`: DTOs with JSON serialization (for external APIs)
+  - `repositories/`: Implementation of domain repository interfaces
+- **Rules**:
+  - All Drift database interactions happen here
+  - Handle data transformation between DB and domain entities
+  - Implement error handling and connection management
+  - Never expose Drift tables directly outside this layer
+```dart
+// features/users/data/datasources/user_local_datasource.dart
+class UserLocalDataSource {
+  final AppDatabase database;
+  
+  UserLocalDataSource(this.database);
+  
+  Future<List<UserTableData>> getAllUsers() async {
+    return await database.select(database.userTable).get();
+  }
+  
+  Future<UserTableData> getUserById(String id) async {
+    return await (database.select(database.userTable)
+      ..where((tbl) => tbl.id.equals(id)))
+      .getSingle();
+  }
+  
+  Future<void> createUser(UserTableCompanion user) async {
+    await database.into(database.userTable).insert(user);
+  }
+}
+```
+
+### Domain Layer
+- **Purpose**: Business logic and core entities (pure Dart)
+- **Contains**:
+  - `entities/`: Plain Dart classes representing business objects
+  - `repositories/`: Abstract repository interfaces
+  - `usecases/`: Single-responsibility business logic operations
+- **Rules**:
+  - No Dart Frog imports
+  - No Drift imports
+  - No HTTP concerns
+  - Framework-agnostic
+  - 100% testable with unit tests
+```dart
+// features/users/domain/entities/user.dart
+class User {
+  final String id;
+  final String email;
+  final String name;
+  final DateTime createdAt;
+  
+  User({
+    required this.id,
+    required this.email,
+    required this.name,
+    required this.createdAt,
+  });
+}
+
+// features/users/domain/repositories/user_repository.dart
+abstract class UserRepository {
+  Future<Either<Failure, User>> getUserById(String id);
+  Future<Either<Failure, List<User>>> getAllUsers();
+  Future<Either<Failure, User>> createUser(CreateUserParams params);
+  Future<Either<Failure, void>> deleteUser(String id);
+}
+
+// features/users/domain/usecases/get_user_by_id.dart
+class GetUserById {
+  final UserRepository repository;
+  
+  GetUserById(this.repository);
+  
+  Future<Either<Failure, User>> execute(String id) {
+    return repository.getUserById(id);
+  }
+}
+```
+
+### Presentation Layer
+- **Purpose**: HTTP request/response handling and validation
+- **Contains**:
+  - `dto/`: Data Transfer Objects for API requests/responses
+  - `handlers/`: Business logic orchestration for routes
+- **Rules**:
+  - DTOs handle serialization/deserialization
+  - Handlers orchestrate use cases
+  - Validate input using validators
+  - Format responses consistently
+```dart
+// features/users/presentation/dto/user_response_dto.dart
+class UserResponseDto {
+  final String id;
+  final String email;
+  final String name;
+  final String createdAt;
+  
+  UserResponseDto({
+    required this.id,
+    required this.email,
+    required this.name,
+    required this.createdAt,
+  });
+  
+  factory UserResponseDto.fromEntity(User user) {
+    return UserResponseDto(
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      createdAt: user.createdAt.toIso8601String(),
+    );
+  }
+  
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'name': name,
+      'createdAt': createdAt,
+    };
+  }
+}
+
+// features/users/presentation/handlers/get_users_handler.dart
+class GetUsersHandler {
+  final GetAllUsers getAllUsersUseCase;
+  
+  GetUsersHandler(this.getAllUsersUseCase);
+  
+  Future<Response> handle(RequestContext context) async {
+    final result = await getAllUsersUseCase.execute();
+    
+    return result.fold(
+      (failure) => Response.json(
+        statusCode: _getStatusCode(failure),
+        body: {'error': failure.message},
+      ),
+      (users) => Response.json(
+        body: {
+          'data': users.map((u) => UserResponseDto.fromEntity(u).toJson()).toList(),
+        },
+      ),
+    );
+  }
+  
+  int _getStatusCode(Failure failure) {
+    return switch (failure) {
+      NotFoundFailure() => 404,
+      ValidationFailure() => 400,
+      UnauthorizedFailure() => 401,
+      _ => 500,
+    };
+  }
+}
+```
+
+## Drift ORM Setup
+
+### Database Configuration
+```dart
+// lib/database/drift/database.dart
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+import 'tables/users_table.dart';
+import 'tables/posts_table.dart';
+
+part 'database.g.dart';
+
+@DriftDatabase(tables: [UserTable, PostTable])
+class AppDatabase extends _$AppDatabase {
+  AppDatabase(QueryExecutor e) : super(e);
+  
+  @override
+  int get schemaVersion => 1;
+  
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onCreate: (Migrator m) async {
+        await m.createAll();
+      },
+      onUpgrade: (Migrator m, int from, int to) async {
+        // Handle migrations here
+      },
+    );
+  }
+}
+```
+
+### Table Definitions
+```dart
+// lib/database/drift/tables/users_table.dart
+import 'package:drift/drift.dart';
+
+class UserTable extends Table {
+  TextColumn get id => text().withLength(min: 36, max: 36)();
+  TextColumn get email => text().unique()();
+  TextColumn get name => text()();
+  TextColumn get passwordHash => text()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+  
+  @override
+  Set<Column> get primaryKey => {id};
+  
+  @override
+  String get tableName => 'users';
+}
+```
+
+### Repository Implementation with Drift
+```dart
+// features/users/data/repositories/user_repository_impl.dart
+class UserRepositoryImpl implements UserRepository {
+  final UserLocalDataSource localDataSource;
+  
+  UserRepositoryImpl(this.localDataSource);
+  
+  @override
+  Future<Either<Failure, User>> getUserById(String id) async {
+    try {
+      final userData = await localDataSource.getUserById(id);
+      return Right(_mapToEntity(userData));
+    } on StateError {
+      return Left(NotFoundFailure('User not found'));
+    } catch (e) {
+      return Left(DatabaseFailure('Failed to fetch user: ${e.toString()}'));
+    }
+  }
+  
+  @override
+  Future<Either<Failure, User>> createUser(CreateUserParams params) async {
+    try {
+      final companion = UserTableCompanion(
+        id: Value(uuid.v4()),
+        email: Value(params.email),
+        name: Value(params.name),
+        passwordHash: Value(params.passwordHash),
+      );
+      
+      await localDataSource.createUser(companion);
+      final user = await localDataSource.getUserByEmail(params.email);
+      return Right(_mapToEntity(user));
+    } catch (e) {
+      return Left(DatabaseFailure('Failed to create user: ${e.toString()}'));
+    }
+  }
+  
+  User _mapToEntity(UserTableData data) {
+    return User(
+      id: data.id,
+      email: data.email,
+      name: data.name,
+      createdAt: data.createdAt,
+    );
+  }
+}
+```
+
+## Middleware
+
+### Authentication Middleware
+```dart
+// routes/_middleware.dart
+import 'package:dart_frog/dart_frog.dart';
+
+Handler middleware(Handler handler) {
+  return handler
+    .use(requestLogger())
+    .use(corsMiddleware())
+    .use(authMiddleware());
+}
+
+// lib/core/middleware/auth_middleware.dart
+Middleware authMiddleware() {
+  return (handler) {
+    return (context) async {
+      final authHeader = context.request.headers['Authorization'];
+      
+      if (authHeader == null) {
+        return Response.json(
+          statusCode: 401,
+          body: {'error': 'Missing authorization header'},
+        );
+      }
+      
+      try {
+        final token = authHeader.replaceFirst('Bearer ', '');
+        final authService = context.read<AuthService>();
+        final userId = await authService.verifyToken(token);
+        
+        return handler(context.provide<String>(() => userId));
+      } catch (e) {
+        return Response.json(
+          statusCode: 401,
+          body: {'error': 'Invalid token'},
+        );
+      }
+    };
+  };
+}
+```
+
+### CORS Middleware
+```dart
+// lib/core/middleware/cors_middleware.dart
+Middleware corsMiddleware() {
+  return (handler) {
+    return (context) async {
+      final response = await handler(context);
+      
+      return response.copyWith(
+        headers: {
+          ...response.headers,
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+      );
+    };
+  };
+}
+```
+
+## Dependency Injection
+```dart
+// lib/core/config/service_locator.dart
+import 'package:get_it/get_it.dart';
+
+final getIt = GetIt.instance;
+
+void setupServiceLocator() {
+  // Database
+  getIt.registerLazySingleton<AppDatabase>(
+    () => AppDatabase(NativeDatabase.memory()),
+  );
+  
+  // Data Sources
+  getIt.registerLazySingleton<UserLocalDataSource>(
+    () => UserLocalDataSource(getIt()),
+  );
+  
+  // Repositories
+  getIt.registerLazySingleton<UserRepository>(
+    () => UserRepositoryImpl(getIt()),
+  );
+  
+  // Use Cases
+  getIt.registerLazySingleton(() => GetUserById(getIt()));
+  getIt.registerLazySingleton(() => GetAllUsers(getIt()));
+  getIt.registerLazySingleton(() => CreateUser(getIt()));
+  
+  // Handlers
+  getIt.registerLazySingleton(() => GetUsersHandler(getIt()));
+  getIt.registerLazySingleton(() => CreateUserHandler(getIt()));
+  
+  // Services
+  getIt.registerLazySingleton<AuthService>(() => AuthServiceImpl());
+}
+```
+
+### Provider Middleware for DI
+```dart
+// routes/_middleware.dart
+Handler middleware(Handler handler) {
+  return handler
+    .use(provideDependencies())
+    .use(requestLogger())
+    .use(corsMiddleware());
+}
+
+Middleware provideDependencies() {
+  return provider<AppDatabase>((context) => getIt<AppDatabase>())
+    .use(provider<GetUsersHandler>((context) => getIt<GetUsersHandler>()))
+    .use(provider<CreateUserHandler>((context) => getIt<CreateUserHandler>()))
+    .use(provider<AuthService>((context) => getIt<AuthService>()));
+}
+```
+
+## Error Handling
+
+### Custom Failures
+```dart
+// lib/core/exceptions/failures.dart
+abstract class Failure {
+  final String message;
+  const Failure(this.message);
+}
+
+class DatabaseFailure extends Failure {
+  const DatabaseFailure(super.message);
+}
+
+class NotFoundFailure extends Failure {
+  const NotFoundFailure(super.message);
+}
+
+class ValidationFailure extends Failure {
+  const ValidationFailure(super.message);
+}
+
+class UnauthorizedFailure extends Failure {
+  const UnauthorizedFailure(super.message);
+}
+
+class ServerFailure extends Failure {
+  const ServerFailure(super.message);
+}
+```
+
+### Global Error Handler
+```dart
+// lib/core/middleware/error_handler_middleware.dart
+Middleware errorHandler() {
+  return (handler) {
+    return (context) async {
+      try {
+        return await handler(context);
+      } catch (e, stackTrace) {
+        print('Error: $e');
+        print('StackTrace: $stackTrace');
+        
+        return Response.json(
+          statusCode: 500,
+          body: {
+            'error': 'Internal server error',
+            'message': e.toString(),
+          },
+        );
+      }
+    };
+  };
+}
+```
+
+## Validation
+```dart
+// lib/features/shared/validators/email_validator.dart
+class EmailValidator {
+  static const _emailRegex = r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$';
+  
+  static bool isValid(String email) {
+    return RegExp(_emailRegex).hasMatch(email);
+  }
+}
+
+// lib/features/users/presentation/dto/create_user_request_dto.dart
+class CreateUserRequestDto {
+  final String email;
+  final String name;
+  final String password;
+  
+  CreateUserRequestDto({
+    required this.email,
+    required this.name,
+    required this.password,
+  });
+  
+  factory CreateUserRequestDto.fromJson(Map<String, dynamic> json) {
+    return CreateUserRequestDto(
+      email: json['email'] as String,
+      name: json['name'] as String,
+      password: json['password'] as String,
+    );
+  }
+  
+  Either<ValidationFailure, CreateUserRequestDto> validate() {
+    if (email.isEmpty) {
+      return Left(ValidationFailure('Email is required'));
+    }
+    
+    if (!EmailValidator.isValid(email)) {
+      return Left(ValidationFailure('Invalid email format'));
+    }
+    
+    if (name.isEmpty) {
+      return Left(ValidationFailure('Name is required'));
+    }
+    
+    if (password.length < 8) {
+      return Left(ValidationFailure('Password must be at least 8 characters'));
+    }
+    
+    return Right(this);
+  }
+}
+```
+
+## Response Formatting
+
+### Standard Response Structure
+```dart
+// lib/core/utils/api_response.dart
+class ApiResponse<T> {
+  final T? data;
+  final String? error;
+  final Map<String, dynamic>? meta;
+  
+  ApiResponse({this.data, this.error, this.meta});
+  
+  Map<String, dynamic> toJson() {
+    final json = <String, dynamic>{};
+    
+    if (data != null) json['data'] = data;
+    if (error != null) json['error'] = error;
+    if (meta != null) json['meta'] = meta;
+    
+    return json;
+  }
+  
+  static ApiResponse<T> success<T>(T data, {Map<String, dynamic>? meta}) {
+    return ApiResponse(data: data, meta: meta);
+  }
+  
+  static ApiResponse<void> failure(String error) {
+    return ApiResponse(error: error);
+  }
+}
+```
+
+## Testing
+
+### Unit Tests
+```dart
+// test/features/users/domain/usecases/get_user_by_id_test.dart
+void main() {
+  late GetUserById useCase;
+  late MockUserRepository mockRepository;
+  
+  setUp(() {
+    mockRepository = MockUserRepository();
+    useCase = GetUserById(mockRepository);
+  });
+  
+  test('should return user when repository returns user', () async {
+    // Arrange
+    final tUser = User(
+      id: '1',
+      email: 'test@test.com',
+      name: 'Test User',
+      createdAt: DateTime.now(),
+    );
+    when(mockRepository.getUserById('1'))
+        .thenAnswer((_) async => Right(tUser));
+    
+    // Act
+    final result = await useCase.execute('1');
+    
+    // Assert
+    expect(result, Right(tUser));
+    verify(mockRepository.getUserById('1')).called(1);
+  });
+}
+```
+
+### Integration Tests
+```dart
+// test/routes/api/v1/users/index_test.dart
+void main() {
+  test('GET /api/v1/users returns 200', () async {
+    final app = await createApp();
+    final response = await app.get('/api/v1/users');
+    
+    expect(response.statusCode, equals(200));
+    expect(response.body, contains('data'));
+  });
+  
+  test('POST /api/v1/users creates user', () async {
+    final app = await createApp();
+    final response = await app.post(
+      '/api/v1/users',
+      body: jsonEncode({
+        'email': 'test@test.com',
+        'name': 'Test User',
+        'password': 'password123',
+      }),
+    );
+    
+    expect(response.statusCode, equals(201));
+  });
+}
+```
+
+## Database Migrations
+```dart
+// lib/database/migrations/migration_v2.dart
+class MigrationV2 {
+  static Future<void> migrate(Migrator m) async {
+    // Add new column
+    await m.addColumn(userTable, userTable.role);
+    
+    // Create new table
+    await m.createTable(postTable);
+    
+    // Create index
+    await m.createIndex(Index(
+      'users_email_idx',
+      'CREATE INDEX users_email_idx ON users(email)',
+    ));
+  }
+}
+
+// Update database.dart
+@override
+int get schemaVersion => 2;
+
+@override
+MigrationStrategy get migration {
+  return MigrationStrategy(
+    onCreate: (Migrator m) async {
+      await m.createAll();
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from == 1 && to == 2) {
+        await MigrationV2.migrate(m);
+      }
+    },
+  );
+}
+```
+
+## Environment Configuration
+```dart
+// lib/core/config/env_config.dart
+class EnvConfig {
+  static String get databasePath => 
+      Platform.environment['DATABASE_PATH'] ?? 'app.db';
+  
+  static String get jwtSecret => 
+      Platform.environment['JWT_SECRET'] ?? throw Exception('JWT_SECRET not set');
+  
+  static String get apiPort => 
+      Platform.environment['PORT'] ?? '8080';
+  
+  static bool get isDevelopment => 
+      Platform.environment['ENVIRONMENT'] == 'development';
+}
+```
+
+## Code Standards
+
+### Naming Conventions
+- Features: `snake_case` folder names (e.g., `user_management`)
+- Files: `snake_case.dart`
+- Classes: `PascalCase`
+- Variables/functions: `camelCase`
+- Constants: `camelCase` or `SCREAMING_SNAKE_CASE` for compile-time constants
+- Private members: prefix with `_`
+
+### Route Naming
+- Use RESTful conventions
+- Use kebab-case for multi-word resources: `/api/v1/user-profiles`
+- Version your API: `/api/v1/`, `/api/v2/`
+- Use plural nouns for collections: `/users` not `/user`
+
+## SOLID Principles
+
+1. **Single Responsibility**: Each class/function has one job
+2. **Open/Closed**: Open for extension, closed for modification
+3. **Liskov Substitution**: Subtypes must be substitutable for base types
+4. **Interface Segregation**: Many specific interfaces over one general
+5. **Dependency Inversion**: Depend on abstractions, not concretions
+
+## Security Best Practices
+
+- Never commit secrets or API keys
+- Use environment variables for sensitive data
+- Hash passwords with bcrypt
+- Implement rate limiting
+- Validate and sanitize all inputs
+- Use parameterized queries (Drift handles this)
+- Implement proper authentication and authorization
+- Use HTTPS in production
+- Implement CORS properly
+- Log security events
+
+## Performance Best Practices
+
+- Use connection pooling for database
+- Implement caching where appropriate
+- Use database indexes for frequently queried columns
+- Paginate large result sets
+- Use asynchronous operations
+- Implement proper error handling to avoid crashes
+- Monitor and log performance metrics
+
+## Checklist Before Committing
+
+- [ ] Feature follows the prescribed folder structure
+- [ ] Domain layer has no framework dependencies
+- [ ] Use cases are single-purpose
+- [ ] Repository interfaces defined in domain, implemented in data
+- [ ] DTOs handle all serialization/deserialization
+- [ ] Routes are thin, logic is in handlers
+- [ ] Validation implemented for all inputs
+- [ ] Error handling implemented
+- [ ] Dependency injection configured
+- [ ] Unit tests written for business logic
+- [ ] Integration tests for routes
+- [ ] No secrets in code
+- [ ] Database migrations handled properly
+- [ ] Code follows naming conventions
+- [ ] SOLID principles respected
