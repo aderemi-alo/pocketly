@@ -17,6 +17,7 @@ class Settings {
         return 'http://localhost:8080';
       }
     }
-    return 'https://pocketly-e999.globeapp.dev';
+    return Platform.environment['BASE_URL'] ??
+        'https://pocketly-e999.globeapp.dev';
   }
 }
