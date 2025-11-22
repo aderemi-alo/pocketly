@@ -17,6 +17,6 @@ class Settings {
         return 'http://localhost:8080';
       }
     }
-    return 'https://your-production-api.com';
+    return 'https://pocketly-e999.globeapp.dev';
   }
 }
