@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:pocketly_api/utils/utils.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:uuid/uuid.dart';
 
@@ -21,6 +22,10 @@ class Users extends Table {
   /// The password hash of the user.
   TextColumn get passwordHash => text()();
 
+  /// Whether the user's email is verified.
+  BoolColumn get isEmailVerified =>
+      boolean().withDefault(const Constant(false))();
+
   /// The date and time the user was created.
   DateTimeColumn get createdAt => dateTime()();
 
@@ -32,7 +37,6 @@ class Users extends Table {
 }
 
 /// Defines the 'refresh_tokens' table.
-
 class RefreshTokens extends Table {
   /// The ID of the refresh token.
   TextColumn get id => text().clientDefault(() => _uuid.v4())();
@@ -51,6 +55,36 @@ class RefreshTokens extends Table {
   DateTimeColumn get expiresAt => dateTime().withDefault(currentDateAndTime)();
 
   /// The date and time the refresh token was created.
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Defines the 'otps' table.
+class Otps extends Table {
+  /// The ID of the OTP.
+  TextColumn get id => text().clientDefault(() => _uuid.v4())();
+
+  /// The email the OTP is sent to.
+  TextColumn get email => text()();
+
+  /// The hashed OTP code.
+  TextColumn get otpCodeHash => text()();
+
+  /// The purpose of the OTP (email_verification or password_reset).
+  TextColumn get purpose => text()();
+
+  /// The date and time the OTP expires.
+  DateTimeColumn get expiresAt => dateTime()();
+
+  /// Whether the OTP has been used.
+  BoolColumn get isUsed => boolean().withDefault(const Constant(false))();
+
+  /// The number of verification attempts.
+  IntColumn get attemptCount => integer().withDefault(const Constant(0))();
+
+  /// The date and time the OTP was created.
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
@@ -80,6 +114,9 @@ class Categories extends Table {
 
   /// The date and time the category was updated.
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// Whether the category is deleted (soft delete).
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -117,11 +154,14 @@ class Expenses extends Table {
   /// The date and time the expense was updated.
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 
+  /// Whether the expense is deleted (soft delete).
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [Expenses, Users, Categories])
+@DriftDatabase(tables: [Expenses, Users, Categories, RefreshTokens, Otps])
 
 /// The database for the Pocketly app.
 class PocketlyDatabase extends _$PocketlyDatabase {
@@ -131,10 +171,29 @@ class PocketlyDatabase extends _$PocketlyDatabase {
   }
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3;
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onUpgrade: (migrator, from, to) async {
+        if (from < 3) {
+          // Add isDeleted column to expenses table
+          // Using custom SQL since addColumn has type issues with boolean columns
+          await customStatement(
+            'ALTER TABLE expenses ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0;',
+          );
+          // Add isDeleted column to categories table
+          await customStatement(
+            'ALTER TABLE categories ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0;',
+          );
+        }
+      },
+    );
+  }
 
   static QueryExecutor _openConnection() {
-    return NativeDatabase.opened(sqlite3.open('gray-horst.db'));
+    return NativeDatabase.opened(sqlite3.open(Settings.dbName));
   }
 
   /// Initializes the database with predefined categories if they don't exist

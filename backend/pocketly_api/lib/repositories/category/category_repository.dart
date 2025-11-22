@@ -10,7 +10,10 @@ class CategoryRepository {
 
   /// Gets all predefined categories (system categories)
   Future<List<Category>> getPredefinedCategories() async {
-    return (_db.select(_db.categories)..where((c) => c.userId.isNull())).get();
+    return (_db.select(_db.categories)
+          ..where((c) => c.userId.isNull())
+          ..where((c) => c.isDeleted.equals(false)))
+        .get();
   }
 
   /// Gets all categories for a specific user (includes predefined + custom)
@@ -18,12 +21,21 @@ class CategoryRepository {
     return (_db.select(_db.categories)
           ..where(
             (c) => c.userId.isNull() | c.userId.equals(userId),
-          ))
+          )
+          ..where((c) => c.isDeleted.equals(false)))
         .get();
   }
 
-  /// Gets a category by ID
+  /// Gets a category by ID (excludes deleted)
   Future<Category?> findById(String categoryId) async {
+    return (_db.select(_db.categories)
+          ..where((c) => c.id.equals(categoryId))
+          ..where((c) => c.isDeleted.equals(false)))
+        .getSingleOrNull();
+  }
+
+  /// Gets a category by ID including deleted (for sync)
+  Future<Category?> findByIdForSync(String categoryId) async {
     return (_db.select(_db.categories)..where((c) => c.id.equals(categoryId)))
         .getSingleOrNull();
   }
@@ -51,7 +63,8 @@ class CategoryRepository {
     // Fetch and return the newly created category
     return (_db.select(_db.categories)
           ..where((c) => c.name.equals(name))
-          ..where((c) => c.userId.equals(userId)))
+          ..where((c) => c.userId.equals(userId))
+          ..where((c) => c.isDeleted.equals(false)))
         .getSingle();
   }
 
@@ -80,18 +93,66 @@ class CategoryRepository {
     return updatedCount > 0;
   }
 
-  /// Deletes a custom category
+  /// Soft deletes a custom category (sets isDeleted = true)
   /// Only user-created categories can be deleted
   Future<bool> deleteCustomCategory({
     required String categoryId,
     required String userId,
   }) async {
-    final deletedCount = await (_db.delete(_db.categories)
+    final now = DateTime.now();
+    final updateCompanion = CategoriesCompanion(
+      id: Value(categoryId),
+      isDeleted: const Value(true),
+      updatedAt: Value(now),
+    );
+
+    final updatedCount = await (_db.update(_db.categories)
           ..where((c) => c.id.equals(categoryId))
           ..where((c) => c.userId.equals(userId)))
-        .go();
+        .write(updateCompanion);
 
-    return deletedCount > 0;
+    return updatedCount > 0;
+  }
+
+  /// Restores a soft-deleted category
+  /// Returns true if the category was restored, false if not found
+  Future<bool> restoreCategory({
+    required String categoryId,
+    required String userId,
+  }) async {
+    final now = DateTime.now();
+    final updateCompanion = CategoriesCompanion(
+      id: Value(categoryId),
+      isDeleted: const Value(false),
+      updatedAt: Value(now),
+    );
+
+    final updatedCount = await (_db.update(_db.categories)
+          ..where((c) => c.id.equals(categoryId))
+          ..where((c) => c.userId.equals(userId)))
+        .write(updateCompanion);
+
+    return updatedCount > 0;
+  }
+
+  /// Gets all categories for a user for sync (includes deleted items)
+  /// Returns categories modified after lastSyncAt
+  Future<List<Category>> getCategoriesForSync({
+    required String userId,
+    DateTime? lastSyncAt,
+  }) async {
+    final query = _db.select(_db.categories)
+      ..where((c) => c.userId.isNull() | c.userId.equals(userId));
+
+    if (lastSyncAt != null) {
+      query.where((c) => c.updatedAt.isBiggerOrEqualValue(lastSyncAt));
+    }
+
+    query.orderBy([
+      (c) => OrderingTerm(expression: c.updatedAt, mode: OrderingMode.asc),
+    ]);
+
+    return query.get();
   }
 
   /// Checks if a category name already exists for a user
@@ -99,7 +160,9 @@ class CategoryRepository {
     required String name,
     String? userId,
   }) async {
-    final query = _db.select(_db.categories)..where((c) => c.name.equals(name));
+    final query = _db.select(_db.categories)
+      ..where((c) => c.name.equals(name))
+      ..where((c) => c.isDeleted.equals(false));
 
     if (userId != null) {
       query.where((c) => c.userId.isNull() | c.userId.equals(userId));

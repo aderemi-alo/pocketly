@@ -8,12 +8,12 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final category = Categories.getById(expense.category.id);
+    final category = expense.category;
     final theme = Theme.of(context);
     return Container(
       padding: context.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -27,12 +27,15 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
                 Text('Expense Details', style: theme.textTheme.bodyLarge),
                 IconButton(
                   onPressed: () => context.pop(),
-                  icon: const Icon(LucideIcons.x),
+                  icon: Icon(
+                    LucideIcons.x,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
               ],
             ),
           ),
-          const Divider(color: AppColors.outline, height: 1),
+          Divider(color: Theme.of(context).colorScheme.outline, height: 1),
           context.verticalSpace(16),
           Padding(
             padding: context.symmetric(horizontal: 20),
@@ -62,7 +65,9 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
                           category.name,
                           style: theme.textTheme.labelLarge?.copyWith(
                             fontWeight: FontWeight.w500,
-                            color: AppColors.textSecondary,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                         Text(
@@ -80,7 +85,7 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
                   width: double.infinity,
                   padding: context.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.background,
+                    color: Theme.of(context).colorScheme.background,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -88,7 +93,7 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
                       Text(
                         'Amount',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                       Text(
@@ -97,7 +102,7 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
                           fontWeight: FontWeight.w600,
                           fontSize: 30,
                           letterSpacing: -1,
-                          color: AppColors.primary,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                     ],
@@ -108,7 +113,7 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
                 Text(
                   'Date',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 context.verticalSpace(5),
@@ -117,7 +122,7 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
                     'EEEE, MMMM d, yyyy',
                   ).format(expense.date.toLocal()),
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textPrimary,
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),
@@ -128,14 +133,14 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
                   Text(
                     'Description',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   context.verticalSpace(5),
                   Text(
                     expense.description ?? 'No description',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -147,7 +152,9 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -180,7 +187,7 @@ class ExpenseDetailsBottomSheet extends ConsumerWidget {
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.error,
+                          backgroundColor: Theme.of(context).colorScheme.error,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),

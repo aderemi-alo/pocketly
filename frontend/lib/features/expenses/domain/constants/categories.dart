@@ -2,48 +2,59 @@ import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/features.dart';
 
 class Categories {
-  static const List<Category> predefined = [
+  // Unix epoch date (Jan 1, 1970) used to mark predefined/system categories
+  // This date serves as a marker to identify system/predefined categories
+  static final _predefinedDate = DateTime(1970, 1, 1);
+
+  static final List<Category> predefined = [
     Category(
       id: 'food',
       name: 'Food',
       icon: LucideIcons.utensils,
-      color: Color(0xFF4CAF50),
+      color: const Color(0xFF4CAF50),
+      updatedAt: _predefinedDate,
     ),
     Category(
       id: 'transportation',
       name: 'Transportation',
       icon: LucideIcons.car,
-      color: Color(0xFF2196F3),
+      color: const Color(0xFF2196F3),
+      updatedAt: _predefinedDate,
     ),
     Category(
       id: 'entertainment',
       name: 'Entertainment',
       icon: LucideIcons.tv,
-      color: Color(0xFF9C27B0),
+      color: const Color(0xFF9C27B0),
+      updatedAt: _predefinedDate,
     ),
     Category(
       id: 'shopping',
       name: 'Shopping',
       icon: LucideIcons.shoppingCart,
-      color: Color(0xFFFF9800),
+      color: const Color(0xFFFF9800),
+      updatedAt: _predefinedDate,
     ),
     Category(
       id: 'bills',
       name: 'Bills',
       icon: LucideIcons.fileText,
-      color: Color(0xFFFF5722),
+      color: const Color(0xFFFF5722),
+      updatedAt: _predefinedDate,
     ),
     Category(
       id: 'healthcare',
       name: 'Healthcare',
       icon: LucideIcons.heart,
-      color: Color(0xFFE91E63),
+      color: const Color(0xFFE91E63),
+      updatedAt: _predefinedDate,
     ),
     Category(
       id: 'others',
       name: 'Others',
       icon: LucideIcons.menu,
-      color: Color(0xFF607D8B),
+      color: const Color(0xFF607D8B),
+      updatedAt: _predefinedDate,
     ),
   ];
 

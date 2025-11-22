@@ -1,5 +1,7 @@
+import 'package:drift/drift.dart';
 import 'package:pocketly_api/database/database.dart';
 import 'package:pocketly_api/utils/encryption.dart';
+import 'package:pocketly_api/utils/settings.dart';
 
 /// Repository for authentication-related operations
 class AuthRepository {
@@ -28,11 +30,23 @@ class AuthRepository {
   }) async {
     final refreshTokenHash = Encryption.hashRefreshToken(refreshToken);
 
+    // Delete existing tokens for this user/device combination first
+    await (_db.delete(_db.refreshTokens)
+          ..where((t) => t.userId.equals(userId))
+          ..where((t) => t.deviceId.equals(deviceId)))
+        .go();
+
+    // Then insert the new token with proper expiration date
     await _db.into(_db.refreshTokens).insert(
           RefreshTokensCompanion.insert(
             userId: userId,
             tokenHash: refreshTokenHash,
             deviceId: deviceId,
+            expiresAt: Value(
+              DateTime.now().add(
+                const Duration(days: Settings.refreshTokenExpirationInDays),
+              ),
+            ),
           ),
         );
   }
@@ -75,6 +89,11 @@ class AuthRepository {
               userId: userId,
               tokenHash: newRefreshTokenHash,
               deviceId: deviceId,
+              expiresAt: Value(
+                DateTime.now().add(
+                  const Duration(days: Settings.refreshTokenExpirationInDays),
+                ),
+              ),
             ),
           );
     });

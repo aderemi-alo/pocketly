@@ -18,172 +18,198 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     final totalTransactions = expensesState.transactionCountCurrentMonth;
 
     return SingleChildScrollView(
-      child: Padding(
-        padding: context.all(20),
-        child: Column(
-          children: [
-            // Summary Cards
-            Row(
+      child: Column(
+        children: [
+          const LocalModeBanner(),
+          Padding(
+            padding: context.all(20),
+            child: Column(
               children: [
-                // Total Spent
-                Expanded(
-                  flex: 3,
-                  child: Container(
-                    padding: context.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
+                // Summary Cards
+                Row(
+                  children: [
+                    // Total Spent
+                    Expanded(
+                      flex: 3,
+                      child: Container(
+                        padding: context.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.shadow.withValues(alpha: 0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const TextWidget(
-                          text: 'Total Spent',
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextWidget(
+                              text: 'Total Spent',
+                              fontSize: 12,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                            context.verticalSpace(4),
+                            TextWidget(
+                              text:
+                                  '₦${FormatUtils.formatCurrency(totalSpent)}',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                            context.verticalSpace(2),
+                            TextWidget(
+                              text: 'This Month',
+                              fontSize: 10,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                          ],
                         ),
-                        context.verticalSpace(4),
-                        TextWidget(
-                          text: '₦${FormatUtils.formatCurrency(totalSpent)}',
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        context.verticalSpace(2),
-                        const TextWidget(
-                          text: 'This Month',
-                          fontSize: 10,
-                          color: AppColors.textSecondary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                context.horizontalSpace(12),
-
-                // Transactions
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                    padding: context.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const TextWidget(
-                          text: 'Transactions',
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                        context.verticalSpace(4),
-                        TextWidget(
-                          text: '$totalTransactions',
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        context.verticalSpace(2),
-                        const TextWidget(
-                          text: 'This Month',
-                          fontSize: 10,
-                          color: AppColors.textSecondary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                context.horizontalSpace(12),
-              ],
-            ),
-            context.verticalSpace(24),
-
-            // Spending by Category Card
-            Container(
-              padding: context.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TextWidget(
-                        text: 'Spending by Category',
-                        fontSize: 16,
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
                       ),
-                      TextWidget(
-                        text: 'This Month',
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
+                    ),
+                    context.horizontalSpace(12),
+
+                    // Transactions
+                    Expanded(
+                      flex: 2,
+                      child: Container(
+                        padding: context.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.shadow.withValues(alpha: 0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextWidget(
+                              text: 'Transactions',
+                              fontSize: 12,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                            context.verticalSpace(4),
+                            TextWidget(
+                              text: '$totalTransactions',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                            context.verticalSpace(2),
+                            TextWidget(
+                              text: 'This Month',
+                              fontSize: 10,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    context.horizontalSpace(12),
+                  ],
+                ),
+                context.verticalSpace(24),
+
+                // Spending by Category Card
+                Container(
+                  padding: context.all(20),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.shadow.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  context.verticalSpace(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextWidget(
+                            text: 'Spending by Category',
+                            fontSize: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          TextWidget(
+                            text: 'This Month',
+                            fontSize: 12,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
+                      context.verticalSpace(16),
 
-                  _buildCategoryChart(expensesState),
-                ],
-              ),
-            ),
-            context.verticalSpace(24),
-
-            // Weekly Spending Bar Chart
-            Container(
-              padding: context.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+                      _buildCategoryChart(expensesState),
+                    ],
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const TextWidget(
-                    text: 'This Week\'s Spending',
-                    fontSize: 16,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  context.verticalSpace(16),
+                ),
+                context.verticalSpace(24),
 
-                  _buildWeeklyChart(expensesState),
-                ],
-              ),
+                // Weekly Spending Bar Chart
+                Container(
+                  padding: context.all(20),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.shadow.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextWidget(
+                        text: 'This Week\'s Spending',
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      context.verticalSpace(16),
+
+                      _buildWeeklyChart(expensesState),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -195,9 +221,9 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
       return Container(
         padding: context.symmetric(vertical: 32),
         alignment: Alignment.center,
-        child: const TextWidget(
-          text: 'No data yet',
-          color: AppColors.textSecondary,
+        child: TextWidget(
+          text: 'Add your first Expense',
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontSize: 14,
         ),
       );
@@ -221,45 +247,55 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
         context.verticalSpace(16),
 
         // Legend
-        ...categoryData.map((categoryData) {
-          return GestureDetector(
-            onTap: () =>
-                _showCategoryDetail(categoryData.categoryId, expensesState),
-            child: Padding(
-              padding: context.only(bottom: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: categoryData.color.withValues(alpha: 0.12),
-                          shape: BoxShape.circle,
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: categoryData.length,
+          itemBuilder: (context, index) {
+            final category = categoryData[index];
+            return GestureDetector(
+              onTap: () =>
+                  _showCategoryDetail(category.categoryId, expensesState),
+              child: Padding(
+                padding: context.only(bottom: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: category.color.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            category.icon,
+                            size: 16,
+                            color: category.color,
+                          ),
                         ),
-                        child: Icon(
-                          categoryData.icon,
-                          size: 16,
-                          color: categoryData.color,
+                        context.horizontalSpace(8),
+                        TextWidget(
+                          text: category.name,
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
-                      ),
-                      context.horizontalSpace(8),
-                      TextWidget(text: categoryData.name, fontSize: 14),
-                    ],
-                  ),
-                  TextWidget(
-                    text: '${categoryData.percentage.toStringAsFixed(1)} %',
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                    letterSpacing: -0.5,
-                  ),
-                ],
+                      ],
+                    ),
+                    TextWidget(
+                      text: '${category.percentage.toStringAsFixed(1)} %',
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      letterSpacing: -0.5,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        }),
+            );
+          },
+        ),
       ],
     );
   }
@@ -303,13 +339,16 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
 
     // Collect category data with values (only categories with expenses in current month)
     expensesByCategory.forEach((categoryId, expenses) {
+      if (expenses.isEmpty) return;
+
       final totalForCategory = expenses.fold<double>(
         0,
         (sum, expense) => sum + expense.amount,
       );
 
-      // Get category info from constants using the category ID
-      final category = Categories.getById(categoryId);
+      // Get category directly from the expense (more reliable than looking up by ID)
+      // All expenses in a group have the same category
+      final category = expenses.first.category;
 
       categoryData.add(
         CategoryChartData(

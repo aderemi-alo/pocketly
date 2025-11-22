@@ -33,14 +33,14 @@ class MonthHeader extends StatelessWidget {
           Text(
             monthName,
             style: theme.textTheme.bodyLarge?.copyWith(
-              color: AppColors.textPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.w500,
             ),
           ),
           Text(
             '₦ ${FormatUtils.formatCurrency(totalAmount)}',
             style: theme.textTheme.labelLarge?.copyWith(
-              color: AppColors.textPrimary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               letterSpacing: -0.5,
             ),
           ),

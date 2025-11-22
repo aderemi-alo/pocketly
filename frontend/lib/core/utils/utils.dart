@@ -2,3 +2,8 @@
 export 'responsive_layout.dart';
 export 'number_input_formatter.dart';
 export 'format_utils.dart';
+export 'settings.dart';
+export 'avatar_color_generator.dart';
+export 'icon_mapper.dart';
+export 'validator.dart';
+export 'error_handler.dart';

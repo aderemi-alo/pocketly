@@ -15,6 +15,7 @@ class ExpenseResponse {
     this.description,
     this.createdAt,
     this.updatedAt,
+    this.isDeleted,
   });
 
   /// Creates a [ExpenseResponse] from a [Expense] entity
@@ -30,6 +31,7 @@ class ExpenseResponse {
       description: expense.description,
       createdAt: expense.createdAt,
       updatedAt: expense.updatedAt,
+      isDeleted: expense.isDeleted,
     );
   }
 
@@ -52,6 +54,7 @@ class ExpenseResponse {
       description: expense.description,
       createdAt: expense.createdAt,
       updatedAt: expense.updatedAt,
+      isDeleted: expense.isDeleted,
     );
   }
 
@@ -85,6 +88,9 @@ class ExpenseResponse {
   /// The date and time the expense was last updated
   final DateTime? updatedAt;
 
+  /// Whether the expense is deleted (soft delete)
+  final bool? isDeleted;
+
   /// Converts the expense response to JSON with full details
   Map<String, dynamic> toJson() {
     return {
@@ -98,6 +104,7 @@ class ExpenseResponse {
       if (description != null) 'description': description,
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
+      if (isDeleted != null) 'isDeleted': isDeleted,
     };
   }
 

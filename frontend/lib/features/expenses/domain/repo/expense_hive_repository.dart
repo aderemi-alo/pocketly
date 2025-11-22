@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:pocketly/core/services/logger_service.dart';
 import 'package:pocketly/core/utils/icon_mapper.dart';
 import 'package:pocketly/features/expenses/data/database/hive_database.dart';
 import 'package:pocketly/features/expenses/data/models/expense_hive.dart';
@@ -23,10 +24,14 @@ class ExpenseHiveRepository {
           name: expenseHive.categoryName,
           icon: IconMapper.getIcon(expenseHive.categoryIconCodePoint),
           color: Color(expenseHive.categoryColorValue),
+          updatedAt: DateTime.now(), // Category updatedAt not stored in ExpenseHive
+          isDeleted: false,
         ),
+        updatedAt: expenseHive.updatedAt,
+        isDeleted: expenseHive.isDeleted,
       );
     } catch (e) {
-      debugPrint('Failed to convert ExpenseHive to Expense domain model: $e');
+      AppLogger.error('Failed to convert ExpenseHive to Expense domain model', e);
       rethrow;
     }
   }
@@ -44,15 +49,25 @@ class ExpenseHiveRepository {
         categoryName: expense.category.name,
         categoryIcon: expense.category.icon,
         categoryColor: expense.category.color,
+        updatedAt: expense.updatedAt,
+        isDeleted: expense.isDeleted,
       );
     } catch (e) {
-      debugPrint('Failed to convert Expense domain model to ExpenseHive: $e');
+      AppLogger.error('Failed to convert Expense domain model to ExpenseHive', e);
       rethrow;
     }
   }
 
-  /// Get all expenses
+  /// Get all expenses (excluding deleted)
   Future<List<Expense>> getAllExpenses() async {
+    final expenses = _box.values
+        .where((e) => !e.isDeleted)
+        .toList();
+    return expenses.map(_toDomainModel).toList();
+  }
+
+  /// Get all expenses for sync (including deleted)
+  Future<List<Expense>> getAllExpensesForSync() async {
     final expenses = _box.values.toList();
     return expenses.map(_toDomainModel).toList();
   }
@@ -69,10 +84,16 @@ class ExpenseHiveRepository {
   /// Add new expense
   Future<void> addExpense(Expense expense) async {
     try {
-      final expenseHive = _toHiveModel(expense);
+      // Ensure updatedAt is set
+      final expenseWithTimestamp = expense.copyWith(
+        updatedAt: expense.updatedAt.isBefore(DateTime.now().subtract(const Duration(seconds: 1)))
+            ? DateTime.now()
+            : expense.updatedAt,
+      );
+      final expenseHive = _toHiveModel(expenseWithTimestamp);
       await _box.add(expenseHive);
     } catch (e) {
-      debugPrint('Failed to add expense: $e');
+      AppLogger.error('Failed to add expense', e);
       rethrow;
     }
   }
@@ -84,13 +105,19 @@ class ExpenseHiveRepository {
         .firstOrNull;
 
     if (existingExpense != null) {
-      final updatedExpense = _toHiveModel(expense);
+      // Ensure updatedAt is set to now if not provided
+      final expenseWithTimestamp = expense.copyWith(
+        updatedAt: expense.updatedAt.isBefore(DateTime.now().subtract(const Duration(seconds: 1)))
+            ? DateTime.now()
+            : expense.updatedAt,
+      );
+      final updatedExpense = _toHiveModel(expenseWithTimestamp);
       final index = _box.values.toList().indexOf(existingExpense);
       await _box.putAt(index, updatedExpense);
     }
   }
 
-  /// Delete expense
+  /// Soft delete expense (sets isDeleted = true)
   Future<void> deleteExpense(String expenseId) async {
     final expense = _box.values
         .where((e) => e.expenseId == expenseId)
@@ -98,11 +125,52 @@ class ExpenseHiveRepository {
 
     if (expense != null) {
       final index = _box.values.toList().indexOf(expense);
-      await _box.deleteAt(index);
+      // Soft delete: set isDeleted = true and update updatedAt
+      final deletedExpense = ExpenseHive.create(
+        expenseId: expense.expenseId,
+        name: expense.name,
+        amount: expense.amount,
+        date: expense.date,
+        description: expense.description,
+        categoryId: expense.categoryId,
+        categoryName: expense.categoryName,
+        categoryIcon: IconMapper.getIcon(expense.categoryIconCodePoint),
+        categoryColor: Color(expense.categoryColorValue),
+        updatedAt: DateTime.now(),
+        isDeleted: true,
+      );
+      await _box.putAt(index, deletedExpense);
     }
   }
 
-  /// Get expenses by date range
+  /// Replace expense ID (atomic operation for local to server ID mapping)
+  Future<void> replaceExpenseId(String oldId, String newId) async {
+    final expense = _box.values
+        .where((e) => e.expenseId == oldId)
+        .firstOrNull;
+    
+    if (expense != null) {
+      final index = _box.values.toList().indexOf(expense);
+      // Create updated expense with new ID
+      final updated = ExpenseHive.create(
+        expenseId: newId,
+        name: expense.name,
+        amount: expense.amount,
+        date: expense.date,
+        categoryId: expense.categoryId,
+        categoryName: expense.categoryName,
+        categoryIcon: IconMapper.getIcon(expense.categoryIconCodePoint),
+        categoryColor: Color(expense.categoryColorValue),
+        description: expense.description,
+        updatedAt: expense.updatedAt,
+        isDeleted: expense.isDeleted,
+      );
+      // Single atomic operation: replace at same index
+      await _box.putAt(index, updated);
+    }
+  }
+
+  /// Get expenses by date range (excluding deleted)
   Future<List<Expense>> getExpensesByDateRange(
     DateTime startDate,
     DateTime endDate,
@@ -110,6 +178,7 @@ class ExpenseHiveRepository {
     final filteredExpenses = _box.values
         .where(
           (expense) =>
+              !expense.isDeleted &&
               expense.date.isAfter(
                 startDate.subtract(const Duration(days: 1)),
               ) &&
@@ -120,16 +189,16 @@ class ExpenseHiveRepository {
     return filteredExpenses.map(_toDomainModel).toList();
   }
 
-  /// Get expenses by category
+  /// Get expenses by category (excluding deleted)
   Future<List<Expense>> getExpensesByCategory(String categoryId) async {
     final filteredExpenses = _box.values
-        .where((expense) => expense.categoryId == categoryId)
+        .where((expense) => !expense.isDeleted && expense.categoryId == categoryId)
         .toList();
 
     return filteredExpenses.map(_toDomainModel).toList();
   }
 
-  /// Get expenses by amount range
+  /// Get expenses by amount range (excluding deleted)
   Future<List<Expense>> getExpenseByAmount(
     double lowerAmount,
     double upperAmount,
@@ -137,6 +206,7 @@ class ExpenseHiveRepository {
     final filteredExpenses = _box.values
         .where(
           (expense) =>
+              !expense.isDeleted &&
               expense.amount >= lowerAmount && expense.amount <= upperAmount,
         )
         .toList();
@@ -144,9 +214,9 @@ class ExpenseHiveRepository {
     return filteredExpenses.map(_toDomainModel).toList();
   }
 
-  /// Get total amount of all expenses
+  /// Get total amount of all expenses (excluding deleted)
   Future<double> getTotalAmount() async {
-    final expenses = _box.values.toList();
+    final expenses = _box.values.where((e) => !e.isDeleted).toList();
     return expenses.fold<double>(0.0, (sum, expense) => sum + expense.amount);
   }
 

@@ -21,6 +21,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
 
   Category _selectedCategory = Categories.predefined.first;
   DateTime _selectedDate = DateTime.now();
+  ExpenseSyncStatus? _previousSyncStatus;
 
   @override
   void initState() {
@@ -39,6 +40,12 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
       _selectedCategory = widget.expense!.category;
       _selectedDate = widget.expense!.date;
     }
+
+    // Initialize previous sync status
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final expensesState = ref.read(expensesProvider);
+      _previousSyncStatus = expensesState.syncStatus;
+    });
   }
 
   @override
@@ -61,6 +68,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
             ? null
             : _descriptionController.text.trim(),
         date: _selectedDate,
+        updatedAt: DateTime.now(),
       );
 
       if (widget.expense != null) {
@@ -89,6 +97,53 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     }
   }
 
+  void _handleSyncStatusChange(ExpensesState state) {
+    if (!mounted) return;
+
+    switch (state.syncStatus) {
+      case ExpenseSyncStatus.success:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Expense saved and synced'),
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        break;
+      case ExpenseSyncStatus.queued:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Expense saved offline, will sync when online'),
+            backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        break;
+      case ExpenseSyncStatus.failed:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              state.lastSyncError ?? 'Expense saved but sync failed',
+            ),
+            backgroundColor: Theme.of(context).colorScheme.errorContainer,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Dismiss',
+              textColor: Theme.of(context).colorScheme.onErrorContainer,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
+          ),
+        );
+        break;
+      case ExpenseSyncStatus.syncing:
+      case ExpenseSyncStatus.idle:
+        // No feedback needed for these states
+        break;
+    }
+  }
+
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -96,15 +151,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
+        return child!;
       },
     );
 
@@ -117,17 +164,27 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final categories = ref.watch(categoriesProvider);
+    final expensesState = ref.watch(expensesProvider);
+
+    // Listen to sync status changes and show feedback
+    if (_previousSyncStatus != expensesState.syncStatus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleSyncStatusChange(expensesState);
+      });
+      _previousSyncStatus = expensesState.syncStatus;
+    }
+
+    final categoriesState = ref.watch(categoriesProvider);
+    final categories = categoriesState.categories;
     final theme = Theme.of(context);
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 1,
-        shadowColor: AppColors.textPrimary,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textSecondary),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -162,7 +219,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                             '₦',
                             style: theme.textTheme.bodyLarge?.copyWith(
                               fontSize: 48,
-                              color: AppColors.primary,
+                              color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -179,14 +236,16 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                               ],
                               style: theme.textTheme.bodyLarge?.copyWith(
                                 fontSize: 48,
-                                color: AppColors.textPrimary,
+                                color: Theme.of(context).colorScheme.onSurface,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: -1.5,
                               ),
                               decoration: InputDecoration(
                                 hintText: '0.00',
                                 hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                                  color: AppColors.textTertiary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                   fontSize: 48,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: -1.5,
@@ -195,7 +254,9 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                                 enabledBorder: InputBorder.none,
                                 focusedBorder: InputBorder.none,
                                 errorBorder: InputBorder.none,
-                                fillColor: AppColors.background,
+                                fillColor: Theme.of(
+                                  context,
+                                ).colorScheme.background,
                                 contentPadding: EdgeInsets.zero,
                               ),
                               validator: (value) {
@@ -234,10 +295,10 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                 decoration: InputDecoration(
                   hintText: 'e.g., Lunch, Coffee, Uber',
                   hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                    color: AppColors.textTertiary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: Theme.of(context).colorScheme.surface,
                   contentPadding: context.symmetric(
                     horizontal: 16,
                     vertical: 12,
@@ -290,12 +351,12 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? _selectedCategory.color
-                            : Colors.white,
+                            : Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
                           color: isSelected
                               ? _selectedCategory.color
-                              : AppColors.outline,
+                              : Theme.of(context).colorScheme.outline,
                         ),
                         boxShadow: isSelected
                             ? [
@@ -316,13 +377,17 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                             height: 40,
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? AppColors.surface.withValues(alpha: 0.2)
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.surface.withValues(alpha: 0.2)
                                   : config.color.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               config.icon,
-                              color: isSelected ? Colors.white : config.color,
+                              color: isSelected
+                                  ? AppColors.surface
+                                  : config.color,
                               size: 20,
                             ),
                           ),
@@ -332,8 +397,10 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                               categoryName,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: isSelected
-                                    ? Colors.white
-                                    : AppColors.textPrimary,
+                                    ? AppColors.surface
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                 fontWeight: FontWeight.w500,
                               ),
                               overflow: TextOverflow.ellipsis,
@@ -361,15 +428,17 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                 child: Container(
                   padding: context.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.outline),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.calendar_today,
-                        color: AppColors.primary,
+                        color: Theme.of(context).colorScheme.primary,
                         size: 20,
                       ),
                       context.horizontalSpace(12),
@@ -398,10 +467,10 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                 decoration: InputDecoration(
                   hintText: 'Add any additional notes...',
                   hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                    color: AppColors.textTertiary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   filled: true,
-                  fillColor: AppColors.surface,
+                  fillColor: Theme.of(context).colorScheme.surface,
                   contentPadding: context.symmetric(
                     horizontal: 16,
                     vertical: 12,
@@ -422,7 +491,9 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                       borderRadius: BorderRadius.circular(24),
                     ),
                     elevation: 4,
-                    shadowColor: AppColors.primary.withValues(alpha: 0.3),
+                    shadowColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.3),
                   ),
                   child: Text(
                     widget.expense != null ? 'Update Expense' : 'Add Expense',

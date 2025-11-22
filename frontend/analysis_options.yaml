@@ -1,10 +1,12 @@
+analyzer:
+  errors:
+    lines_longer_than_80_chars: ignore
 include: package:flutter_lints/flutter.yaml
 
 linter:
   rules:
     # --- Debugging ---
     avoid_print: true               # Disallow print(), use logger instead
-    avoid_redundant_argument_values: true # Cleaner widget constructors
 
     # --- Code Quality / Safety ---
     prefer_final_locals: true       # Use final for locals when possible
@@ -25,7 +27,7 @@ linter:
     unnecessary_this: true          # Avoid redundant "this."
     unnecessary_new: true           # No "new" keyword
     unnecessary_const: true         # No redundant "const"
-    lines_longer_than_80_chars: false # Don't force 80-char limit (relaxed)
+    lines_longer_than_80_chars: true # Don't force 80-char limit (relaxed)
     always_use_package_imports: true # Enforce package imports (clearer in big apps)
     require_trailing_commas: true   # Enforce trailing commas for cleaner diffs
 

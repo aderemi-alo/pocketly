@@ -1,13 +1,79 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pocketly/core/services/services.dart';
+import 'package:pocketly/core/services/theme_service.dart';
 import 'package:pocketly/features/features.dart';
 
 final locator = GetIt.instance;
 
 Future<void> setupLocator() async {
-  locator.registerLazySingleton<ExpenseHiveRepository>(
-    () => ExpenseHiveRepository(),
+  // Initialize SharedPreferences
+  final sharedPreferences = await SharedPreferences.getInstance();
+
+  // Core services
+  locator.registerLazySingleton(() => sharedPreferences);
+  locator.registerLazySingleton(() => const FlutterSecureStorage());
+  locator.registerLazySingleton(() => TokenStorageService(locator()));
+  locator.registerLazySingleton(
+    () => ThemeService(locator<SharedPreferences>()),
   );
+  locator.registerLazySingleton(() => DeviceIdService(locator()));
+  locator.registerLazySingleton(() => NetworkService());
+  locator.registerLazySingleton(() => AppInfoService());
+  locator.registerLazySingleton(() => ApiClient(locator(), locator()));
+
+  // Sync services
+  locator.registerLazySingleton(() => SyncQueueService());
+  locator.registerLazySingleton(() => ExpenseCacheManager());
+  locator.registerLazySingleton(() => ConflictResolution());
+
+  // API repositories
+  locator.registerLazySingleton(() => ExpenseApiRepository(locator()));
+  locator.registerLazySingleton(() => CategoryApiRepository(locator()));
+  locator.registerLazySingleton(() => AuthRepositoryImpl(locator(), locator()));
+
+  // Local repositories
+  locator.registerLazySingleton(() => ExpenseHiveRepository());
+  locator.registerLazySingleton(() => CategoryHiveRepository());
+
+  // Sync manager (callbacks will be set up via provider wrapper)
+  locator.registerLazySingleton(
+    () => SyncManager(
+      syncQueue: locator(),
+      networkService: locator(),
+      expenseApi: locator(),
+      categoryApi: locator(),
+      cacheManager: locator(),
+      expenseHiveRepository: locator(),
+      conflictResolver: locator(),
+      appStateUpdater: null, // Set up via provider wrapper
+      canSyncChecker: null, // Set up via provider wrapper
+    ),
+  );
+
+  // Initialize sync manager
+  await locator<SyncManager>().initialize();
 }
 
+// Getters for easy access
 ExpenseHiveRepository get expenseHiveRepository =>
     locator<ExpenseHiveRepository>();
+
+ExpenseApiRepository get expenseApiRepository =>
+    locator<ExpenseApiRepository>();
+
+CategoryApiRepository get categoryApiRepository =>
+    locator<CategoryApiRepository>();
+
+SyncManager get syncManager => locator<SyncManager>();
+
+NetworkService get networkService => locator<NetworkService>();
+
+TokenStorageService get tokenStorageService => locator<TokenStorageService>();
+
+ExpenseCacheManager get expenseCacheManager => locator<ExpenseCacheManager>();
+
+SyncQueueService get syncQueueService => locator<SyncQueueService>();
+
+AppInfoService get appInfoService => locator<AppInfoService>();

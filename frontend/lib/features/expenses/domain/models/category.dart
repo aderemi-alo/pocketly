@@ -6,12 +6,16 @@ class Category {
   final String name;
   final IconData icon;
   final Color color;
+  final DateTime updatedAt;
+  final bool isDeleted;
 
   const Category({
     required this.id,
     required this.name,
     required this.icon,
     required this.color,
+    required this.updatedAt,
+    this.isDeleted = false,
   });
 
   @override

@@ -85,4 +85,20 @@ class UserRepository {
   Future<List<User>> getAllUsers() async {
     return _db.select(_db.users).get();
   }
+
+  /// Updates a user's email verification status
+  Future<bool> updateEmailVerificationStatus({
+    required String userId,
+    required bool isVerified,
+  }) async {
+    final updatedCount =
+        await (_db.update(_db.users)..where((u) => u.id.equals(userId))).write(
+      UsersCompanion(
+        isEmailVerified: Value(isVerified),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+
+    return updatedCount > 0;
+  }
 }

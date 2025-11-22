@@ -7,6 +7,8 @@ class Expense {
   final Category category;
   final DateTime date;
   final String? description;
+  final DateTime updatedAt;
+  final bool isDeleted;
 
   const Expense({
     required this.id,
@@ -15,6 +17,8 @@ class Expense {
     required this.category,
     required this.date,
     this.description,
+    required this.updatedAt,
+    this.isDeleted = false,
   });
 
   Expense copyWith({
@@ -24,6 +28,8 @@ class Expense {
     Category? category,
     DateTime? date,
     String? description,
+    DateTime? updatedAt,
+    bool? isDeleted,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -32,6 +38,8 @@ class Expense {
       category: category ?? this.category,
       date: date ?? this.date,
       description: description ?? this.description,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
     );
   }
 

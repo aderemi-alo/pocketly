@@ -1,16 +1,26 @@
 import 'package:pocketly/features/features.dart';
 
+enum ExpenseSyncStatus { idle, syncing, success, failed, queued }
+
 class ExpensesState {
   final List<Expense> expenses;
   final bool isLoading;
   final String? error;
   final ExpenseFilter filter;
+  final ExpenseSyncStatus syncStatus;
+  final String? lastSyncError;
+  final bool isQueued;
+  final Map<String, ExpenseSyncStatus> expenseSyncStatuses;
 
   const ExpensesState({
     this.expenses = const [],
     this.isLoading = false,
     this.error,
     this.filter = const ExpenseFilter(),
+    this.syncStatus = ExpenseSyncStatus.idle,
+    this.lastSyncError,
+    this.isQueued = false,
+    this.expenseSyncStatuses = const {},
   });
 
   ExpensesState copyWith({
@@ -18,12 +28,23 @@ class ExpensesState {
     bool? isLoading,
     String? error,
     ExpenseFilter? filter,
+    ExpenseSyncStatus? syncStatus,
+    String? lastSyncError,
+    bool? isQueued,
+    Map<String, ExpenseSyncStatus>? expenseSyncStatuses,
+    bool clearSyncError = false,
   }) {
     return ExpensesState(
       expenses: expenses ?? this.expenses,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
       filter: filter ?? this.filter,
+      syncStatus: syncStatus ?? this.syncStatus,
+      lastSyncError: clearSyncError
+          ? null
+          : (lastSyncError ?? this.lastSyncError),
+      isQueued: isQueued ?? this.isQueued,
+      expenseSyncStatuses: expenseSyncStatuses ?? this.expenseSyncStatuses,
     );
   }
 
@@ -210,6 +231,16 @@ class ExpensesState {
           .toList();
     }
 
+    // Filter by search query
+    if (filter.searchQuery != null && filter.searchQuery!.isNotEmpty) {
+      final query = filter.searchQuery!.toLowerCase();
+      filtered = filtered.where((expense) {
+        final name = expense.name.toLowerCase();
+        final description = expense.description?.toLowerCase() ?? '';
+        return name.contains(query) || description.contains(query);
+      }).toList();
+    }
+
     // Sort by date (newest first)
     filtered.sort((a, b) => b.date.compareTo(a.date));
     return filtered;
@@ -298,11 +329,24 @@ class ExpensesState {
         other.expenses.length == expenses.length &&
         other.isLoading == isLoading &&
         other.error == error &&
-        other.filter == filter;
+        other.filter == filter &&
+        other.syncStatus == syncStatus &&
+        other.lastSyncError == lastSyncError &&
+        other.isQueued == isQueued &&
+        other.expenseSyncStatuses.length == expenseSyncStatuses.length;
   }
 
   @override
-  int get hashCode => Object.hash(expenses, isLoading, error, filter);
+  int get hashCode => Object.hash(
+    expenses,
+    isLoading,
+    error,
+    filter,
+    syncStatus,
+    lastSyncError,
+    isQueued,
+    expenseSyncStatuses,
+  );
 
   @override
   String toString() =>

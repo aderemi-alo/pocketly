@@ -29,7 +29,7 @@ class _ScaffoldWithNestedNavigationState
     _nextIndex = widget.navigationShell.currentIndex;
 
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 250),
       vsync: this,
     );
 
@@ -121,38 +121,7 @@ class _ScaffoldWithNestedNavigationState
     return widget.navigationShell;
   }
 
-  PreferredSizeWidget _buildAnimatedAppBar() {
-    final theme = Theme.of(context);
-
-    return AppBar(
-      backgroundColor: AppColors.surface,
-      foregroundColor: AppColors.textPrimary,
-      elevation: 1,
-      shadowColor: AppColors.textPrimary,
-      title: _buildAnimatedTitle(theme.textTheme),
-    );
-  }
-
   Widget _buildAnimatedTitle(TextTheme textTheme) {
-    if (_isAnimating) {
-      return ClipRect(
-        child: Stack(
-          children: [
-            // Current title sliding out
-            SlideTransition(
-              position: _currentPageAnimation,
-              child: _buildTitleText(_currentIndex, textTheme),
-            ),
-            // Next title sliding in
-            SlideTransition(
-              position: _nextPageAnimation,
-              child: _buildTitleText(_nextIndex, textTheme),
-            ),
-          ],
-        ),
-      );
-    }
-
     return _buildTitleText(widget.navigationShell.currentIndex, textTheme);
   }
 
@@ -191,8 +160,22 @@ class _ScaffoldWithNestedNavigationState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: _buildAnimatedAppBar(),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      // appBar: _buildAnimatedAppBar(),
+      appBar: AppBar(
+        title: _buildAnimatedTitle(Theme.of(context).textTheme),
+        actions: [
+          const SyncStatusIndicator(),
+          context.horizontalSpace(8),
+          if (widget.navigationShell.currentIndex != 2) ...[
+            GestureDetector(
+              onTap: () => context.push('/settings/profile'),
+              child: const UserAvatarWidget(isSmall: true),
+            ),
+            context.horizontalSpace(12),
+          ],
+        ],
+      ),
       body: _buildCarouselBody(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: widget.navigationShell.currentIndex,
@@ -206,10 +189,10 @@ class _ScaffoldWithNestedNavigationState
             icon: Icon(LucideIcons.receipt),
             label: 'Expenses',
           ),
-          // BottomNavigationBarItem(
-          //   icon: Icon(LucideIcons.settings),
-          //   label: 'Settings',
-          // ),
+          BottomNavigationBarItem(
+            icon: Icon(LucideIcons.settings),
+            label: 'Settings',
+          ),
         ],
       ),
     );

@@ -8,8 +8,16 @@ class ExpenseRepository {
 
   final PocketlyDatabase _db;
 
-  /// Gets an expense by ID
+  /// Gets an expense by ID (excludes deleted)
   Future<Expense?> findById(String expenseId) async {
+    return (_db.select(_db.expenses)
+          ..where((e) => e.id.equals(expenseId))
+          ..where((e) => e.isDeleted.equals(false)))
+        .getSingleOrNull();
+  }
+
+  /// Gets an expense by ID including deleted (for sync)
+  Future<Expense?> findByIdForSync(String expenseId) async {
     return (_db.select(_db.expenses)..where((e) => e.id.equals(expenseId)))
         .getSingleOrNull();
   }
@@ -43,6 +51,7 @@ class ExpenseRepository {
           ..where((e) => e.userId.equals(userId))
           ..where((e) => e.name.equals(name))
           ..where((e) => e.date.equals(date))
+          ..where((e) => e.isDeleted.equals(false))
           ..orderBy([
             (e) =>
                 OrderingTerm(expression: e.createdAt, mode: OrderingMode.desc),
@@ -81,17 +90,65 @@ class ExpenseRepository {
     return updatedCount > 0;
   }
 
-  /// Deletes an expense
+  /// Soft deletes an expense (sets isDeleted = true)
   /// Returns true if the expense was deleted, false if not found
   Future<bool> deleteExpense({
     required String expenseId,
     required String userId,
   }) async {
-    final deletedCount = await (_db.delete(_db.expenses)
+    final now = DateTime.now();
+    final updateCompanion = ExpensesCompanion(
+      id: Value(expenseId),
+      isDeleted: const Value(true),
+      updatedAt: Value(now),
+    );
+
+    final updatedCount = await (_db.update(_db.expenses)
           ..where((e) => e.id.equals(expenseId))
           ..where((e) => e.userId.equals(userId)))
-        .go();
+        .write(updateCompanion);
 
-    return deletedCount > 0;
+    return updatedCount > 0;
+  }
+
+  /// Restores a soft-deleted expense
+  /// Returns true if the expense was restored, false if not found
+  Future<bool> restoreExpense({
+    required String expenseId,
+    required String userId,
+  }) async {
+    final now = DateTime.now();
+    final updateCompanion = ExpensesCompanion(
+      id: Value(expenseId),
+      isDeleted: const Value(false),
+      updatedAt: Value(now),
+    );
+
+    final updatedCount = await (_db.update(_db.expenses)
+          ..where((e) => e.id.equals(expenseId))
+          ..where((e) => e.userId.equals(userId)))
+        .write(updateCompanion);
+
+    return updatedCount > 0;
+  }
+
+  /// Gets all expenses for a user for sync (includes deleted items)
+  /// Returns expenses modified after lastSyncAt
+  Future<List<Expense>> getExpensesForSync({
+    required String userId,
+    DateTime? lastSyncAt,
+  }) async {
+    final query = _db.select(_db.expenses)
+      ..where((e) => e.userId.equals(userId));
+
+    if (lastSyncAt != null) {
+      query.where((e) => e.updatedAt.isBiggerOrEqualValue(lastSyncAt));
+    }
+
+    query.orderBy([
+      (e) => OrderingTerm(expression: e.updatedAt, mode: OrderingMode.asc),
+    ]);
+
+    return query.get();
   }
 }

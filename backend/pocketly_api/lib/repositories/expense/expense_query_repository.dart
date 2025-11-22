@@ -20,7 +20,8 @@ class ExpenseQueryRepository {
     String? sortOrder = 'desc',
   }) async {
     final query = _db.select(_db.expenses)
-      ..where((e) => e.userId.equals(userId));
+      ..where((e) => e.userId.equals(userId))
+      ..where((e) => e.isDeleted.equals(false));
 
     // Apply optional filters
     if (categoryId != null) {
@@ -60,7 +61,8 @@ class ExpenseQueryRepository {
   }) async {
     final query = _db.selectOnly(_db.expenses)
       ..addColumns([_db.expenses.id.count()])
-      ..where(_db.expenses.userId.equals(userId));
+      ..where(_db.expenses.userId.equals(userId))
+      ..where(_db.expenses.isDeleted.equals(false));
 
     // Apply optional filters
     if (categoryId != null) {
@@ -89,7 +91,8 @@ class ExpenseQueryRepository {
         _db.categories.id.equalsExp(_db.expenses.categoryId),
       ),
     ])
-      ..where(_db.expenses.id.equals(expenseId));
+      ..where(_db.expenses.id.equals(expenseId))
+      ..where(_db.expenses.isDeleted.equals(false));
 
     final result = await query.getSingleOrNull();
 
@@ -119,6 +122,7 @@ class ExpenseQueryRepository {
       ),
     ])
       ..where(_db.expenses.userId.equals(userId))
+      ..where(_db.expenses.isDeleted.equals(false))
       ..orderBy([
         OrderingTerm(
           expression:

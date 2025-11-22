@@ -100,7 +100,7 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
 
   @override
   Widget build(BuildContext context) {
-    final category = Categories.getById(widget.expense.category.id);
+    final category = widget.expense.category;
     final theme = Theme.of(context);
     // Update the slide animation with the correct screen width
     final screenWidth = MediaQuery.of(context).size.width;
@@ -129,7 +129,7 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: AppColors.primary,
+                      color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Material(
@@ -145,7 +145,7 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
                         },
                         child: const Icon(
                           LucideIcons.pen,
-                          color: Colors.white,
+                          color: AppColors.surface,
                           size: 20,
                         ),
                       ),
@@ -175,7 +175,7 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
                         },
                         child: const Icon(
                           LucideIcons.trash2,
-                          color: Colors.white,
+                          color: AppColors.surface,
                           size: 20,
                         ),
                       ),
@@ -194,11 +194,13 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
               child: Container(
                 margin: context.only(bottom: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: context.radius(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.shadow.withValues(alpha: 0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -233,7 +235,7 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
                             Text(
                               widget.expense.name,
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: AppColors.textPrimary,
+                                color: Theme.of(context).colorScheme.onSurface,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -244,7 +246,9 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
                             Text(
                               _formatDate(widget.expense.date),
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: AppColors.textSecondary,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                                 fontSize: 14,
                               ),
                             ),
@@ -261,16 +265,18 @@ class _ExpenseCardState extends ConsumerState<ExpenseCard>
                           Text(
                             '₦${FormatUtils.formatCurrency(widget.expense.amount)}',
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textPrimary,
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           context.verticalSpace(4),
                           Text(
-                            widget.expense.category.name,
+                            category.name,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textSecondary,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                               fontSize: 14,
                             ),
                           ),

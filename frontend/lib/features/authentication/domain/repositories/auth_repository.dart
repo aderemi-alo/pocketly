@@ -1,0 +1,13 @@
+import 'package:pocketly/core/core.dart';
+import 'package:pocketly/features/authentication/domain/entities/entities.dart';
+
+abstract class AuthRepository {
+  Future<AuthResponse> login(LoginRequest request);
+  Future<AuthResponse> register(LoginRequest request);
+  Future<void> logout();
+  Future<AuthResponse> refreshToken(String refreshToken);
+  Future<void> updatePassword(String currentPassword, String newPassword);
+  Future<UserModel> updateProfile(UpdateProfileRequest request);
+  Future<UserModel> fetchUserProfile();
+  Future<void> deleteAccount(String? password);
+}
