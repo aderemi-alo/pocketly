@@ -40,7 +40,9 @@ class ExpensesState {
       error: error ?? this.error,
       filter: filter ?? this.filter,
       syncStatus: syncStatus ?? this.syncStatus,
-      lastSyncError: clearSyncError ? null : (lastSyncError ?? this.lastSyncError),
+      lastSyncError: clearSyncError
+          ? null
+          : (lastSyncError ?? this.lastSyncError),
       isQueued: isQueued ?? this.isQueued,
       expenseSyncStatuses: expenseSyncStatuses ?? this.expenseSyncStatuses,
     );
@@ -229,6 +231,16 @@ class ExpensesState {
           .toList();
     }
 
+    // Filter by search query
+    if (filter.searchQuery != null && filter.searchQuery!.isNotEmpty) {
+      final query = filter.searchQuery!.toLowerCase();
+      filtered = filtered.where((expense) {
+        final name = expense.name.toLowerCase();
+        final description = expense.description?.toLowerCase() ?? '';
+        return name.contains(query) || description.contains(query);
+      }).toList();
+    }
+
     // Sort by date (newest first)
     filtered.sort((a, b) => b.date.compareTo(a.date));
     return filtered;
@@ -326,15 +338,15 @@ class ExpensesState {
 
   @override
   int get hashCode => Object.hash(
-        expenses,
-        isLoading,
-        error,
-        filter,
-        syncStatus,
-        lastSyncError,
-        isQueued,
-        expenseSyncStatuses,
-      );
+    expenses,
+    isLoading,
+    error,
+    filter,
+    syncStatus,
+    lastSyncError,
+    isQueued,
+    expenseSyncStatuses,
+  );
 
   @override
   String toString() =>

@@ -233,12 +233,29 @@ class SyncManager {
           ? _lastSyncTimeGetter!()
           : null;
 
+      // Get pending creation items to exclude
+      final pendingItems = _syncQueue.getPendingItems();
+      final failedItems = _syncQueue.getFailedItems();
+      final pendingCreationIds = [...pendingItems, ...failedItems]
+          .where(
+            (item) =>
+                item.entityType == 'expense' && item.operation == 'create',
+          )
+          .map((item) => item.localId)
+          .whereType<String>()
+          .toSet();
+
       // Get local expenses for sync (including deleted)
       final localExpenses = await _expenseHiveRepository
           .getAllExpensesForSync();
 
+      // Filter out pending creations
+      final expensesToSync = localExpenses.where((expense) {
+        return !pendingCreationIds.contains(expense.id);
+      }).toList();
+
       // Prepare local changes for sync
-      final localChanges = localExpenses.map((expense) {
+      final localChanges = expensesToSync.map((expense) {
         return {
           'id': expense.id,
           'name': expense.name,
@@ -256,6 +273,14 @@ class SyncManager {
         lastSyncAt: lastSyncAt,
         localChanges: localChanges,
       );
+
+      // Process ID mappings first (to prevent duplication)
+      final idMapping = syncResponse['idMapping'] as Map<String, dynamic>?;
+      if (idMapping != null) {
+        for (final entry in idMapping.entries) {
+          await _updateLocalIdMapping(entry.key, entry.value as String);
+        }
+      }
 
       // Process server changes
       final serverChanges =

@@ -143,6 +143,13 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     state = state.copyWith(filter: filter);
   }
 
+  /// Search expenses
+  void searchExpenses(String query) {
+    final currentFilter = state.filter;
+    final updatedFilter = currentFilter.copyWith(searchQuery: query);
+    state = state.copyWith(filter: updatedFilter);
+  }
+
   /// Update expense with validation
   Future<void> updateExpense({
     required String expenseId,

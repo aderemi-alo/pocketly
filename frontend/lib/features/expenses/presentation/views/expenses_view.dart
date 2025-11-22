@@ -100,6 +100,33 @@ class _ExpensesViewState extends ConsumerState<ExpensesView> {
               )
             : Column(
                 children: [
+                  // Search Bar
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search expenses...',
+                        prefixIcon: const Icon(LucideIcons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                      onChanged: (value) {
+                        ref
+                            .read(expensesProvider.notifier)
+                            .searchExpenses(value);
+                      },
+                    ),
+                  ),
                   // Filter Bar
                   ExpenseFilterBar(
                     filter: expensesState.filter,

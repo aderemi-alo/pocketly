@@ -48,6 +48,7 @@ Future<Response> _syncExpenses(RequestContext context) async {
 
     // Process local changes and resolve conflicts
     final conflicts = <Map<String, dynamic>>[];
+    final idMapping = <String, String>{};
 
     for (final localChange in localChanges) {
       final changeMap = localChange as Map<String, dynamic>;
@@ -82,7 +83,7 @@ Future<Response> _syncExpenses(RequestContext context) async {
 
             if (name != null && amount != null && dateStr != null) {
               final date = DateTime.parse(dateStr);
-              await expenseRepo.createExpense(
+              final createdExpense = await expenseRepo.createExpense(
                 userId: userId,
                 name: name,
                 amount: amount.toDouble(),
@@ -90,6 +91,9 @@ Future<Response> _syncExpenses(RequestContext context) async {
                 categoryId: categoryId,
                 description: description,
               );
+
+              // Map local ID to new server ID
+              idMapping[expenseId] = createdExpense.id;
             }
           } catch (e) {
             AppLogger.warning('Failed to create expense from sync: $e');
@@ -98,6 +102,13 @@ Future<Response> _syncExpenses(RequestContext context) async {
         // If isDeleted and doesn't exist, no action needed
       } else {
         // Expense exists - resolve conflict based on timestamps
+
+        // DELETE-WINS CHECK: If server expense is deleted, ignore updates
+        if (serverExpense.isDeleted == true && !isDeleted) {
+          AppLogger.info('Ignoring update for deleted expense: $expenseId');
+          continue;
+        }
+
         final serverUpdatedAt = serverExpense.updatedAt;
 
         if (localUpdatedAt.isAfter(serverUpdatedAt)) {
@@ -182,6 +193,7 @@ Future<Response> _syncExpenses(RequestContext context) async {
       data: {
         'serverChanges': serverChanges,
         'conflicts': conflicts,
+        'idMapping': idMapping,
       },
     );
   } catch (e) {
