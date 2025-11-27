@@ -57,7 +57,7 @@ class CategoryApiRepository {
     required List<Map<String, dynamic>> localChanges,
   }) async {
     final response = await _apiClient.dio.post(
-      '/categories/sync',
+      '/categories/actions/sync',
       data: {
         if (lastSyncAt != null) 'lastSyncAt': lastSyncAt.toIso8601String(),
         'localChanges': localChanges,

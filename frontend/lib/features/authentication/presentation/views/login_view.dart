@@ -266,23 +266,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         ),
 
                         const SizedBox(height: 16),
-
-                        // Skip Button
-                        TextButton(
-                          onPressed: () => context.go(AppRoutes.dashboard),
-                          child: Text(
-                            'Skip for now',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                  decoration: TextDecoration.underline,
-                                ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
