@@ -112,7 +112,7 @@ class ExpenseApiRepository {
     required List<Map<String, dynamic>> localChanges,
   }) async {
     final response = await _apiClient.dio.post(
-      '/expenses/sync',
+      '/expenses/actions/sync',
       data: {
         if (lastSyncAt != null) 'lastSyncAt': lastSyncAt.toIso8601String(),
         'localChanges': localChanges,

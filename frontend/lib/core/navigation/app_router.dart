@@ -55,11 +55,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isOnAuthPage =
           currentLocation == AppRoutes.login ||
           currentLocation == AppRoutes.signup ||
-          currentLocation == AppRoutes.forgotPassword;
+          currentLocation == AppRoutes.forgotPassword ||
+          currentLocation == AppRoutes.emailVerification;
 
       // Authenticated users should not access auth pages
       if (isAuthenticated && isOnAuthPage) {
         return AppRoutes.dashboard;
+      }
+
+      // Unauthenticated users can only access auth pages
+      if (!isAuthenticated && !isOnAuthPage) {
+        return AppRoutes.login;
       }
 
       return null; // No redirect needed

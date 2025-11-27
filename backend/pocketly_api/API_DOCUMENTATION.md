@@ -227,6 +227,49 @@ Delete a custom category (predefined categories cannot be deleted).
 }
 ```
 
+#### POST /categories/actions/sync
+Sync local category changes with the server.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request:**
+```json
+{
+  "lastSyncAt": "2024-10-12T12:00:00Z", // Optional: null for first sync
+  "localChanges": [
+    {
+      "id": "uuid",
+      "name": "Gym",
+      "icon": "dumbbell",
+      "color": "#FF5722",
+      "updatedAt": "2024-10-12T12:05:00Z",
+      "isDeleted": false
+    }
+  ]
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "serverChanges": [
+      {
+        "id": "uuid",
+        "name": "Food",
+        "icon": "utensils",
+        "color": "#4CAF50",
+        "isPredefined": true,
+        "createdAt": "2024-10-12T12:00:00Z",
+        "updatedAt": "2024-10-12T12:10:00Z"
+      }
+    ],
+    "conflicts": []
+  }
+}
+```
+
 ---
 
 ### 💰 Expense Endpoints
@@ -397,6 +440,53 @@ GET /expenses/stats?startDate=2024-10-01T00:00:00Z&endDate=2024-10-31T23:59:59Z 
     "startDate": "2024-10-01T00:00:00Z",
     "endDate": "2024-10-31T23:59:59Z",
     "period": "custom"
+  }
+}
+```
+
+#### POST /expenses/actions/sync
+Sync local expense changes with the server.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request:**
+```json
+{
+  "lastSyncAt": "2024-10-12T12:00:00Z", // Optional: null for first sync
+  "localChanges": [
+    {
+      "id": "uuid",
+      "name": "Lunch",
+      "amount": 25.50,
+      "date": "2024-10-12T12:00:00Z",
+      "categoryId": "food",
+      "description": "Pizza",
+      "updatedAt": "2024-10-12T12:05:00Z",
+      "isDeleted": false
+    }
+  ]
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "serverChanges": [
+      {
+        "id": "uuid",
+        "name": "Dinner",
+        "amount": 50.00,
+        "date": "2024-10-12T18:00:00Z",
+        "categoryId": "food",
+        "updatedAt": "2024-10-12T18:00:00Z"
+      }
+    ],
+    "conflicts": [],
+    "idMapping": {
+      "temp-uuid": "server-uuid"
+    }
   }
 }
 ```

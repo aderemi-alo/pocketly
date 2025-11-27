@@ -33,7 +33,7 @@ class LocalModeBanner extends ConsumerWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Offline Mode - Your data is safe locally. Sign in to sync across devices.',
+              'Session Expired - Please sign in to continue using Pocketly.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onTertiaryContainer,
               ),
