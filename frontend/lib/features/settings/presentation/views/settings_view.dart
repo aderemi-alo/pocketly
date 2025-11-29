@@ -331,11 +331,16 @@ class _SyncButtonState extends ConsumerState<_SyncButton> {
     setState(() => _isSyncing = true);
 
     try {
-      await syncManager.forceSyncNow();
+      // Manually fetch fresh data from server
+      await ref.read(categoriesProvider.notifier).syncCategories();
+
+      // Refresh expenses list (will fetch from Hive which should have latest data)
+      await ref.read(expensesProvider.notifier).refreshExpenses();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Sync completed successfully'),
+            content: Text('Data refreshed successfully'),
             duration: Duration(seconds: 2),
           ),
         );
@@ -344,7 +349,7 @@ class _SyncButtonState extends ConsumerState<_SyncButton> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Sync failed: $e'),
+            content: Text('Refresh failed: $e'),
             duration: const Duration(seconds: 3),
           ),
         );

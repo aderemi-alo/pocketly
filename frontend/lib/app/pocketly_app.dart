@@ -14,50 +14,6 @@ class _PocketlyAppState extends ConsumerState<PocketlyApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
-    // Setup SyncManager callbacks after first frame to ensure providers are ready
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _setupSyncManagerCallbacks();
-    });
-  }
-
-  void _setupSyncManagerCallbacks() {
-    final syncManager = locator<SyncManager>();
-    syncManager.setupCallbacks(
-      appStateUpdater:
-          ({
-            DateTime? lastSyncTime,
-            int? pendingSyncCount,
-            int? failedSyncCount,
-            bool? isSyncing,
-            String? lastSyncError,
-          }) {
-            // Persist lastSyncTime if provided
-            if (lastSyncTime != null) {
-              ref
-                  .read(appStateProvider.notifier)
-                  .updateLastSyncTime(lastSyncTime);
-            }
-
-            ref
-                .read(appStateProvider.notifier)
-                .updateSyncState(
-                  lastSyncTime: lastSyncTime,
-                  pendingSyncCount: pendingSyncCount,
-                  failedSyncCount: failedSyncCount,
-                  isSyncing: isSyncing,
-                  lastSyncError: lastSyncError,
-                );
-          },
-      canSyncChecker: () {
-        final appState = ref.read(appStateProvider);
-        return appState.canSync;
-      },
-      lastSyncTimeGetter: () {
-        final appState = ref.read(appStateProvider);
-        return appState.lastSyncTime;
-      },
-    );
   }
 
   @override
