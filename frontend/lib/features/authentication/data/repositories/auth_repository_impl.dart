@@ -30,7 +30,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return authResponse;
     } catch (e) {
-      throw Exception('Login failed: ${e.toString()}');
+      throw AppException(ErrorHandler.getErrorMessage(e));
     }
   }
 
@@ -56,7 +56,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return authResponse;
     } catch (e) {
-      throw Exception('Registration failed: ${e.toString()}');
+      throw AppException(ErrorHandler.getErrorMessage(e));
     }
   }
 
@@ -76,7 +76,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return user;
     } catch (e) {
-      throw Exception('Update profile failed: ${e.toString()}');
+      throw AppException(ErrorHandler.getErrorMessage(e));
     }
   }
 
@@ -93,14 +93,22 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return user;
     } catch (e) {
-      throw Exception('Fetch user profile failed: ${e.toString()}');
+      throw AppException(ErrorHandler.getErrorMessage(e));
     }
   }
 
   @override
   Future<void> logout() async {
     try {
-      await _apiClient.dio.post('/auth/logout');
+      final deviceId = await locator<DeviceIdService>().getDeviceId();
+      final response = await _apiClient.dio.post(
+        '/auth/logout',
+        data: {'deviceId': deviceId},
+      );
+      if (response.statusCode != 200) {
+        AppLogger.warning('Logout API call failed', response.data);
+        throw AppException('Logout failed: ${response.statusCode}');
+      }
     } catch (e) {
       // Continue with logout even if API call fails
       AppLogger.warning('Logout API call failed', e);
@@ -134,7 +142,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return authResponse;
     } catch (e) {
-      throw Exception('Token refresh failed: ${e.toString()}');
+      throw AppException(ErrorHandler.getErrorMessage(e));
     }
   }
 
@@ -149,7 +157,7 @@ class AuthRepositoryImpl implements AuthRepository {
         data: {'currentPassword': currentPassword, 'newPassword': newPassword},
       );
     } catch (e) {
-      throw Exception('Password update failed: ${e.toString()}');
+      throw AppException(ErrorHandler.getErrorMessage(e));
     }
   }
 
@@ -161,7 +169,7 @@ class AuthRepositoryImpl implements AuthRepository {
         data: password != null ? {'password': password} : null,
       );
     } catch (e) {
-      throw Exception('Account deletion failed: ${e.toString()}');
+      throw AppException(ErrorHandler.getErrorMessage(e));
     }
   }
 }

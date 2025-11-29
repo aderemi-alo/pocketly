@@ -10,6 +10,7 @@ export 'services/banner_service.dart';
 export 'providers/providers.dart';
 export 'providers/app_state_provider.dart';
 export 'enums/app_mode.dart';
+export 'errors/app_exception.dart';
 
 // Package exports
 export 'package:flutter/material.dart';

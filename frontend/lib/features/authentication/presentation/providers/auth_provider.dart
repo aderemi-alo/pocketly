@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/authentication/domain/domain.dart';
 import 'package:pocketly/features/authentication/data/data.dart';
@@ -272,6 +273,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // Reset state and switch to local mode
       state = const AuthState();
       _ref.read(appStateProvider.notifier).setLocalMode();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403) {
+        state = state.copyWith(isLoading: false, error: 'Incorrect password');
+        return;
+      }
+
+      if (e.response?.statusCode == 401) {
+        // Token expired and refresh failed (or was skipped), log out user
+        await logout();
+        return;
+      }
+
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
