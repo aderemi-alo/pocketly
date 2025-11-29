@@ -127,7 +127,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         await _ref.read(categoriesProvider.notifier).syncCategories();
 
         // Fetch all expenses from server and populate Hive
-        await _fetchAndPopulateExpenses();
+        await _ref.read(expensesProvider.notifier).fetchAndSyncExpenses();
       } catch (e) {
         ErrorHandler.logError('Failed to fetch data on login', e);
         // Don't fail login if data fetch fails - user can use refresh button

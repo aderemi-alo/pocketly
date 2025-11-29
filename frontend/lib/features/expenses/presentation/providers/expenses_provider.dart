@@ -20,7 +20,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     }
   }
 
-  /// Add expense with validation
+  /// Add expense with validation (backend-first approach)
   Future<void> addExpense({
     required String name,
     String? description,
@@ -40,46 +40,43 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     }
 
     // Check email verification limits
-    final authState = ref.read(authProvider);
-    final isVerified = authState.user?.isEmailVerified ?? true;
-    final expenseCount = state.expenses.length;
+    // final authState = ref.read(authProvider);
+    // final isVerified = authState.user?.isEmailVerified ?? true;
+    // final expenseCount = state.expenses.length;
 
-    if (!isVerified) {
-      if (expenseCount >= 20) {
-        // Block at 21st expense
-        setError('Verify your email to add more expenses');
-        // Show dialog prompting verification
-        _showVerificationDialog();
-        return;
-      } else if (expenseCount >= 14) {
-        // Warning at 15th expense
-        _showWarningSnackbar();
-      }
-    }
+    // if (!isVerified) {
+    //   if (expenseCount >= 20) {
+    //     // Block at 21st expense
+    //     setError('Verify your email to add more expenses');
+    //     // Show dialog prompting verification
+    //     _showVerificationDialog();
+    //     return;
+    //   } else if (expenseCount >= 14) {
+    //     // Warning at 15th expense
+    //     _showWarningSnackbar();
+    //   }
+    // }
 
     try {
       setLoading(true);
-      final now = DateTime.now();
-      final expense = Expense(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+
+      // BACKEND-FIRST: Create on server first
+      final createdExpense = await _createExpenseOnBackend(
         name: name.trim(),
+        description: description,
         amount: amount,
         category: category,
         date: date,
-        description: description,
-        updatedAt: now,
-        isDeleted: false,
       );
 
-      // Update state immediately for UI responsiveness
-      final updatedExpenses = [...state.expenses, expense];
+      // Only update state and Hive after backend success
+      final updatedExpenses = [...state.expenses, createdExpense];
       state = state.copyWith(expenses: updatedExpenses, isLoading: false);
 
-      // Persist to database in background
-      await expenseHiveRepository.addExpense(expense);
+      // Persist to database with backend-generated ID
+      await expenseHiveRepository.addExpense(createdExpense);
 
-      // Try to create on server if authenticated
-      await _createExpenseOnServer(expense);
+      AppLogger.info('✅ Expense added successfully: ${createdExpense.id}');
     } catch (e) {
       setError('Failed to add expense: $e');
     }
@@ -97,7 +94,7 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     state = state.copyWith(filter: updatedFilter);
   }
 
-  /// Update expense with validation
+  /// Update expense with validation (backend-first approach)
   Future<void> updateExpense({
     required String expenseId,
     required String name,
@@ -119,61 +116,61 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
 
     try {
       setLoading(true);
-      // Get existing expense to preserve updatedAt if needed, or set to now
-      final existingExpense = state.expenses.firstWhere(
-        (e) => e.id == expenseId,
-        orElse: () => Expense(
-          id: expenseId,
-          name: name.trim(),
-          amount: amount,
-          category: category,
-          date: date,
-          description: description,
-          updatedAt: DateTime.now(),
-          isDeleted: false,
-        ),
-      );
 
-      final updatedExpense = existingExpense.copyWith(
+      // BACKEND-FIRST: Update on server first
+      final updatedApiExpense = await _updateExpenseOnBackend(
+        expenseId: expenseId,
         name: name.trim(),
+        description: description,
         amount: amount,
         category: category,
         date: date,
-        description: description,
-        updatedAt: DateTime.now(), // Update timestamp on modification
       );
 
-      // Update state immediately for UI responsiveness
+      // Only update state and Hive after backend success
+      final updatedExpense = Expense(
+        id: updatedApiExpense.id,
+        name: updatedApiExpense.name,
+        amount: updatedApiExpense.amount,
+        category: category, // Preserve category from input
+        date: updatedApiExpense.date,
+        description: updatedApiExpense.description,
+        updatedAt: updatedApiExpense.updatedAt,
+        isDeleted: updatedApiExpense.isDeleted ?? false,
+      );
+
       final updatedExpenses = state.expenses.map((expense) {
         return expense.id == expenseId ? updatedExpense : expense;
       }).toList();
       state = state.copyWith(expenses: updatedExpenses, isLoading: false);
 
-      // Persist to database in background
+      // Persist to database
       await expenseHiveRepository.updateExpense(updatedExpense);
 
-      // Try to update on server if authenticated
-      await _updateExpenseOnServer(updatedExpense);
+      AppLogger.info('✅ Expense updated successfully: $expenseId');
     } catch (e) {
       setError('Failed to update expense: $e');
     }
   }
 
+  /// Delete expense (backend-first approach)
   Future<void> deleteExpense(String expenseId) async {
     try {
       setLoading(true);
 
-      // Update state immediately for UI responsiveness
+      // BACKEND-FIRST: Delete on server first
+      await _deleteExpenseOnBackend(expenseId);
+
+      // Only update state and Hive after backend success
       final updatedExpenses = state.expenses
           .where((expense) => expense.id != expenseId)
           .toList();
       state = state.copyWith(expenses: updatedExpenses, isLoading: false);
 
-      // Persist to database in background
+      // Persist to database
       await expenseHiveRepository.deleteExpense(expenseId);
 
-      // Try to delete on server if authenticated
-      await _deleteExpenseOnServer(expenseId);
+      AppLogger.info('✅ Expense deleted successfully: $expenseId');
     } catch (e) {
       setError('Failed to delete expense: $e');
     }
@@ -282,112 +279,154 @@ class ExpensesNotifier extends Notifier<ExpensesState> {
     return uuidRegex.hasMatch(id);
   }
 
-  /// Create expense on server (direct API call)
-  Future<void> _createExpenseOnServer(Expense expense) async {
-    try {
-      final networkService = locator<NetworkService>();
-      final isOnline = await networkService.isConnected;
+  /// Create expense on backend (returns created expense with backend ID)
+  Future<Expense> _createExpenseOnBackend({
+    required String name,
+    String? description,
+    required double amount,
+    required Category category,
+    required DateTime date,
+  }) async {
+    final networkService = locator<NetworkService>();
+    final isOnline = await networkService.isConnected;
 
-      if (!isOnline) {
-        throw Exception('No internet connection');
-      }
-
-      final expenseApi = expenseApiRepository;
-      final localId = expense.id;
-
-      // Get backend category ID
-      final backendCategoryId = await _getBackendCategoryId(expense.category);
-
-      // Create expense on server
-      final apiExpense = await expenseApi.createExpense(
-        name: expense.name,
-        amount: expense.amount,
-        date: expense.date,
-        categoryId: backendCategoryId,
-        description: expense.description,
+    if (!isOnline) {
+      throw Exception(
+        'No internet connection. Please connect to create expenses.',
       );
-
-      // Update local expense with server ID
-      final updatedExpense = Expense(
-        id: apiExpense.id,
-        name: apiExpense.name,
-        amount: apiExpense.amount,
-        date: apiExpense.date,
-        category: expense.category,
-        description: apiExpense.description,
-        updatedAt: apiExpense.updatedAt,
-        isDeleted: apiExpense.isDeleted ?? false,
-      );
-
-      // Update in Hive with server ID
-      await expenseHiveRepository.replaceExpenseId(localId, apiExpense.id);
-
-      // Update state with server ID
-      final updatedExpenses = state.expenses.map((e) {
-        return e.id == localId ? updatedExpense : e;
-      }).toList();
-      state = state.copyWith(expenses: updatedExpenses);
-
-      AppLogger.info('✅ Created expense: ${expense.name} -> ${apiExpense.id}');
-    } catch (e) {
-      // Rollback UI and Hive on failure
-      final updatedExpenses = state.expenses
-          .where((exp) => exp.id != expense.id)
-          .toList();
-      await expenseHiveRepository.deleteExpense(expense.id);
-      state = state.copyWith(expenses: updatedExpenses);
-      rethrow;
     }
+
+    final expenseApi = expenseApiRepository;
+
+    // Get backend category ID
+    final backendCategoryId = await _getBackendCategoryId(category);
+
+    // Create expense on server
+    final apiExpense = await expenseApi.createExpense(
+      name: name,
+      amount: amount,
+      date: date,
+      categoryId: backendCategoryId,
+      description: description,
+    );
+
+    // Return expense with backend-generated ID
+    return Expense(
+      id: apiExpense.id,
+      name: apiExpense.name,
+      amount: apiExpense.amount,
+      date: apiExpense.date,
+      category: category,
+      description: apiExpense.description,
+      updatedAt: apiExpense.updatedAt,
+      isDeleted: apiExpense.isDeleted ?? false,
+    );
   }
 
-  /// Update expense on server (direct API call)
-  Future<void> _updateExpenseOnServer(Expense expense) async {
-    try {
-      final networkService = locator<NetworkService>();
-      final isOnline = await networkService.isConnected;
+  /// Update expense on backend (returns updated expense data)
+  Future<ExpenseApiModel> _updateExpenseOnBackend({
+    required String expenseId,
+    required String name,
+    String? description,
+    required double amount,
+    required Category category,
+    required DateTime date,
+  }) async {
+    final networkService = locator<NetworkService>();
+    final isOnline = await networkService.isConnected;
 
-      if (!isOnline) {
-        throw Exception('No internet connection');
-      }
-
-      final expenseApi = expenseApiRepository;
-      final backendCategoryId = await _getBackendCategoryId(expense.category);
-
-      await expenseApi.updateExpense(
-        expenseId: expense.id,
-        name: expense.name,
-        amount: expense.amount,
-        date: expense.date,
-        categoryId: backendCategoryId,
-        description: expense.description,
+    if (!isOnline) {
+      throw Exception(
+        'No internet connection. Please connect to update this expense.',
       );
-
-      AppLogger.info('✅ Updated expense: ${expense.name}');
-    } catch (e) {
-      // Reload from Hive to revert UI changes
-      await _loadExpenses();
-      rethrow;
     }
+
+    final expenseApi = expenseApiRepository;
+    final backendCategoryId = await _getBackendCategoryId(category);
+
+    return await expenseApi.updateExpense(
+      expenseId: expenseId,
+      name: name,
+      amount: amount,
+      date: date,
+      categoryId: backendCategoryId,
+      description: description,
+    );
   }
 
-  /// Delete expense on server (direct API call)
-  Future<void> _deleteExpenseOnServer(String expenseId) async {
-    try {
-      final networkService = locator<NetworkService>();
-      final isOnline = await networkService.isConnected;
+  /// Delete expense on backend
+  Future<void> _deleteExpenseOnBackend(String expenseId) async {
+    final networkService = locator<NetworkService>();
+    final isOnline = await networkService.isConnected;
 
-      if (!isOnline) {
-        throw Exception('No internet connection');
+    if (!isOnline) {
+      throw Exception(
+        'No internet connection. Please connect to delete this expense.',
+      );
+    }
+
+    final expenseApi = expenseApiRepository;
+    await expenseApi.deleteExpense(expenseId);
+  }
+
+  /// Fetch expenses from backend and sync to local Hive database
+  Future<void> fetchAndSyncExpenses() async {
+    try {
+      setLoading(true);
+      final expenseApi = expenseApiRepository;
+
+      // 1. Fetch all expenses from server
+      final result = await expenseApi.getExpenses(
+        limit: 1000, // Large enough to get all expenses for now
+        offset: 0,
+        includeCategory: true,
+      );
+
+      final apiExpenses = result['expenses'] as List<ExpenseApiModel>;
+
+      // 2. Convert to domain models
+      final List<Expense> domainExpenses = [];
+
+      for (final apiExpense in apiExpenses) {
+        // We need the category to be present
+        if (apiExpense.category == null) {
+          AppLogger.warning(
+            'Skipping expense ${apiExpense.id} due to missing category',
+          );
+          continue;
+        }
+
+        domainExpenses.add(
+          Expense(
+            id: apiExpense.id,
+            name: apiExpense.name,
+            amount: apiExpense.amount,
+            date: apiExpense.date,
+            category: apiExpense.category!.toDomain(),
+            description: apiExpense.description,
+            updatedAt: apiExpense.updatedAt,
+            isDeleted: apiExpense.isDeleted ?? false,
+          ),
+        );
       }
 
-      final expenseApi = expenseApiRepository;
-      await expenseApi.deleteExpense(expenseId);
+      // 3. Clear local database
+      await expenseHiveRepository.clearAllExpenses();
 
-      AppLogger.info('✅ Deleted expense: $expenseId');
+      // 4. Populate local database with fresh data
+      for (final expense in domainExpenses) {
+        await expenseHiveRepository.addExpense(expense);
+      }
+
+      // 5. Update state
+      state = state.copyWith(expenses: domainExpenses, isLoading: false);
+
+      AppLogger.info(
+        '✅ Successfully synced ${domainExpenses.length} expenses from server',
+      );
     } catch (e) {
-      // Reload from Hive to revert UI changes
-      await _loadExpenses();
-      rethrow;
+      ErrorHandler.logError('Failed to sync expenses from server', e);
+      setError('Failed to sync expenses: $e');
     }
   }
 }

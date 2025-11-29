@@ -52,7 +52,7 @@ class ExpenseHive extends HiveObject {
     required IconData categoryIcon,
     required Color categoryColor,
     DateTime? updatedAt,
-    bool isDeleted = false,
+    required this.isDeleted,
   }) {
     categoryIconCodePoint = categoryIcon.codePoint;
     categoryColorValue = categoryColor.toARGB32();

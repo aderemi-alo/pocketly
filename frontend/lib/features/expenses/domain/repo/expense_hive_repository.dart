@@ -24,14 +24,18 @@ class ExpenseHiveRepository {
           name: expenseHive.categoryName,
           icon: IconMapper.getIcon(expenseHive.categoryIconCodePoint),
           color: Color(expenseHive.categoryColorValue),
-          updatedAt: DateTime.now(), // Category updatedAt not stored in ExpenseHive
+          updatedAt:
+              DateTime.now(), // Category updatedAt not stored in ExpenseHive
           isDeleted: false,
         ),
         updatedAt: expenseHive.updatedAt,
         isDeleted: expenseHive.isDeleted,
       );
     } catch (e) {
-      AppLogger.error('Failed to convert ExpenseHive to Expense domain model', e);
+      AppLogger.error(
+        'Failed to convert ExpenseHive to Expense domain model',
+        e,
+      );
       rethrow;
     }
   }
@@ -53,16 +57,17 @@ class ExpenseHiveRepository {
         isDeleted: expense.isDeleted,
       );
     } catch (e) {
-      AppLogger.error('Failed to convert Expense domain model to ExpenseHive', e);
+      AppLogger.error(
+        'Failed to convert Expense domain model to ExpenseHive',
+        e,
+      );
       rethrow;
     }
   }
 
   /// Get all expenses (excluding deleted)
   Future<List<Expense>> getAllExpenses() async {
-    final expenses = _box.values
-        .where((e) => !e.isDeleted)
-        .toList();
+    final expenses = _box.values.where((e) => !e.isDeleted).toList();
     return expenses.map(_toDomainModel).toList();
   }
 
@@ -84,13 +89,7 @@ class ExpenseHiveRepository {
   /// Add new expense
   Future<void> addExpense(Expense expense) async {
     try {
-      // Ensure updatedAt is set
-      final expenseWithTimestamp = expense.copyWith(
-        updatedAt: expense.updatedAt.isBefore(DateTime.now().subtract(const Duration(seconds: 1)))
-            ? DateTime.now()
-            : expense.updatedAt,
-      );
-      final expenseHive = _toHiveModel(expenseWithTimestamp);
+      final expenseHive = _toHiveModel(expense);
       await _box.add(expenseHive);
     } catch (e) {
       AppLogger.error('Failed to add expense', e);
@@ -107,7 +106,10 @@ class ExpenseHiveRepository {
     if (existingExpense != null) {
       // Ensure updatedAt is set to now if not provided
       final expenseWithTimestamp = expense.copyWith(
-        updatedAt: expense.updatedAt.isBefore(DateTime.now().subtract(const Duration(seconds: 1)))
+        updatedAt:
+            expense.updatedAt.isBefore(
+              DateTime.now().subtract(const Duration(seconds: 1)),
+            )
             ? DateTime.now()
             : expense.updatedAt,
       );
@@ -145,10 +147,8 @@ class ExpenseHiveRepository {
 
   /// Replace expense ID (atomic operation for local to server ID mapping)
   Future<void> replaceExpenseId(String oldId, String newId) async {
-    final expense = _box.values
-        .where((e) => e.expenseId == oldId)
-        .firstOrNull;
-    
+    final expense = _box.values.where((e) => e.expenseId == oldId).firstOrNull;
+
     if (expense != null) {
       final index = _box.values.toList().indexOf(expense);
       // Create updated expense with new ID
@@ -192,7 +192,9 @@ class ExpenseHiveRepository {
   /// Get expenses by category (excluding deleted)
   Future<List<Expense>> getExpensesByCategory(String categoryId) async {
     final filteredExpenses = _box.values
-        .where((expense) => !expense.isDeleted && expense.categoryId == categoryId)
+        .where(
+          (expense) => !expense.isDeleted && expense.categoryId == categoryId,
+        )
         .toList();
 
     return filteredExpenses.map(_toDomainModel).toList();
@@ -207,7 +209,8 @@ class ExpenseHiveRepository {
         .where(
           (expense) =>
               !expense.isDeleted &&
-              expense.amount >= lowerAmount && expense.amount <= upperAmount,
+              expense.amount >= lowerAmount &&
+              expense.amount <= upperAmount,
         )
         .toList();
 

@@ -20,6 +20,9 @@ class DeleteExpenseDialog extends ConsumerWidget {
           onPressed: () {
             ref.read(expensesProvider.notifier).deleteExpense(expenseId);
             context.pop(true);
+            if (context.canPop()) {
+              context.pop(true);
+            }
           },
           style: TextButton.styleFrom(foregroundColor: AppColors.error),
           child: const Text('Delete'),
