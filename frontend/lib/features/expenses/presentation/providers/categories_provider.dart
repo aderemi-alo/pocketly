@@ -23,10 +23,11 @@ class CategoriesNotifier extends Notifier<CategoriesState> {
       state = state.copyWith(isLoading: true);
       final categories = await _categoryHiveRepository.getAllCategories();
 
-      // If no categories in local storage, use predefined as fallback
+      // If no categories in local storage, fetch from backend first
       if (categories.isEmpty) {
-        final predefined = Categories.predefined;
-        state = state.copyWith(categories: predefined, isLoading: false);
+        AppLogger.info('No local categories found, fetching from backend...');
+        await syncCategories(); // This will handle the backend fetch and fallback
+        return; // syncCategories updates state, so we return early
       } else {
         state = state.copyWith(categories: categories, isLoading: false);
       }
@@ -63,13 +64,46 @@ class CategoriesNotifier extends Notifier<CategoriesState> {
       );
     } catch (e) {
       ErrorHandler.logError('Failed to sync categories', e);
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Failed to sync categories: $e',
-      );
 
-      // If sync fails, try to load from local storage
-      await loadLocalCategories();
+      // Check if this is a network error
+      final networkService = locator<NetworkService>();
+      final isOnline = await networkService.isConnected;
+
+      if (!isOnline) {
+        // Offline: Use predefined categories ONLY as last resort
+        AppLogger.warning('No internet connection. Using default categories.');
+        state = state.copyWith(
+          isLoading: false,
+          error: 'No internet connection. Using default categories.',
+          categories: Categories.predefined,
+        );
+      } else {
+        // Online but API failed: Check if we have local categories
+        final localCategories = await _categoryHiveRepository
+            .getAllCategories();
+
+        if (localCategories.isNotEmpty) {
+          // Use local categories from previous sync
+          AppLogger.info(
+            'API failed, using local categories from previous sync',
+          );
+          state = state.copyWith(
+            isLoading: false,
+            error: 'Failed to sync categories: $e',
+            categories: localCategories,
+          );
+        } else {
+          // No local categories and API failed: Use predefined as fallback
+          AppLogger.warning(
+            'API failed and no local categories. Using predefined.',
+          );
+          state = state.copyWith(
+            isLoading: false,
+            error: 'Failed to sync categories: $e',
+            categories: Categories.predefined,
+          );
+        }
+      }
     }
   }
 

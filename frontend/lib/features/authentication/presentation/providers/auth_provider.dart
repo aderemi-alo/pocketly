@@ -1,7 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:pocketly/core/core.dart';
 import 'package:pocketly/features/authentication/domain/domain.dart';
 import 'package:pocketly/features/authentication/data/data.dart';
 import 'package:pocketly/features/expenses/presentation/providers/categories_provider.dart';
+import 'package:pocketly/features/expenses/presentation/providers/expenses_provider.dart';
+import 'package:pocketly/features/expenses/domain/repo/category_hive_repository.dart';
 
 // Repository provider
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -119,16 +122,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       _ref.read(appStateProvider.notifier).setOnlineMode();
 
-      // Sync categories from backend after successful login
+      // Fetch all data from server after successful login
       try {
+        // Fetch categories first
         await _ref.read(categoriesProvider.notifier).syncCategories();
-      } catch (e) {
-        ErrorHandler.logError('Failed to sync categories on login', e);
-        // Don't fail login if category sync fails
-      }
 
-      // Process pending sync queue after successful login
-      await _processPendingSyncQueue();
+        // Fetch all expenses from server and populate Hive
+        await _ref.read(expensesProvider.notifier).fetchAndSyncExpenses();
+      } catch (e) {
+        ErrorHandler.logError('Failed to fetch data on login', e);
+        // Don't fail login if data fetch fails - user can use refresh button
+      }
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -161,16 +165,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       _ref.read(appStateProvider.notifier).setOnlineMode();
 
-      // Sync categories from backend after successful registration
+      // Fetch initial data from server after successful registration
       try {
         await _ref.read(categoriesProvider.notifier).syncCategories();
+        await _fetchAndPopulateExpenses();
       } catch (e) {
-        ErrorHandler.logError('Failed to sync categories on registration', e);
-        // Don't fail registration if category sync fails
+        ErrorHandler.logError('Failed to fetch data on registration', e);
+        // Don't fail registration if data fetch fails
       }
-
-      // Process pending sync queue after successful registration
-      await _processPendingSyncQueue();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -184,8 +186,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _tokenStorage.clearUserData();
       await _tokenStorage.clearTokens();
 
-      // Clear lastSyncTime on logout
-      _ref.read(appStateProvider.notifier).updateLastSyncTime(null);
+      // Clear all Hive data on logout
+      await expenseHiveRepository.clearAllExpenses();
+      final categoryRepo = locator<CategoryHiveRepository>();
+      await categoryRepo.clearAll();
 
       state = const AuthState();
       _ref.read(appStateProvider.notifier).setLocalMode();
@@ -194,8 +198,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _tokenStorage.clearUserData();
       await _tokenStorage.clearTokens();
 
-      // Clear lastSyncTime even on error
-      _ref.read(appStateProvider.notifier).updateLastSyncTime(null);
+      // Clear Hive data even if logout fails
+      await expenseHiveRepository.clearAllExpenses();
+      final categoryRepo = locator<CategoryHiveRepository>();
+      await categoryRepo.clearAll();
 
       state = const AuthState();
       _ref.read(appStateProvider.notifier).setLocalMode();
@@ -267,6 +273,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // Reset state and switch to local mode
       state = const AuthState();
       _ref.read(appStateProvider.notifier).setLocalMode();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403) {
+        state = state.copyWith(isLoading: false, error: 'Incorrect password');
+        return;
+      }
+
+      if (e.response?.statusCode == 401) {
+        // Token expired and refresh failed (or was skipped), log out user
+        await logout();
+        return;
+      }
+
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
@@ -277,19 +297,30 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(error: null);
   }
 
-  /// Process pending sync queue after login
-  Future<void> _processPendingSyncQueue() async {
+  /// Fetch all expenses from server and populate Hive
+  Future<void> _fetchAndPopulateExpenses() async {
     try {
-      // TODO: Implement sync queue processing
-      // This would trigger the sync manager to process pending items
-      AppLogger.debug('Processing pending sync queue...');
+      final expenseApi = expenseApiRepository;
 
-      // Update pending sync count
-      final syncQueue = locator<SyncQueueService>();
-      final pendingCount = syncQueue.getPendingItems().length;
-      _ref.read(appStateProvider.notifier).updatePendingSyncCount(pendingCount);
+      // Fetch all expenses from server (pagination might be needed later)
+      final result = await expenseApi.getExpenses(
+        limit: 1000, // Large enough to get all expenses for now
+        offset: 0,
+        includeCategory: true,
+      );
+
+      final expenses = result['expenses'] as List<dynamic>;
+
+      // Trigger expenses refresh to load newly fetched data from server
+      // The expenses provider will re-fetch from Hive after this
+      if (mounted) {
+        await _ref.read(expensesProvider.notifier).refreshExpenses();
+      }
+
+      AppLogger.info('Fetched ${expenses.length} expenses from server');
     } catch (e) {
-      ErrorHandler.logError('Failed to process sync queue', e);
+      ErrorHandler.logError('Failed to fetch expenses from server', e);
+      rethrow;
     }
   }
 }

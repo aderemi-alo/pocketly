@@ -165,8 +165,6 @@ class _ScaffoldWithNestedNavigationState
       appBar: AppBar(
         title: _buildAnimatedTitle(Theme.of(context).textTheme),
         actions: [
-          const SyncStatusIndicator(),
-          context.horizontalSpace(8),
           if (widget.navigationShell.currentIndex != 2) ...[
             GestureDetector(
               onTap: () => context.push('/settings/profile'),

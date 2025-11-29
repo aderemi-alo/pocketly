@@ -45,7 +45,7 @@ Future<Response> _deleteAccount(RequestContext context) async {
 
       // Verify password
       if (!authRepo.verifyPassword(password, user.passwordHash)) {
-        return ApiResponse.unauthorized(
+        return ApiResponse.forbidden(
           message: 'Invalid password',
         );
       }

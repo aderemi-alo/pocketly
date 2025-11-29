@@ -27,36 +27,43 @@ class _ExpensesViewState extends ConsumerState<ExpensesView> {
     );
 
     return Expanded(
-      child: ListView.builder(
-        itemCount: totalItems,
-        itemBuilder: (context, index) {
-          int currentIndex = index;
+      child: RefreshIndicator(
+        onRefresh: () =>
+            ref.read(expensesProvider.notifier).fetchAndSyncExpenses(),
+        child: ListView.builder(
+          itemCount: totalItems,
+          itemBuilder: (context, index) {
+            int currentIndex = index;
 
-          // Find which month and expense this index corresponds to
-          for (final monthKey in sortedMonths) {
-            final monthExpenses = groupedExpenses[monthKey]!;
+            // Find which month and expense this index corresponds to
+            for (final monthKey in sortedMonths) {
+              final monthExpenses = groupedExpenses[monthKey]!;
 
-            if (currentIndex == 0) {
-              // Show month header
-              final totalAmount = monthExpenses.fold(
-                0.0,
-                (sum, expense) => sum + expense.amount,
-              );
-              return MonthHeader(monthKey: monthKey, totalAmount: totalAmount);
+              if (currentIndex == 0) {
+                // Show month header
+                final totalAmount = monthExpenses.fold(
+                  0.0,
+                  (sum, expense) => sum + expense.amount,
+                );
+                return MonthHeader(
+                  monthKey: monthKey,
+                  totalAmount: totalAmount,
+                );
+              }
+
+              currentIndex--;
+
+              if (currentIndex < monthExpenses.length) {
+                // Show expense card
+                return ExpenseCard(expense: monthExpenses[currentIndex]);
+              }
+
+              currentIndex -= monthExpenses.length;
             }
 
-            currentIndex--;
-
-            if (currentIndex < monthExpenses.length) {
-              // Show expense card
-              return ExpenseCard(expense: monthExpenses[currentIndex]);
-            }
-
-            currentIndex -= monthExpenses.length;
-          }
-
-          return const SizedBox.shrink();
-        },
+            return const SizedBox.shrink();
+          },
+        ),
       ),
     );
   }
@@ -70,32 +77,45 @@ class _ExpensesViewState extends ConsumerState<ExpensesView> {
       body: Padding(
         padding: context.symmetric(horizontal: 16, vertical: 24),
         child: expensesState.expenses.isEmpty
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: context.all(20),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.4),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        LucideIcons.receipt,
-                        size: 60,
-                        color: Theme.of(context).colorScheme.primary,
+            ? RefreshIndicator(
+                onRefresh: () =>
+                    ref.read(expensesProvider.notifier).fetchAndSyncExpenses(),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.7,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: context.all(20),
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.4),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              LucideIcons.receipt,
+                              size: 60,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          context.verticalSpace(16),
+                          Text(
+                            'No expenses yet',
+                            style: theme.textTheme.titleLarge,
+                          ),
+                          context.verticalSpace(8),
+                          Text(
+                            'Start tracking by adding your first expense',
+                            style: theme.textTheme.bodyLarge,
+                          ),
+                        ],
                       ),
                     ),
-                    context.verticalSpace(16),
-                    Text('No expenses yet', style: theme.textTheme.titleLarge),
-                    context.verticalSpace(8),
-                    Text(
-                      'Start tracking by adding your first expense',
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                  ],
+                  ),
                 ),
               )
             : Column(

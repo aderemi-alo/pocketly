@@ -20,6 +20,23 @@ class ErrorHandler {
   }
 
   static String _handleDioError(DioException error) {
+    // Try to extract backend error message
+    if (error.response?.data != null) {
+      try {
+        final data = error.response?.data;
+        if (data is Map<String, dynamic>) {
+          if (data.containsKey('message')) {
+            return data['message'].toString();
+          }
+          if (data.containsKey('error')) {
+            return data['error'].toString();
+          }
+        }
+      } catch (e) {
+        // Fallback to default handling if parsing fails
+      }
+    }
+
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:

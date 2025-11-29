@@ -56,42 +56,15 @@ class _NetworkRestoredBannerState extends ConsumerState<NetworkRestoredBanner>
   }
 
   Future<void> _triggerSync() async {
-    if (_isSyncing) return;
-
-    setState(() => _isSyncing = true);
-
-    try {
-      await syncManager.forceSyncNow();
-
-      // Update app state
-      ref.read(appStateProvider.notifier).updateLastSyncTime(DateTime.now());
-      final syncQueue = syncQueueService;
-      final pendingCount = syncQueue.getPendingItems().length;
-      ref.read(appStateProvider.notifier).updatePendingSyncCount(pendingCount);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sync completed successfully'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        _dismiss();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Sync failed: ${e.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSyncing = false);
-      }
+    // No longer needed - direct CRUD operations handle sync automatically
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Your changes are synced automatically when online'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      _dismiss();
     }
   }
 

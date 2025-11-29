@@ -35,8 +35,14 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Skip auth header for auth endpoints
-          if (options.path.contains('/auth/')) {
+          // Public auth endpoints that don't require an access token
+          final isPublicAuthEndpoint = [
+            '/auth/login',
+            '/auth/register',
+            '/auth/refresh',
+          ].any((endpoint) => options.path.contains(endpoint));
+
+          if (isPublicAuthEndpoint) {
             return handler.next(options);
           }
 
@@ -64,8 +70,15 @@ class ApiClient {
 
           // Handle 401 - Unauthorized (token expired)
           if (error.response?.statusCode == 401) {
-            // Don't retry if already on auth endpoint
-            if (error.requestOptions.path.contains('/auth/')) {
+            // Don't retry for public auth endpoints
+            final isPublicAuthEndpoint = [
+              '/auth/login',
+              '/auth/register',
+              '/auth/refresh',
+              '/auth/delete',
+            ].any((endpoint) => error.requestOptions.path.contains(endpoint));
+
+            if (isPublicAuthEndpoint) {
               return handler.next(error);
             }
 

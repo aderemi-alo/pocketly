@@ -25,7 +25,7 @@ Future<Response> _getCategories(RequestContext context) async {
     }
 
     // Get all categories for the user (predefined + custom)
-    final categories = await categoryRepo.getUserCategories(userId);
+    final categories = await categoryRepo.getPredefinedCategories();
 
     final response = categories
         .map((category) => CategoryResponse.fromEntity(category).toJson())
