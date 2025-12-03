@@ -59,13 +59,9 @@ class _SignupViewState extends ConsumerState<SignupView> {
 
     // Listen for auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) {
-      // Navigate to dashboard on successful registration
-      if (next.isAuthenticated && !next.isLoading) {
-        context.go(AppRoutes.dashboard);
-      }
-
-      // Show error if any
-      if (next.error != null) {
+      // Navigation happens automatically via GoRouter redirect
+      // Only handle error display here
+      if (next.error != null && !next.isLoading) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.error!),

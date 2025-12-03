@@ -4,6 +4,7 @@ import 'package:pocketly/features/features.dart';
 import 'package:pocketly/features/authentication/presentation/views/forgot_password_view.dart';
 import 'package:pocketly/features/authentication/presentation/views/email_verification_view.dart';
 import 'package:pocketly/features/settings/presentation/views/change_password_view.dart';
+import 'package:pocketly/core/navigation/auth_guard.dart';
 
 // Helper class to refresh router when auth state changes
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -40,64 +41,55 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 // Router provider
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
-
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: AppRoutes.login,
+    initialLocation: AppRoutes
+        .dashboard, // Try dashboard first, guard will redirect if needed
     debugLogDiagnostics: true,
     refreshListenable: GoRouterRefreshStream(
       ref.watch(authProvider.notifier).stream,
     ),
-    redirect: (context, state) {
-      final isAuthenticated = authState.isAuthenticated;
-      final currentLocation = state.matchedLocation;
-      final isOnAuthPage =
-          currentLocation == AppRoutes.login ||
-          currentLocation == AppRoutes.signup ||
-          currentLocation == AppRoutes.forgotPassword ||
-          currentLocation == AppRoutes.emailVerification;
-
-      // Authenticated users should not access auth pages
-      if (isAuthenticated && isOnAuthPage) {
-        return AppRoutes.dashboard;
-      }
-
-      // Unauthenticated users can only access auth pages
-      if (!isAuthenticated && !isOnAuthPage) {
-        return AppRoutes.login;
-      }
-
-      return null; // No redirect needed
-    },
+    // Global redirect removed in favor of route-level guards
     routes: [
+      // PUBLIC ROUTES (guest-only)
       GoRoute(
         path: AppRoutes.login,
         name: 'login',
+        redirect: (context, state) => requireGuest(context, state, ref),
         builder: (context, state) => const LoginView(),
       ),
       GoRoute(
         path: AppRoutes.signup,
         name: 'signup',
+        redirect: (context, state) => requireGuest(context, state, ref),
         builder: (context, state) => const SignupView(),
       ),
       GoRoute(
         path: AppRoutes.forgotPassword,
         name: 'forgotPassword',
+        redirect: (context, state) => requireGuest(context, state, ref),
         builder: (context, state) => const ForgotPasswordView(),
       ),
       GoRoute(
         path: AppRoutes.emailVerification,
         name: 'emailVerification',
+        // Email verification might be accessible to both, but usually guest
+        // If it requires auth token in URL, it might be different.
+        // Assuming guest for now as it's part of auth flow.
+        redirect: (context, state) => requireGuest(context, state, ref),
         builder: (context, state) {
           final email = state.extra as String? ?? '';
           return EmailVerificationView(email: email);
         },
       ),
+
+      // PROTECTED ROUTES (auth required)
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ScaffoldWithNestedNavigation(navigationShell: navigationShell);
         },
+        // Apply guard to the shell route to protect all branches
+        redirect: (context, state) => requireAuth(context, state, ref),
         branches: [
           StatefulShellBranch(
             routes: [
