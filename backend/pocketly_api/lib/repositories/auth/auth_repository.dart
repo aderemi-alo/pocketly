@@ -138,4 +138,19 @@ class AuthRepository {
     final payload = Encryption.verifyAccessToken(token);
     return Map<String, dynamic>.from(payload);
   }
+
+  /// Updates a user's password
+  Future<void> updatePassword({
+    required String userId,
+    required String newPassword,
+  }) async {
+    final passwordHash = Encryption.encryptPassword(newPassword);
+
+    await (_db.update(_db.users)..where((u) => u.id.equals(userId))).write(
+      UsersCompanion(
+        passwordHash: Value(passwordHash),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
 }
