@@ -221,6 +221,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await logout();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
     }
   }
 
