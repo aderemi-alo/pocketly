@@ -90,6 +90,7 @@ Future<Response> _updateExpense(
     final dateStr = body['date'] as String?;
     final categoryId = body['categoryId'] as String?;
     final description = body['description'] as String?;
+    final currency = (body['currency'] as String?)?.toUpperCase();
 
     // Validate amount if provided
     if (amount != null && amount <= 0) {
@@ -118,12 +119,21 @@ Future<Response> _updateExpense(
       }
     }
 
+    // Validate currency if provided
+    if (currency != null && !isValidCurrency(currency)) {
+      return ApiResponse.badRequest(
+        message:
+            'Invalid currency code. Supported: ${supportedCurrencies.join(", ")}',
+      );
+    }
+
     // At least one field should be provided for update
     if (name == null &&
         amount == null &&
         date == null &&
         categoryId == null &&
-        description == null) {
+        description == null &&
+        currency == null) {
       return ApiResponse.badRequest(
         message: 'At least one field must be provided for update',
       );
@@ -138,6 +148,7 @@ Future<Response> _updateExpense(
       date: date,
       categoryId: categoryId,
       description: description?.trim(),
+      currency: currency,
     );
 
     if (!success) {

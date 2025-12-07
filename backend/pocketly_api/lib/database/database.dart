@@ -148,6 +148,9 @@ class Expenses extends Table {
       .nullable()
       .references(Categories, #id, onDelete: KeyAction.restrict)();
 
+  /// The currency code (ISO 4217). Defaults to NGN.
+  TextColumn get currency => text().withDefault(const Constant('NGN'))();
+
   /// The date and time the expense was created.
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
@@ -171,7 +174,7 @@ class PocketlyDatabase extends _$PocketlyDatabase {
   }
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -186,6 +189,12 @@ class PocketlyDatabase extends _$PocketlyDatabase {
           // Add isDeleted column to categories table
           await customStatement(
             'ALTER TABLE categories ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0;',
+          );
+        }
+        if (from < 4) {
+          // Add currency column to expenses table with default 'NGN'
+          await customStatement(
+            "ALTER TABLE expenses ADD COLUMN currency TEXT NOT NULL DEFAULT 'NGN';",
           );
         }
       },

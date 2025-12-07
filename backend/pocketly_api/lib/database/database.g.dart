@@ -890,6 +890,14 @@ class $ExpensesTable extends Expenses with TableInfo<$ExpensesTable, Expense> {
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'REFERENCES categories (id) ON DELETE RESTRICT'));
+  static const VerificationMeta _currencyMeta =
+      const VerificationMeta('currency');
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+      'currency', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('NGN'));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -925,6 +933,7 @@ class $ExpensesTable extends Expenses with TableInfo<$ExpensesTable, Expense> {
         amount,
         date,
         categoryId,
+        currency,
         createdAt,
         updatedAt,
         isDeleted
@@ -976,6 +985,10 @@ class $ExpensesTable extends Expenses with TableInfo<$ExpensesTable, Expense> {
           categoryId.isAcceptableOrUnknown(
               data['category_id']!, _categoryIdMeta));
     }
+    if (data.containsKey('currency')) {
+      context.handle(_currencyMeta,
+          currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -1011,6 +1024,8 @@ class $ExpensesTable extends Expenses with TableInfo<$ExpensesTable, Expense> {
           .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
       categoryId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}category_id']),
+      currency: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}currency'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -1048,6 +1063,9 @@ class Expense extends DataClass implements Insertable<Expense> {
   /// The category of the expense.
   final String? categoryId;
 
+  /// The currency code (ISO 4217). Defaults to NGN.
+  final String currency;
+
   /// The date and time the expense was created.
   final DateTime createdAt;
 
@@ -1064,6 +1082,7 @@ class Expense extends DataClass implements Insertable<Expense> {
       required this.amount,
       required this.date,
       this.categoryId,
+      required this.currency,
       required this.createdAt,
       required this.updatedAt,
       required this.isDeleted});
@@ -1083,6 +1102,7 @@ class Expense extends DataClass implements Insertable<Expense> {
     if (!nullToAbsent || categoryId != null) {
       map['category_id'] = Variable<String>(categoryId);
     }
+    map['currency'] = Variable<String>(currency);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['is_deleted'] = Variable<bool>(isDeleted);
@@ -1103,6 +1123,7 @@ class Expense extends DataClass implements Insertable<Expense> {
       categoryId: categoryId == null && nullToAbsent
           ? const Value.absent()
           : Value(categoryId),
+      currency: Value(currency),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       isDeleted: Value(isDeleted),
@@ -1120,6 +1141,7 @@ class Expense extends DataClass implements Insertable<Expense> {
       amount: serializer.fromJson<double>(json['amount']),
       date: serializer.fromJson<DateTime>(json['date']),
       categoryId: serializer.fromJson<String?>(json['categoryId']),
+      currency: serializer.fromJson<String>(json['currency']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
@@ -1136,6 +1158,7 @@ class Expense extends DataClass implements Insertable<Expense> {
       'amount': serializer.toJson<double>(amount),
       'date': serializer.toJson<DateTime>(date),
       'categoryId': serializer.toJson<String?>(categoryId),
+      'currency': serializer.toJson<String>(currency),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'isDeleted': serializer.toJson<bool>(isDeleted),
@@ -1150,6 +1173,7 @@ class Expense extends DataClass implements Insertable<Expense> {
           double? amount,
           DateTime? date,
           Value<String?> categoryId = const Value.absent(),
+          String? currency,
           DateTime? createdAt,
           DateTime? updatedAt,
           bool? isDeleted}) =>
@@ -1161,6 +1185,7 @@ class Expense extends DataClass implements Insertable<Expense> {
         amount: amount ?? this.amount,
         date: date ?? this.date,
         categoryId: categoryId.present ? categoryId.value : this.categoryId,
+        currency: currency ?? this.currency,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         isDeleted: isDeleted ?? this.isDeleted,
@@ -1176,6 +1201,7 @@ class Expense extends DataClass implements Insertable<Expense> {
       date: data.date.present ? data.date.value : this.date,
       categoryId:
           data.categoryId.present ? data.categoryId.value : this.categoryId,
+      currency: data.currency.present ? data.currency.value : this.currency,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
@@ -1192,6 +1218,7 @@ class Expense extends DataClass implements Insertable<Expense> {
           ..write('amount: $amount, ')
           ..write('date: $date, ')
           ..write('categoryId: $categoryId, ')
+          ..write('currency: $currency, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted')
@@ -1201,7 +1228,7 @@ class Expense extends DataClass implements Insertable<Expense> {
 
   @override
   int get hashCode => Object.hash(id, userId, name, description, amount, date,
-      categoryId, createdAt, updatedAt, isDeleted);
+      categoryId, currency, createdAt, updatedAt, isDeleted);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1213,6 +1240,7 @@ class Expense extends DataClass implements Insertable<Expense> {
           other.amount == this.amount &&
           other.date == this.date &&
           other.categoryId == this.categoryId &&
+          other.currency == this.currency &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.isDeleted == this.isDeleted);
@@ -1226,6 +1254,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
   final Value<double> amount;
   final Value<DateTime> date;
   final Value<String?> categoryId;
+  final Value<String> currency;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<bool> isDeleted;
@@ -1238,6 +1267,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
     this.amount = const Value.absent(),
     this.date = const Value.absent(),
     this.categoryId = const Value.absent(),
+    this.currency = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -1251,6 +1281,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
     required double amount,
     required DateTime date,
     this.categoryId = const Value.absent(),
+    this.currency = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -1266,6 +1297,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
     Expression<double>? amount,
     Expression<DateTime>? date,
     Expression<String>? categoryId,
+    Expression<String>? currency,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<bool>? isDeleted,
@@ -1279,6 +1311,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
       if (amount != null) 'amount': amount,
       if (date != null) 'date': date,
       if (categoryId != null) 'category_id': categoryId,
+      if (currency != null) 'currency': currency,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (isDeleted != null) 'is_deleted': isDeleted,
@@ -1294,6 +1327,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
       Value<double>? amount,
       Value<DateTime>? date,
       Value<String?>? categoryId,
+      Value<String>? currency,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<bool>? isDeleted,
@@ -1306,6 +1340,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
       amount: amount ?? this.amount,
       date: date ?? this.date,
       categoryId: categoryId ?? this.categoryId,
+      currency: currency ?? this.currency,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
@@ -1337,6 +1372,9 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
     if (categoryId.present) {
       map['category_id'] = Variable<String>(categoryId.value);
     }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1362,6 +1400,7 @@ class ExpensesCompanion extends UpdateCompanion<Expense> {
           ..write('amount: $amount, ')
           ..write('date: $date, ')
           ..write('categoryId: $categoryId, ')
+          ..write('currency: $currency, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -3042,6 +3081,7 @@ typedef $$ExpensesTableCreateCompanionBuilder = ExpensesCompanion Function({
   required double amount,
   required DateTime date,
   Value<String?> categoryId,
+  Value<String> currency,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -3055,6 +3095,7 @@ typedef $$ExpensesTableUpdateCompanionBuilder = ExpensesCompanion Function({
   Value<double> amount,
   Value<DateTime> date,
   Value<String?> categoryId,
+  Value<String> currency,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -3118,6 +3159,9 @@ class $$ExpensesTableFilterComposer
 
   ColumnFilters<DateTime> get date => $composableBuilder(
       column: $table.date, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get currency => $composableBuilder(
+      column: $table.currency, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -3193,6 +3237,9 @@ class $$ExpensesTableOrderingComposer
   ColumnOrderings<DateTime> get date => $composableBuilder(
       column: $table.date, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get currency => $composableBuilder(
+      column: $table.currency, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -3266,6 +3313,9 @@ class $$ExpensesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -3347,6 +3397,7 @@ class $$ExpensesTableTableManager extends RootTableManager<
             Value<double> amount = const Value.absent(),
             Value<DateTime> date = const Value.absent(),
             Value<String?> categoryId = const Value.absent(),
+            Value<String> currency = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -3360,6 +3411,7 @@ class $$ExpensesTableTableManager extends RootTableManager<
             amount: amount,
             date: date,
             categoryId: categoryId,
+            currency: currency,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,
@@ -3373,6 +3425,7 @@ class $$ExpensesTableTableManager extends RootTableManager<
             required double amount,
             required DateTime date,
             Value<String?> categoryId = const Value.absent(),
+            Value<String> currency = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -3386,6 +3439,7 @@ class $$ExpensesTableTableManager extends RootTableManager<
             amount: amount,
             date: date,
             categoryId: categoryId,
+            currency: currency,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,

@@ -30,6 +30,7 @@ class ExpenseRepository {
     required DateTime date,
     String? categoryId,
     String? description,
+    String currency = 'NGN',
   }) async {
     final now = DateTime.now();
 
@@ -40,6 +41,7 @@ class ExpenseRepository {
       date: date,
       categoryId: Value(categoryId),
       description: Value(description),
+      currency: Value(currency),
       createdAt: Value(now),
       updatedAt: Value(now),
     );
@@ -70,6 +72,7 @@ class ExpenseRepository {
     DateTime? date,
     String? categoryId,
     String? description,
+    String? currency,
   }) async {
     final updateCompanion = ExpensesCompanion(
       id: Value(expenseId),
@@ -79,6 +82,7 @@ class ExpenseRepository {
       categoryId: categoryId != null ? Value(categoryId) : const Value.absent(),
       description:
           description != null ? Value(description) : const Value.absent(),
+      currency: currency != null ? Value(currency) : const Value.absent(),
       updatedAt: Value(DateTime.now()),
     );
 

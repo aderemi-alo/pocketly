@@ -144,6 +144,8 @@ Future<Response> _createExpense(RequestContext context) async {
     final dateStr = body['date'] as String?;
     final categoryId = body['categoryId'] as String?;
     final description = body['description'] as String?;
+    final currency =
+        (body['currency'] as String?)?.toUpperCase() ?? defaultCurrency;
 
     // Validate required fields
     if (name == null || name.trim().isEmpty) {
@@ -169,6 +171,14 @@ Future<Response> _createExpense(RequestContext context) async {
       );
     }
 
+    // Validate currency code
+    if (!isValidCurrency(currency)) {
+      return ApiResponse.badRequest(
+        message:
+            'Invalid currency code. Supported: ${supportedCurrencies.join(", ")}',
+      );
+    }
+
     // Validate category if provided
     if (categoryId != null) {
       final category = await categoryRepo.findById(categoryId);
@@ -185,6 +195,7 @@ Future<Response> _createExpense(RequestContext context) async {
       date: date,
       categoryId: categoryId,
       description: description?.trim(),
+      currency: currency,
     );
 
     // Fetch category details if present

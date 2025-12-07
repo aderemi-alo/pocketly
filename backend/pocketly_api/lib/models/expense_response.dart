@@ -9,6 +9,7 @@ class ExpenseResponse {
     required this.name,
     required this.amount,
     required this.date,
+    required this.currency,
     this.categoryId,
     this.category,
     this.userId,
@@ -26,6 +27,7 @@ class ExpenseResponse {
       name: expense.name,
       amount: expense.amount,
       date: expense.date,
+      currency: expense.currency,
       categoryId: expense.categoryId,
       userId: expense.userId,
       description: expense.description,
@@ -46,6 +48,7 @@ class ExpenseResponse {
       name: expense.name,
       amount: expense.amount,
       date: expense.date,
+      currency: expense.currency,
       categoryId: expense.categoryId,
       category: categoryEntity != null
           ? CategoryResponse.fromEntity(categoryEntity)
@@ -69,6 +72,9 @@ class ExpenseResponse {
 
   /// The expense's date
   final DateTime date;
+
+  /// The expense's currency code (ISO 4217)
+  final String currency;
 
   /// The expense's category ID
   final String? categoryId;
@@ -98,6 +104,7 @@ class ExpenseResponse {
       'name': name,
       'amount': amount,
       'date': date.toIso8601String(),
+      'currency': currency,
       if (categoryId != null) 'categoryId': categoryId,
       if (category != null) 'category': category!.toJson(),
       if (userId != null) 'userId': userId,
@@ -116,6 +123,7 @@ class ExpenseResponse {
       'name': name,
       'amount': amount,
       'date': date.toIso8601String(),
+      'currency': currency,
       if (categoryId != null) 'categoryId': categoryId,
       if (category != null)
         'category': {
