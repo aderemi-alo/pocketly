@@ -4,3 +4,4 @@ export 'network_service.dart';
 export 'token_storage_service.dart';
 export 'app_info_service.dart';
 export 'logger_service.dart';
+export 'export_data_service.dart';

@@ -143,7 +143,44 @@ class SettingsView extends ConsumerWidget {
             ),
             context.verticalSpace(16),
 
-            // About Section
+            // Data & Privacy Section
+            Container(
+              padding: context.all(16),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: context.radius(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.shadow.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Data & Privacy',
+                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  context.verticalSpace(4),
+                  Text(
+                    'Manage your data',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  context.verticalSpace(12),
+                  _DownloadDataTile(),
+                ],
+              ),
+            ),
+            context.verticalSpace(16),
+
             Container(
               padding: context.all(16),
               width: double.infinity,
@@ -269,6 +306,143 @@ class _InfoRow extends StatelessWidget {
         Text(label, style: Theme.of(context).textTheme.bodyMedium),
         Text(value, style: Theme.of(context).textTheme.bodyMedium),
       ],
+    );
+  }
+}
+
+class _DownloadDataTile extends ConsumerStatefulWidget {
+  const _DownloadDataTile();
+
+  @override
+  ConsumerState<_DownloadDataTile> createState() => _DownloadDataTileState();
+}
+
+class _DownloadDataTileState extends ConsumerState<_DownloadDataTile> {
+  bool _isLoading = false;
+
+  Future<void> _handleExport() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final exportService = ref.read(exportDataServiceProvider);
+      final filePath = await exportService.exportData();
+
+      if (mounted) {
+        if (filePath != null) {
+          // Show success dialog with file location
+          await showDialog<void>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Export Complete'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Your data has been saved to:'),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      filePath.split('/').last,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Transfer this file to your new device and import it into Klyro.',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Done'),
+                ),
+              ],
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Export failed. Please try again.'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: _isLoading ? null : _handleExport,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                LucideIcons.download,
+                size: 20,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Download My Data',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    'Export for Klyro import',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_isLoading)
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Icon(
+                LucideIcons.chevronRight,
+                size: 20,
+                color: Theme.of(context).colorScheme.outline,
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

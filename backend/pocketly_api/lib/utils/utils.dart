@@ -1,5 +1,6 @@
 export 'api_response.dart';
 export 'auth_middleware.dart';
+export 'category_mapper.dart';
 export 'encryption.dart';
 export 'logger.dart';
 export 'otp_generator.dart';
