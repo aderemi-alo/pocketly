@@ -1,5 +1,4 @@
 import 'package:dart_frog/dart_frog.dart';
-import 'package:pocketly_api/models/models.dart';
 import 'package:pocketly_api/repositories/repositories.dart';
 import 'package:pocketly_api/utils/utils.dart';
 
@@ -28,7 +27,7 @@ Future<Response> _updatePassword(RequestContext context) async {
   // when the group doesn't enforce it is to use a pipeline in the onRequest.
 
   final handler =
-      Pipeline().addMiddleware(requireAuth()).addHandler((context) async {
+      const Pipeline().addMiddleware(requireAuth()).addHandler((context) async {
     final authRepo = context.read<AuthRepository>();
 
     try {

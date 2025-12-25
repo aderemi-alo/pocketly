@@ -4,6 +4,7 @@ import 'package:pocketly/features/shared/widgets/network_restored_banner.dart';
 
 class BannerService {
   static OverlayEntry? _currentBanner;
+  // ignore: unused_field
   static BuildContext? _context;
 
   /// Show network restored banner
