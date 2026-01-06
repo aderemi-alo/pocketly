@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'package:pocketly/core/core.dart';
-import 'package:pocketly/core/locator/locator_service.dart';
 
 /// Service for exporting user data from Pocketly in Klyro-compatible format.
 class ExportDataService {
@@ -12,7 +12,7 @@ class ExportDataService {
 
   ExportDataService(this._apiClient);
 
-  /// Exports all user data and saves to the documents directory.
+  /// Exports all user data and opens a share sheet to save/share the file.
   ///
   /// The export is performed server-side to ensure all data is captured
   /// with proper category mapping to Klyro format.
@@ -27,7 +27,7 @@ class ExportDataService {
       if (response.statusCode == 200 && response.data['success'] == true) {
         final exportData = response.data['data'];
 
-        // Write to documents directory (persistent storage)
+        // Write to temporary directory for sharing
         final jsonString = const JsonEncoder.withIndent(
           '  ',
         ).convert(exportData);
@@ -38,6 +38,10 @@ class ExportDataService {
         await file.writeAsString(jsonString);
 
         AppLogger.info('✅ Export saved to: ${file.path}');
+
+        // Open share sheet so user can save/share the file
+        await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
+
         return file.path;
       } else {
         AppLogger.error('❌ Export failed: ${response.data['message']}');

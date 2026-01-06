@@ -1,7 +1,7 @@
 name: pocketly
 description: "A new Flutter project."
 publish_to: 'none'
-version: 1.1.0+4
+version: 1.1.1+5
 
 environment:
   sdk: ^3.9.0
@@ -28,6 +28,7 @@ dependencies:
   shared_preferences: ^2.2.2
   logger: ^2.0.2+1
   flutter_launcher_icons: ^0.14.4
+  share_plus: ^12.0.1
 
 dev_dependencies:
   flutter_test:
